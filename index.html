@@ -1,0 +1,33 @@
+<!DOCTYPE html>
+<html>
+<head>
+<link rel="stylesheet" type="text/css" href="style.css">
+<script src="mersenne-twister.js"></script>
+<script src="main.js"></script>
+<script src="web/lighttoggle.js"></script>
+</head>
+
+<body>
+<img id="decobottom" src="web/decobottom.png">
+</img>
+
+<canvas id="frontbuffer" class="buffer" tabindex="1" width="640" height="480" visibility: hidden;">
+Canvas not supported :(
+</canvas>
+
+<canvas id="backbuffer" class="buffer" tabindex="1" width="640" height="480" z-index: 1; visibility: visible;">
+
+</canvas>
+
+<table>
+<tr>
+<td>
+<a id="lighttoggle" href="#" onClick="nweb.lightTog.Toggle()">[Toggle Luminance]</a>
+</td>
+</tr>
+</table>
+<script>
+main();
+</script>
+</body>
+</html>
