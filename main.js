@@ -1251,6 +1251,8 @@ function Sprite() {
 	this.mTex = null;
 	this.mDepth = 0;
 	
+	this.mAlpha = 1.0;
+	
 	this.mPos = new IVec2(0, 0);
 	this.mClipPos = new IVec2(0, 0);
 	this.mClipSize = new IVec2(0, 0);
@@ -1276,16 +1278,6 @@ function Sprite() {
 // returns the type of this object for validity checking
 Sprite.prototype.Type = function() {
 	return "Sprite";
-}
-
-// initialises the sprite
-Sprite.prototype.SetUp = function() {
-	
-}
-
-// cleans up the sprite
-Sprite.prototype.TearDown = function() {
-	
 }
 
 // make a copy of another (other) sprite (copy constructor)
@@ -1523,6 +1515,18 @@ RenderBatch.prototype.TearDown = function() {
 	
 }
 
+RenderBatch.prototype.Add = function(object) {
+	if (object.Type() == "Sprite") {
+		this.AddSprite(object);
+	}
+	else if (object.Type() == "Text") {
+		this.AddText(object);
+	}
+	else if (object.Type() == "Shape") {
+		this.AddShape(object);
+	}
+}
+
 // add a sprite to the render batch
 RenderBatch.prototype.AddSprite = function(sprite) {
 	this.mNeedSort = true;
@@ -1572,15 +1576,14 @@ RenderBatch.prototype.Render = function(camera) {
 		this.mNeedSort = false;
 	}
 	
+	var scrTL = new IVec2(0 + cam.mTranslate.mX, 0 + cam.mTranslate.mY);
+	var scrBR = new IVec2(nmain.game.mCanvasSize.mX + cam.mTranslate.mX, nmain.game.mCanvasSize.mY + cam.mTranslate.mY);
+	
 	for (var i = 0; i < this.mRenderData.length; ++i) {
 		nmain.game.mCurrContext.save();
 		
 		if (this.mRenderData[i].Type() == "Sprite") {
 			var spr = this.mRenderData[i];
-			
-			var scrTL = new IVec2(0 + cam.mTranslate.mX, 0 + cam.mTranslate.mY);
-			var scrBR = new IVec2(nmain.game.mCanvasSize.mX + cam.mTranslate.mX,
-					nmain.game.mCanvasSize.mY + cam.mTranslate.mY);
 			
 			var sprTL = new IVec2(spr.GetPosition().mX, spr.GetPosition().mY);
 			var sprBR = new IVec2(spr.GetPosition().mX + spr.GetWidth(), spr.GetPosition().mY + spr.GetHeight());
@@ -1607,24 +1610,22 @@ RenderBatch.prototype.Render = function(camera) {
 			}
 			
 			if (intersect == true) {
+				var oldAlpha = nmain.game.mCurrContext.globalAlpha;
+				nmain.game.mCurrContext.globalAlpha = spr.mAlpha;
+				
 				nmain.game.mCurrContext.translate(spr.GetPosition().mX, spr.GetPosition().mY);
 				nmain.game.mCurrContext.rotate(spr.mRotation * (Math.PI / 180));
 				
 				nmain.game.mCurrContext.drawImage(spr.mTex.mImg, spr.mClipPos.mX, spr.mClipPos.mY,
 						spr.mClipSize.mX, spr.mClipSize.mY, 0, 0,
 						spr.GetWidth() * spr.mScale.mX, spr.GetHeight() * spr.mScale.mY);
+				
+				nmain.game.mCurrContext.globalAlpha = oldAlpha;
 			}
 		}
 		else if (this.mRenderData[i].Type() == "Text") {
 			var txt = this.mRenderData[i];
 			var txtArr = txt.mString.split("\n");
-			
-			nmain.game.mCurrContext.font = txt.mFont;
-			nmain.game.mCurrContext.strokeStyle = txt.mColour;
-			
-			var scrTL = new IVec2(0 + cam.mTranslate.mX, 0 + cam.mTranslate.mY);
-			var scrBR = new IVec2(nmain.game.mCanvasSize.mX + cam.mTranslate.mX,
-					nmain.game.mCanvasSize.mY + cam.mTranslate.mY);
 			
 			var txtTL = new IVec2(txt.mPos.mX, txt.mPos.mY);
 			var txtBR = new IVec2(txt.mPos.mX + txt.GetWidth(), txt.mPos.mY + txt.GetHeight());
@@ -1651,6 +1652,9 @@ RenderBatch.prototype.Render = function(camera) {
 			}
 			
 			if (intersect == true) {
+				nmain.game.mCurrContext.font = txt.mFont;
+				nmain.game.mCurrContext.strokeStyle = txt.mColour;
+				
 				nmain.game.mCurrContext.translate(txt.mPos.mX, txt.mPos.mY + txt.mHeight);
 				nmain.game.mCurrContext.rotate(txt.mRotation * (Math.PI / 180));
 				
@@ -1676,30 +1680,56 @@ RenderBatch.prototype.Render = function(camera) {
 			var shp = this.mRenderData[i];
 			var pos = shp.GetPosition();
 			
-			nmain.game.mCurrContext.fillStyle = shp.mColour;
-			nmain.game.mCurrContext.strokeStyle = shp.mColour;
-			var oldAlpha = nmain.game.mCurrContext.globalAlpha;
-			nmain.game.mCurrContext.globalAlpha = shp.mAlpha;
+			var shpTL = new IVec2(shp.mPos.mX, shp.mPos.mY);
+			var shpBR = new IVec2(shp.mPos.mX + shp.GetWidth(), shp.mPos.mY + shp.GetHeight());
 			
-			nmain.game.mCurrContext.beginPath();
-			nmain.game.mCurrContext.moveTo(pos.mX, pos.mY);
-			
-			for (var j = 0; j < shp.mPoints.length; ++j) {
-				var pt = new IVec2();
-				pt.Copy(shp.mPoints[j]);
-				nmain.game.mCurrContext.lineTo(pos.mX + pt.mX, pos.mY + pt.mY);
+			var intersect = false;
+			var left = shpTL.mX;
+			var right = scrBR.mX;
+			if (scrTL.mX < shpTL.mX) {
+				left = scrTL.mX;
+				right = shpBR.mX;
 			}
 			
-			nmain.game.mCurrContext.closePath();
-			
-			if (shp.mOutline == false) {
-				nmain.game.mCurrContext.fill();
+			if (right - left < shp.GetWidth() + nmain.game.mCanvasSize.mX) {
+				var top = shpTL.mY;
+				var bottom = scrBR.mY;
+				if (scrTL.mY < shpTL.mY) {
+					top = scrTL.mY;
+					bottom = shpBR.mY;
+				}
+				
+				if (bottom - top < shp.GetHeight() + nmain.game.mCanvasSize.mY) {
+					intersect = true;
+				}
 			}
-			else {
-				nmain.game.mCurrContext.stroke();
-			}
 			
-			nmain.game.mCurrContext.globalAlpha = oldAlpha;
+			if (intersect == true) {
+				nmain.game.mCurrContext.fillStyle = shp.mColour;
+				nmain.game.mCurrContext.strokeStyle = shp.mColour;
+				var oldAlpha = nmain.game.mCurrContext.globalAlpha;
+				nmain.game.mCurrContext.globalAlpha = shp.mAlpha;
+				
+				nmain.game.mCurrContext.beginPath();
+				nmain.game.mCurrContext.moveTo(pos.mX, pos.mY);
+				
+				for (var j = 0; j < shp.mPoints.length; ++j) {
+					var pt = new IVec2();
+					pt.Copy(shp.mPoints[j]);
+					nmain.game.mCurrContext.lineTo(pos.mX + pt.mX, pos.mY + pt.mY);
+				}
+				
+				nmain.game.mCurrContext.closePath();
+				
+				if (shp.mOutline == false) {
+					nmain.game.mCurrContext.fill();
+				}
+				else {
+					nmain.game.mCurrContext.stroke();
+				}
+				
+				nmain.game.mCurrContext.globalAlpha = oldAlpha;
+			}
 		}
 		
 		nmain.game.mCurrContext.restore();
@@ -1708,6 +1738,143 @@ RenderBatch.prototype.Render = function(camera) {
 
 // ...End
 
+
+// GUIButton Class...
+function GUIButton() {
+	this.mPos = new IVec2(0, 0);
+	this.mSize = new IVec2(0, 0);
+	
+	this.mStatus = "idle";
+	this.mSpriteIdle = new Sprite();
+	this.mSpriteHover = new Sprite();
+	this.mSpriteDown = new Sprite();
+	this.mSpriteInactive = new Sprite();
+	
+	this.mActive = true;
+	this.mHover = false;
+	this.mDown = false;
+	this.mWasClicked = false;
+};
+
+GUIButton.prototype.SetUp = function(pos, size, depth) {
+	this.mPos.Copy(pos);
+	this.mSize.Copy(size);
+	
+	this.mSpriteIdle.mPos.Copy(pos);
+	this.mSpriteIdle.mDepth = depth;
+	
+	this.mSpriteHover.mPos.Copy(pos);
+	this.mSpriteHover.mDepth = depth;
+	
+	this.mSpriteDown.mPos.Copy(pos);
+	this.mSpriteDown.mDepth = depth;
+	
+	this.mSpriteInactive.mPos.Copy(pos);
+	this.mSpriteInactive.mDepth = depth;
+}
+
+GUIButton.prototype.Input = function() {
+	if (this.mActive == true) {
+		if (this.mHover == true) {
+			if (nmgrs.inputMan.GetMouseReleased(nmouse.button.code.left)) {
+				if (this.mDown == true) {
+					this.mWasClicked = true;
+				}
+			}
+			else if (nmgrs.inputMan.GetMousePressed(nmouse.button.code.left)) {
+				this.mDown = true;
+			}
+		}
+		
+		if (nmgrs.inputMan.GetMouseReleased(nmouse.button.code.left)) {
+			this.mDown = false;
+		}
+	}
+}
+
+GUIButton.prototype.Process = function(point) {
+	if (this.mActive == true) {
+		var tl = new IVec2(0, 0); tl.Copy(this.mPos);
+		var br = new IVec2(0, 0); br.Copy(this.mPos);
+		br.mX += this.mSize.mX; br.mY += this.mSize.mY;
+		if (util.PointInRectangle(point, tl, br)) {
+			this.mHover = true;
+			if (this.mDown == false) {
+				this.mStatus = "hover";
+			}
+			else {
+				this.mStatus = "down";
+			}
+		}
+		else {
+			this.mHover = false;
+			this.mStatus = "idle";
+		}
+	}
+	
+	if (this.mActive == true) {
+		if (this.mStatus == "hover") {
+			this.mSpriteHover.Process();
+		}
+		else if (this.mStatus == "down") {
+			this.mSpriteDown.Process()
+		}
+		else {
+			this.mSpriteIdle.Process()
+		}
+	}
+	else {
+		this.mSpriteInactive.Process()
+	}
+}
+
+GUIButton.prototype.OnClick = function() {
+	if (this.mWasClicked == true) {
+		this.mWasClicked = false;
+		return true;
+	}
+	
+	return false;
+}
+
+GUIButton.prototype.GetRenderData = function() {
+	var arr = new Array();
+	if (this.mActive == true) {
+		if (this.mStatus == "hover") {
+			arr.push(this.mSpriteHover);
+		}
+		else if (this.mStatus == "down") {
+			arr.push(this.mSpriteDown);
+		}
+		else {
+			arr.push(this.mSpriteIdle);
+		}
+	}
+	else {
+		arr.push(this.mSpriteInactive);
+	}
+	
+	return arr;
+}
+
+GUIButton.prototype.GetSpritePositions = function() {
+	return this.mSpriteIdle.mPos;
+}
+
+GUIButton.prototype.SetSpritePositions = function(pos) {
+	this.mSpriteIdle.mPos.Copy(pos);
+	this.mSpriteHover.mPos.Copy(pos);
+	this.mSpriteDown.mPos.Copy(pos);
+	this.mSpriteInactive.mPos.Copy(pos);
+}
+
+GUIButton.prototype.SetSpriteDepths = function(depth) {
+	this.mSpriteIdle.mDepth = depth;
+	this.mSpriteHover.mDepth = depth;
+	this.mSpriteDown.mDepth = depth;
+	this.mSpriteInactive.mDepth = depth;
+}
+// ...End
 
 // RNG Class...
 // a pseudo-random number generator
@@ -1776,6 +1943,8 @@ Timer.prototype.Copy = function(other) {
 // todo: maintain a transform matrix for translation as well as rotation and scaling
 function Camera() {
 	this.mTranslate = new IVec2(0, 0); // current translation
+	
+	this.mViewUpdated = false; // indication whether the camera state has been altered
 }
 
 // make a copy of another (other) camera (copy constructor)
@@ -1783,9 +1952,22 @@ Camera.prototype.Copy = function(other) {
 	this.mTranslate.Copy(other.mTranslate); // call ivec2 copy (copy constructor)
 }
 
+// processes camera every frame
+Camera.prototype.Process = function() {
+	if (this.mViewUpdated == true) {
+		this.mViewUpdated = false;
+	}
+}
+
 // apply the camera's transform to the canvas
 Camera.prototype.Apply = function() {
 	nmain.game.mCurrContext.translate(-this.mTranslate.mX, -this.mTranslate.mY); // apply translation
+}
+
+// apply a transformation to the camera
+Camera.prototype.Translate = function(trans) {
+	this.mTranslate.Set(this.mTranslate.mX - trans.mX, this.mTranslate.mY - trans.mY);
+	this.mViewUpdated = true;
 }
 // ...End
 
@@ -1808,7 +1990,19 @@ InitScene.prototype.Persistent = function() {
 
 // initialises the scene object
 InitScene.prototype.SetUp = function() {
-	
+	try {
+		nmgrs.resLoad.QueueTexture("tileset_test", "./res/vis/tileset_test.png");
+		
+		nmgrs.resLoad.QueueTexture("gui_map_compassmain", "./res/vis/gui_map_compassmain.png");
+		nmgrs.resLoad.QueueTexture("gui_map_compassextra", "./res/vis/gui_map_compassextra.png");
+		nmgrs.resLoad.QueueTexture("gui_map_zlevelmain", "./res/vis/gui_map_zlevelmain.png");
+		nmgrs.resLoad.QueueTexture("gui_map_zlevelextra", "./res/vis/gui_map_zlevelextra.png");
+		
+		nmgrs.resLoad.AcquireResources();
+		nmgrs.resLoad.mIntervalID = setInterval(function() {nmgrs.resLoad.ProgressCheck();}, 0);
+	} catch(e) {
+		alert(e.What());
+	}
 }
 
 // cleans up the scene object
@@ -1823,7 +2017,9 @@ InitScene.prototype.Input = function() {
 
 // handles game logic
 InitScene.prototype.Process = function() {
-	
+	if (nmgrs.resLoad.mWorking == false) {
+		nmgrs.sceneMan.ChangeScene(new GFTestScene());
+	}
 }
 
 // handles all drawing tasks
@@ -2016,4 +2212,588 @@ function main() {
 		alert(e.What());
 	}
 };
+
+// GFBluePrintTile Class...
+// game file: 
+function GFBluePrintTile() {
+	this.mPos = new IVec2(0, 0);
+	
+	this.mZ = 0;
+	this.mSpecial = 0;
+};
+// ...End
+
+
+// GFBluePrint Class...
+// game file: 
+function GFBluePrint() {
+	this.mSize = new IVec2(0, 0);
+	this.mTiles = new Array();
+};
+
+GFBluePrint.prototype.Copy = function(other) {
+	this.mSize.Copy(other.mSize);
+	
+	this.mTiles.splice(0, this.mTiles.length);
+	this.mTiles = this.mTiles.concat(other.mTiles);
+}
+
+GFBluePrint.prototype.SetUp = function(bpstring) {
+	var rows = bpstring.split('r');
+	var tiles = new Array();
+	
+	if (rows.length > 0) {
+		{
+			var cols = rows[0].split('c');
+			this.mSize.Set(cols.length, rows.length);
+		}
+		
+		for (var i = 0; i < rows.length; ++i) {
+			var split = rows[i].split('c');
+			tiles = tiles.concat(split);
+		}
+		
+		var id = 0;
+		for (var y = 0; y < this.mSize.mY; ++y) {
+			for (var x = 0; x < this.mSize.mX; ++x) {
+				var bpTile = new GFBluePrintTile();
+				bpTile.mPos.Set(x, y);
+				bpTile.mZ = Number(tiles[id].charAt(0));
+				bpTile.mSpecial = Number(tiles[id].charAt(1));
+				this.mTiles.push(bpTile);
+				id++;
+			}
+		}
+	}
+}
+// ...End
+
+
+// GFBluePrintContainer Class...
+// game file: 
+function GFBluePrintContainer() {
+	this.mInitialBluePrints = new Array();
+	this.mRegularBluePrints = new Array();
+	this.mFinalBluePrints = new Array();
+};
+
+GFBluePrintContainer.prototype.SetUp = function() {
+	var initArr = new Array();
+	initArr.push("00c02c00r02c00c02r00c02c00");
+	for (var i = 0; i < initArr.length; ++i) {
+		var bp = new GFBluePrint();
+		bp.SetUp(initArr[i]);
+		this.mInitialBluePrints.push(bp);
+	}
+	
+	var regArr = new Array();
+	regArr.push("01c02c01r02c00c02r01c02c01");
+	for (var i = 0; i < regArr.length; ++i) {
+		var bp = new GFBluePrint();
+		bp.SetUp(regArr[i]);
+		this.mRegularBluePrints.push(bp);
+	}
+	
+	var finArr = new Array();
+	finArr.push("01c01r01c01");
+	for (var i = 0; i < finArr.length; ++i) {
+		var bp = new GFBluePrint();
+		bp.SetUp(finArr[i]);
+		this.mFinalBluePrints.push(bp);
+	}
+}
+// ...End
+
+
+// GFMap Class...
+// game file: 
+function GFMap() {
+	
+};
+
+GFMap.prototype.SetUp = function() {
+	// takes array of segments which already have offsets and everything set
+	// adds them all to a global array or something farts
+}
+// ...End
+
+
+// GFMapSegment Class...
+// game file: a segment (or piece) of a map
+function GFMapSegment() {
+	this.mPos = new IVec2(0, 0); // the position (offset) of this map segment with the entire map
+	this.mSize = new IVec2(0, 0); // the dimensions of this map segment (in terms of tile numbers, not pixels)
+	this.mTiles = new Array(); // an array of the tile objects that make up this map segment
+	
+	this.mCurrZLevel = 3;
+};
+
+GFMapSegment.prototype.SetUp = function(blueprint) {
+	var tex = nmgrs.resMan.mTexStore.GetResource("tileset_test");
+	this.mSize.Copy(blueprint.mSize);
+	
+	for (var i = 0; i < blueprint.mTiles.length; ++i) {
+		var tile = new GFMapTile();
+		tile.mLocalPos.Copy(blueprint.mTiles[i].mPos);
+		tile.mGlobalPos.Set(tile.mLocalPos.mX + this.mPos.mX, tile.mLocalPos.mY + this.mPos.mY);
+		tile.mZ = blueprint.mTiles[i].mZ;
+		tile.mSpecial = blueprint.mTiles[i].mSpecial;
+		
+		tile.SetUp(tex);
+		
+		this.mTiles.push(tile);
+	}
+}
+
+// returns the appropiate render data
+GFMapSegment.prototype.GetRenderData = function(renderLevel) {
+	var arr = new Array(); // an array to store our render data
+	
+	// for our entire map segment array
+	for (var i = 0; i < this.mTiles.length; ++i) {
+		arr = arr.concat(this.mTiles[i].GetRenderData(renderLevel)); // get and add the render data returned by the tile
+	}
+	
+	return arr; // return the retrieved render data
+}
+
+
+GFMapSegment.prototype.ChangeZLevel = function(newLevel) {
+	if (this.mCurrZLevel + newLevel <= 3 && this.mCurrZLevel + newLevel >= 0) {
+		this.mCurrZLevel += newLevel;
+		// for our entire map segment array
+		for (var i = 0; i < this.mTiles.length; ++i) {
+			this.mTiles[i].ChangeZLevel(this.mCurrZLevel);
+		}
+	}
+}
+// ...End
+
+
+// GFMapTile Class...
+// game file: 
+function GFMapTile() {
+	this.mLocalPos = new IVec2(0, 0); // the position of this tile in the map segment
+	this.mGlobalPos = new IVec2(0, 0); // the position of this tile in the entire map
+	
+	this.mZ = 0;
+	this.mSpecial = 0;
+	this.mSlopeDirection = 0;
+	
+	this.mSprite = new Sprite();
+	this.mTileFrame = 0;
+};
+
+GFMapTile.prototype.SetUp = function(tex) {
+	var x = (this.mGlobalPos.mX * 28) + (this.mGlobalPos.mY * 28);
+	var y = (this.mGlobalPos.mX * -14) + (this.mGlobalPos.mY * 14);
+	
+	this.mSprite.SetAnimatedTexture(tex, 35, 7, -1, -1);
+	this.mSprite.mPos.Set(x, y);
+	this.mSprite.mDepth = 2500 - (this.mGlobalPos.mY * 2) + this.mGlobalPos.mX;
+	this.mTileFrame = this.mZ;
+	
+	if (this.mZ % 2 != 0) {
+		this.mTileFrame = this.mZ + (this.mSprite.mFramesPerLine * this.mSlopeDirection);
+	}
+	
+	this.mSprite.SetCurrentFrame(this.mTileFrame);
+}
+
+GFMapTile.prototype.GetRenderData = function(renderLevel) {
+	var arr = new Array(); // an array to store our render data
+	
+	arr.push(this.mSprite);
+	
+	return arr;
+}
+
+GFMapTile.prototype.ChangeZLevel = function(newLevel) {
+	if ((newLevel * 2) < this.mZ) {
+		var newFrame = 34 - newLevel;
+		if (this.mSprite.mCurrFrame != newFrame) {
+			this.mSprite.SetCurrentFrame(newFrame);
+		}
+	}
+	else {
+		if (this.mSprite.mCurrFrame != this.mTileFrame) {
+			this.mSprite.SetCurrentFrame(this.mTileFrame);
+		}
+	}
+}
+// ...End
+
+// GFTestScene Class...
+// game file:
+function GFTestScene() {
+	this.mPersist = false;
+	
+	this.mRand = new RNG(0);
+	
+	this.mCam = new Camera();
+	this.mBatch = new RenderBatch();
+	this.mMapSegment = new GFMapSegment();
+	
+	this.mMapControl = new GFGUIMapControl();
+}
+
+// returns the type of this object for validity checking
+GFTestScene.prototype.Type = function() {
+	return "GFTestScene";
+};
+
+// returns whether this scene is to persist or not (when changing to a new scene -- preserves state)
+GFTestScene.prototype.Persistent = function() {
+	return this.mPersist;
+};
+
+// initialises the scene object
+GFTestScene.prototype.SetUp = function() {
+	this.mCam.Translate(new IVec2(60, 100));
+	nmain.game.mClearColour = "#75632F";
+	
+	var bp = new GFBluePrint(); bp.SetUp("20c40c60r10c00c00r00c00c00");
+	this.mMapSegment.mPos.Set(0, 6); this.mMapSegment.SetUp(bp);
+	
+	this.mMapControl.SetUp();
+}
+
+// cleans up the scene object
+GFTestScene.prototype.TearDown = function() {
+	
+}
+
+// handles user input
+GFTestScene.prototype.Input = function() {
+	this.mMapControl.Input();
+}
+
+// handles game logic
+GFTestScene.prototype.Process = function() {
+	this.mMapControl.Process();
+	
+	this.mCam.Process();
+}
+
+// handles all drawing tasks
+GFTestScene.prototype.Render = function() {
+	nmain.game.SetIdentity();
+	this.mCam.Apply();
+	
+	this.mBatch.Clear();
+	
+	var arr = new Array();
+	arr = arr.concat(this.mMapSegment.GetRenderData(0));
+	arr = arr.concat(this.mMapControl.GetRenderData());
+	
+	for (var i = 0; i < arr.length; ++i) {
+		this.mBatch.Add(arr[i]);
+	}
+	
+	this.mBatch.Render(this.mCam);
+}
+// ...End
+
+
+// GFGUIMapControl Class...
+// game file:
+function GFGUIMapControl() {
+	this.mCompassMain = new Array();
+	this.mCompassMain[0] = new GUIButton(); // north
+	this.mCompassMain[1] = new GUIButton(); // east
+	this.mCompassMain[2] = new GUIButton(); // south
+	this.mCompassMain[3] = new GUIButton(); // west
+	
+	this.mZLevelMain = new Array();
+	this.mZLevelMain[0] = new GUIButton(); // up
+	this.mZLevelMain[1] = new GUIButton(); // down
+	
+	this.mCompassExtra = new Sprite();
+	this.mZLevelExtra = new Sprite();
+	
+	this.mTranslate = new IVec2(0, 0);
+}
+
+GFGUIMapControl.prototype.SetUp = function() {
+	var currScene = nmgrs.sceneMan.mCurrScene;
+	var initOffset = new IVec2();
+	initOffset.Copy(currScene.mCam.mTranslate);
+	
+	{
+		var tex = nmgrs.resMan.mTexStore.GetResource("gui_map_compassmain");
+		
+		{
+			this.mCompassMain[0].SetUp(new IVec2(512 + initOffset.mX, 10 + initOffset.mY), new IVec2(40, 22), -5000);
+			this.mCompassMain[0].mPos.Set(512, 10);
+			
+			this.mCompassMain[0].mSpriteIdle.SetAnimatedTexture(tex, 12, 3, -1, -1);
+			this.mCompassMain[0].mSpriteIdle.SetCurrentFrame(0);
+			
+			this.mCompassMain[0].mSpriteHover.SetAnimatedTexture(tex, 12, 3, -1, -1);
+			this.mCompassMain[0].mSpriteHover.SetCurrentFrame(1);
+			
+			this.mCompassMain[0].mSpriteDown.SetAnimatedTexture(tex, 12, 3, -1, -1);
+			this.mCompassMain[0].mSpriteDown.SetCurrentFrame(2);
+			
+			this.mCompassMain[0].mSpriteInactive.SetAnimatedTexture(tex, 12, 3, -1, -1);
+			this.mCompassMain[0].mSpriteInactive.SetCurrentFrame(0);
+		}
+		
+		{
+			this.mCompassMain[1].SetUp(new IVec2(584 + initOffset.mX, 10 + initOffset.mY), new IVec2(40, 22), -5000);
+			this.mCompassMain[1].mPos.Set(584, 10);
+			
+			this.mCompassMain[1].mSpriteIdle.SetAnimatedTexture(tex, 12, 3, -1, -1);
+			this.mCompassMain[1].mSpriteIdle.SetCurrentFrame(3);
+			
+			this.mCompassMain[1].mSpriteHover.SetAnimatedTexture(tex, 12, 3, -1, -1);
+			this.mCompassMain[1].mSpriteHover.SetCurrentFrame(4);
+			
+			this.mCompassMain[1].mSpriteDown.SetAnimatedTexture(tex, 12, 3, -1, -1);
+			this.mCompassMain[1].mSpriteDown.SetCurrentFrame(5);
+			
+			this.mCompassMain[1].mSpriteInactive.SetAnimatedTexture(tex, 12, 3, -1, -1);
+			this.mCompassMain[1].mSpriteInactive.SetCurrentFrame(3);
+		}
+		
+		{
+			this.mCompassMain[2].SetUp(new IVec2(512 + initOffset.mX, 46 + initOffset.mY), new IVec2(40, 22), -5000);
+			this.mCompassMain[2].mPos.Set(512, 46);
+			
+			this.mCompassMain[2].mSpriteIdle.SetAnimatedTexture(tex, 12, 3, -1, -1);
+			this.mCompassMain[2].mSpriteIdle.SetCurrentFrame(6);
+			
+			this.mCompassMain[2].mSpriteHover.SetAnimatedTexture(tex, 12, 3, -1, -1);
+			this.mCompassMain[2].mSpriteHover.SetCurrentFrame(7);
+			
+			this.mCompassMain[2].mSpriteDown.SetAnimatedTexture(tex, 12, 3, -1, -1);
+			this.mCompassMain[2].mSpriteDown.SetCurrentFrame(8);
+			
+			this.mCompassMain[2].mSpriteInactive.SetAnimatedTexture(tex, 12, 3, -1, -1);
+			this.mCompassMain[2].mSpriteInactive.SetCurrentFrame(6);
+		}
+		
+		{
+			this.mCompassMain[3].SetUp(new IVec2(584 + initOffset.mX, 46 + initOffset.mY), new IVec2(40, 22), -5000);
+			this.mCompassMain[3].mPos.Set(584, 46);
+			
+			this.mCompassMain[3].mSpriteIdle.SetAnimatedTexture(tex, 12, 3, -1, -1);
+			this.mCompassMain[3].mSpriteIdle.SetCurrentFrame(9);
+			
+			this.mCompassMain[3].mSpriteHover.SetAnimatedTexture(tex, 12, 3, -1, -1);
+			this.mCompassMain[3].mSpriteHover.SetCurrentFrame(10);
+			
+			this.mCompassMain[3].mSpriteDown.SetAnimatedTexture(tex, 12, 3, -1, -1);
+			this.mCompassMain[3].mSpriteDown.SetCurrentFrame(11);
+			
+			this.mCompassMain[3].mSpriteInactive.SetAnimatedTexture(tex, 12, 3, -1, -1);
+			this.mCompassMain[3].mSpriteInactive.SetCurrentFrame(9);
+		}
+	}
+	
+	{
+		var tex = nmgrs.resMan.mTexStore.GetResource("gui_map_zlevelmain");
+		
+		{
+			this.mZLevelMain[0].SetUp(new IVec2(422 + initOffset.mX, 10 + initOffset.mY), new IVec2(38, 22), -5000);
+			this.mZLevelMain[0].mPos.Set(422, 10);
+			
+			this.mZLevelMain[0].mSpriteIdle.SetAnimatedTexture(tex, 6, 3, -1, -1);
+			this.mZLevelMain[0].mSpriteIdle.SetCurrentFrame(0);
+			
+			this.mZLevelMain[0].mSpriteHover.SetAnimatedTexture(tex, 6, 3, -1, -1);
+			this.mZLevelMain[0].mSpriteHover.SetCurrentFrame(1);
+			
+			this.mZLevelMain[0].mSpriteDown.SetAnimatedTexture(tex, 6, 3, -1, -1);
+			this.mZLevelMain[0].mSpriteDown.SetCurrentFrame(2);
+			
+			this.mZLevelMain[0].mSpriteInactive.SetAnimatedTexture(tex, 6, 3, -1, -1);
+			this.mZLevelMain[0].mSpriteInactive.SetCurrentFrame(0);
+		}
+		
+		{
+			this.mZLevelMain[1].SetUp(new IVec2(422 + initOffset.mX, 46 + initOffset.mY), new IVec2(38, 22), -5000);
+			this.mZLevelMain[1].mPos.Set(422, 46);
+			
+			this.mZLevelMain[1].mSpriteIdle.SetAnimatedTexture(tex, 6, 3, -1, -1);
+			this.mZLevelMain[1].mSpriteIdle.SetCurrentFrame(3);
+			
+			this.mZLevelMain[1].mSpriteHover.SetAnimatedTexture(tex, 6, 3, -1, -1);
+			this.mZLevelMain[1].mSpriteHover.SetCurrentFrame(4);
+			
+			this.mZLevelMain[1].mSpriteDown.SetAnimatedTexture(tex, 6, 3, -1, -1);
+			this.mZLevelMain[1].mSpriteDown.SetCurrentFrame(5);
+			
+			this.mZLevelMain[1].mSpriteInactive.SetAnimatedTexture(tex, 6, 3, -1, -1);
+			this.mZLevelMain[1].mSpriteInactive.SetCurrentFrame(3);
+		}
+	}
+	
+	{
+		var tex = nmgrs.resMan.mTexStore.GetResource("gui_map_compassextra");
+		
+		this.mCompassExtra.mPos.Set(554 + initOffset.mX, 32 + initOffset.mY);
+		this.mCompassExtra.mDepth = -5000;
+		this.mCompassExtra.SetTexture(tex);
+	}
+	
+	{
+		var tex = nmgrs.resMan.mTexStore.GetResource("gui_map_zlevelextra");
+		
+		this.mZLevelExtra.mPos.Set(468 + initOffset.mX, 6 + initOffset.mY);
+		this.mZLevelExtra.mDepth = -5000;
+		this.mZLevelExtra.SetAnimatedTexture(tex, 4, 4, -1, -1);
+		this.mZLevelExtra.SetCurrentFrame(3);
+	}
+};
+
+GFGUIMapControl.prototype.Input = function() {
+	{ // map scrolling
+		{ // keyboard input
+			var trans = new IVec2(0, 0);
+			if (nmgrs.inputMan.GetKeyboardDown(nkeyboard.key.code.up)) {
+				trans.mX += -2; trans.mY += -1;
+			}
+			
+			if (nmgrs.inputMan.GetKeyboardDown(nkeyboard.key.code.right)) {
+				trans.mX += 2; trans.mY += -1;
+			}
+			
+			if (nmgrs.inputMan.GetKeyboardDown(nkeyboard.key.code.down)) {
+				trans.mX += 2; trans.mY += 1;
+			}
+			
+			if (nmgrs.inputMan.GetKeyboardDown(nkeyboard.key.code.left)) {
+				trans.mX += -2; trans.mY += 1;
+			}
+			
+			this.mTranslate.Copy(trans);
+		}
+		
+		// mouse input (gui button)
+		for (var i = 0; i < this.mCompassMain.length; ++i) {
+			this.mCompassMain[i].Input();
+		}
+	}
+	
+	{ // map z-level control
+		var currScene = nmgrs.sceneMan.mCurrScene;
+		{ // keyboard input
+			if (nmgrs.inputMan.GetKeyboardPressed(nkeyboard.key.code.q)) {
+				currScene.mMapSegment.ChangeZLevel(-1);
+				this.mZLevelExtra.SetCurrentFrame(currScene.mMapSegment.mCurrZLevel);
+			}
+			
+			if (nmgrs.inputMan.GetKeyboardPressed(nkeyboard.key.code.e)) {
+				currScene.mMapSegment.ChangeZLevel(1);
+				this.mZLevelExtra.SetCurrentFrame(currScene.mMapSegment.mCurrZLevel);
+			}
+		}
+		
+		// mouse input (gui button)
+		for (var i = 0; i < this.mZLevelMain.length; ++i) {
+			this.mZLevelMain[i].Input();
+		}
+	}
+}
+
+GFGUIMapControl.prototype.Process = function() {
+	// reference to the current scene
+	var currScene = nmgrs.sceneMan.mCurrScene;
+	
+	// process any neccesary keyboard translation
+	if (this.mTranslate.mX != 0 || this.mTranslate.mY != 0) {
+		currScene.mCam.Translate(this.mTranslate);
+	}
+	
+	{ // process all gui button elements
+		var pt = new IVec2(0, 0);
+		pt.Copy(nmgrs.inputMan.GetLocalMouseCoords());
+		
+		for (var i = 0; i < this.mCompassMain.length; ++i) {
+			this.mCompassMain[i].Process(pt);
+		}
+		
+		for (var i = 0; i < this.mZLevelMain.length; ++i) {
+			this.mZLevelMain[i].Process(pt);
+		}
+	}
+	
+	{ // handle main compass gui elements being held down
+		if (this.mCompassMain[0].mDown == true) {
+			currScene.mCam.Translate(new IVec2(-2, -1));
+			this.mTranslate.mX -= 2; this.mTranslate.mY -= 1;
+		}
+		else if (this.mCompassMain[1].mDown == true) {
+			currScene.mCam.Translate(new IVec2(2, -1));
+			this.mTranslate.mX += 2; this.mTranslate.mY -= 1;
+		}
+		else if (this.mCompassMain[2].mDown == true) {
+			currScene.mCam.Translate(new IVec2(-2, 1));
+			this.mTranslate.mX -= 2; this.mTranslate.mY += 1;
+		}
+		else if (this.mCompassMain[3].mDown == true) {
+			currScene.mCam.Translate(new IVec2(2, 1));
+			this.mTranslate.mX += 2; this.mTranslate.mY += 1;
+		}
+	}
+	
+	{ // handle main zlevel gui elements being pressed
+		if (this.mZLevelMain[0].OnClick() == true) {
+			currScene.mMapSegment.ChangeZLevel(1);
+			this.mZLevelExtra.SetCurrentFrame(currScene.mMapSegment.mCurrZLevel);
+		}
+		else if (this.mZLevelMain[1].OnClick() == true) {
+			currScene.mMapSegment.ChangeZLevel(-1);
+			this.mZLevelExtra.SetCurrentFrame(currScene.mMapSegment.mCurrZLevel);
+		}
+	}
+	
+	// if the camera view has changed
+	if (currScene.mCam.mViewUpdated == true) {
+		// for all main compass gui elements
+		for (var i = 0; i < this.mCompassMain.length; ++i) {
+			// find new position using translation offset and update gui to remain at same point on screen
+			var newPos = new IVec2(0, 0); newPos.Copy(this.mCompassMain[i].GetSpritePositions());
+			newPos.mX -= this.mTranslate.mX; newPos.mY -= this.mTranslate.mY;
+			this.mCompassMain[i].SetSpritePositions(newPos);
+		}
+		
+		// for all main zlevel gui elements
+		for (var i = 0; i < this.mZLevelMain.length; ++i) {
+			// find new position using translation offset and update gui to remain at same point on screen
+			var newPos = new IVec2(0, 0); newPos.Copy(this.mZLevelMain[i].GetSpritePositions());
+			newPos.mX -= this.mTranslate.mX; newPos.mY -= this.mTranslate.mY;
+			this.mZLevelMain[i].SetSpritePositions(newPos);
+		}
+		
+		{
+			this.mCompassExtra.mPos.Set(554 + currScene.mCam.mTranslate.mX, 32 + currScene.mCam.mTranslate.mY);
+			this.mZLevelExtra.mPos.Set(468 + currScene.mCam.mTranslate.mX, 6 + currScene.mCam.mTranslate.mY);
+		}
+	}
+}
+
+GFGUIMapControl.prototype.GetRenderData = function() {
+	var arr = new Array();
+	
+	// for all main compass gui elements
+	for (var i = 0; i < this.mCompassMain.length; ++i) {
+		arr = arr.concat(this.mCompassMain[i].GetRenderData()); // add to render
+	}
+	
+	// for all main zlevel gui elements
+	for (var i = 0; i < this.mZLevelMain.length; ++i) {
+		arr = arr.concat(this.mZLevelMain[i].GetRenderData()); // add to render
+	}
+	
+	// add extra compass gui
+	arr.push(this.mCompassExtra);
+	
+	// add extra zlevel gui
+	arr.push(this.mZLevelExtra);
+	
+	return arr;
+}
+// ...End
 
