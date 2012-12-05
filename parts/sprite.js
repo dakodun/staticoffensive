@@ -4,6 +4,8 @@ function Sprite() {
 	this.mTex = null;
 	this.mDepth = 0;
 	
+	this.mAlpha = 1.0;
+	
 	this.mPos = new IVec2(0, 0);
 	this.mClipPos = new IVec2(0, 0);
 	this.mClipSize = new IVec2(0, 0);
@@ -29,16 +31,6 @@ function Sprite() {
 // returns the type of this object for validity checking
 Sprite.prototype.Type = function() {
 	return "Sprite";
-}
-
-// initialises the sprite
-Sprite.prototype.SetUp = function() {
-	
-}
-
-// cleans up the sprite
-Sprite.prototype.TearDown = function() {
-	
 }
 
 // make a copy of another (other) sprite (copy constructor)
