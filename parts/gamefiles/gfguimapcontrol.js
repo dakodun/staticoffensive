@@ -155,19 +155,19 @@ GFGUIMapControl.prototype.Input = function() {
 		{ // keyboard input
 			var trans = new IVec2(0, 0);
 			if (nmgrs.inputMan.GetKeyboardDown(nkeyboard.key.code.up)) {
-				trans.mX += -2; trans.mY += -1;
-			}
-			
-			if (nmgrs.inputMan.GetKeyboardDown(nkeyboard.key.code.right)) {
-				trans.mX += 2; trans.mY += -1;
-			}
-			
-			if (nmgrs.inputMan.GetKeyboardDown(nkeyboard.key.code.down)) {
 				trans.mX += 2; trans.mY += 1;
 			}
 			
-			if (nmgrs.inputMan.GetKeyboardDown(nkeyboard.key.code.left)) {
+			if (nmgrs.inputMan.GetKeyboardDown(nkeyboard.key.code.right)) {
 				trans.mX += -2; trans.mY += 1;
+			}
+			
+			if (nmgrs.inputMan.GetKeyboardDown(nkeyboard.key.code.down)) {
+				trans.mX += -2; trans.mY += -1;
+			}
+			
+			if (nmgrs.inputMan.GetKeyboardDown(nkeyboard.key.code.left)) {
+				trans.mX += 2; trans.mY += -1;
 			}
 			
 			this.mTranslate.Copy(trans);
@@ -183,13 +183,13 @@ GFGUIMapControl.prototype.Input = function() {
 		var currScene = nmgrs.sceneMan.mCurrScene;
 		{ // keyboard input
 			if (nmgrs.inputMan.GetKeyboardPressed(nkeyboard.key.code.q)) {
-				currScene.mMapSegment.ChangeZLevel(-1);
-				this.mZLevelExtra.SetCurrentFrame(currScene.mMapSegment.mCurrZLevel);
+				currScene.mMap.ChangeZLevel(-1);
+				this.mZLevelExtra.SetCurrentFrame(currScene.mMap.mCurrZLevel);
 			}
 			
 			if (nmgrs.inputMan.GetKeyboardPressed(nkeyboard.key.code.e)) {
-				currScene.mMapSegment.ChangeZLevel(1);
-				this.mZLevelExtra.SetCurrentFrame(currScene.mMapSegment.mCurrZLevel);
+				currScene.mMap.ChangeZLevel(1);
+				this.mZLevelExtra.SetCurrentFrame(currScene.mMap.mCurrZLevel);
 			}
 		}
 		
@@ -204,7 +204,7 @@ GFGUIMapControl.prototype.Process = function() {
 	// reference to the current scene
 	var currScene = nmgrs.sceneMan.mCurrScene;
 	
-	// process any neccesary keyboard translation
+	// process any necessary keyboard translation
 	if (this.mTranslate.mX != 0 || this.mTranslate.mY != 0) {
 		currScene.mCam.Translate(this.mTranslate);
 	}
@@ -224,31 +224,31 @@ GFGUIMapControl.prototype.Process = function() {
 	
 	{ // handle main compass gui elements being held down
 		if (this.mCompassMain[0].mDown == true) {
-			currScene.mCam.Translate(new IVec2(-2, -1));
-			this.mTranslate.mX -= 2; this.mTranslate.mY -= 1;
+			currScene.mCam.Translate(new IVec2(2, 1));
+			this.mTranslate.mX += 2; this.mTranslate.mY += 1;
 		}
 		else if (this.mCompassMain[1].mDown == true) {
-			currScene.mCam.Translate(new IVec2(2, -1));
-			this.mTranslate.mX += 2; this.mTranslate.mY -= 1;
-		}
-		else if (this.mCompassMain[2].mDown == true) {
 			currScene.mCam.Translate(new IVec2(-2, 1));
 			this.mTranslate.mX -= 2; this.mTranslate.mY += 1;
 		}
+		else if (this.mCompassMain[2].mDown == true) {
+			currScene.mCam.Translate(new IVec2(2, -1));
+			this.mTranslate.mX += 2; this.mTranslate.mY -= 1;
+		}
 		else if (this.mCompassMain[3].mDown == true) {
-			currScene.mCam.Translate(new IVec2(2, 1));
-			this.mTranslate.mX += 2; this.mTranslate.mY += 1;
+			currScene.mCam.Translate(new IVec2(-2, -1));
+			this.mTranslate.mX -= 2; this.mTranslate.mY -= 1;
 		}
 	}
 	
 	{ // handle main zlevel gui elements being pressed
 		if (this.mZLevelMain[0].OnClick() == true) {
-			currScene.mMapSegment.ChangeZLevel(1);
-			this.mZLevelExtra.SetCurrentFrame(currScene.mMapSegment.mCurrZLevel);
+			currScene.mMap.ChangeZLevel(1);
+			this.mZLevelExtra.SetCurrentFrame(currScene.mMap.mCurrZLevel);
 		}
 		else if (this.mZLevelMain[1].OnClick() == true) {
-			currScene.mMapSegment.ChangeZLevel(-1);
-			this.mZLevelExtra.SetCurrentFrame(currScene.mMapSegment.mCurrZLevel);
+			currScene.mMap.ChangeZLevel(-1);
+			this.mZLevelExtra.SetCurrentFrame(currScene.mMap.mCurrZLevel);
 		}
 	}
 	
