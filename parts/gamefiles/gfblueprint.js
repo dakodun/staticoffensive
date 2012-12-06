@@ -4,7 +4,8 @@ function GFBluePrintTile() {
 	this.mPos = new IVec2(0, 0);
 	
 	this.mZ = 0;
-	this.mSpecial = 0;
+	this.mSpecial = "o";
+	this.mSlopeDirection = 0;
 };
 // ...End
 
@@ -44,7 +45,8 @@ GFBluePrint.prototype.SetUp = function(bpstring) {
 				var bpTile = new GFBluePrintTile();
 				bpTile.mPos.Set(x, y);
 				bpTile.mZ = Number(tiles[id].charAt(0));
-				bpTile.mSpecial = Number(tiles[id].charAt(1));
+				bpTile.mSlopeDirection = Number(tiles[id].charAt(1));
+				bpTile.mSpecial = tiles[id].charAt(2);
 				this.mTiles.push(bpTile);
 				id++;
 			}
@@ -54,38 +56,32 @@ GFBluePrint.prototype.SetUp = function(bpstring) {
 // ...End
 
 
-// GFBluePrintContainer Class...
+// GFBluePrintCollection Class...
 // game file: 
-function GFBluePrintContainer() {
-	this.mInitialBluePrints = new Array();
-	this.mRegularBluePrints = new Array();
-	this.mFinalBluePrints = new Array();
-};
+function GFBluePrintCollection() {
+	this.mInitStore = new Array();
+	this.mRegStore = new Array();
+	this.mFinStore = new Array();
+}
 
-GFBluePrintContainer.prototype.SetUp = function() {
-	var initArr = new Array();
-	initArr.push("00c02c00r02c00c02r00c02c00");
-	for (var i = 0; i < initArr.length; ++i) {
-		var bp = new GFBluePrint();
-		bp.SetUp(initArr[i]);
-		this.mInitialBluePrints.push(bp);
+GFBluePrintCollection.prototype.Copy = function(other) {
+	this.mInitStore.splice(0, this.mInitStore.length);
+	this.mInitStore = this.mInitStore.concat(other.mInitStore);
+	
+	this.mRegStore.splice(0, this.mRegStore.length);
+	this.mRegStore = this.mRegStore.concat(other.mRegStore);
+	
+	this.mFinStore.splice(0, this.mFinStore.length);
+	this.mFinStore = this.mFinStore.concat(other.mFinStore);
+}
+
+GFBluePrintCollection.prototype.Convert = function(bparr) {
+	var str = "";
+	for (var i = 0; i < bparr.length; ++i) {
+		str += bparr[i];
 	}
 	
-	var regArr = new Array();
-	regArr.push("01c02c01r02c00c02r01c02c01");
-	for (var i = 0; i < regArr.length; ++i) {
-		var bp = new GFBluePrint();
-		bp.SetUp(regArr[i]);
-		this.mRegularBluePrints.push(bp);
-	}
-	
-	var finArr = new Array();
-	finArr.push("01c01r01c01");
-	for (var i = 0; i < finArr.length; ++i) {
-		var bp = new GFBluePrint();
-		bp.SetUp(finArr[i]);
-		this.mFinalBluePrints.push(bp);
-	}
+	return str;
 }
 // ...End
 
