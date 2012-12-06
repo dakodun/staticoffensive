@@ -5,11 +5,12 @@ function GFMapTile() {
 	this.mGlobalPos = new IVec2(0, 0); // the position of this tile in the entire map
 	
 	this.mZ = 0;
-	this.mSpecial = 0;
 	this.mSlopeDirection = 0;
+	this.mSpecial = "o";
 	
 	this.mSprite = new Sprite();
 	this.mTileFrame = 0;
+	this.mBlank = false;
 };
 
 GFMapTile.prototype.SetUp = function(tex) {
@@ -18,17 +19,22 @@ GFMapTile.prototype.SetUp = function(tex) {
 	
 	this.mSprite.SetAnimatedTexture(tex, 35, 7, -1, -1);
 	this.mSprite.mPos.Set(x, y);
-	this.mSprite.mDepth = 2500 - (this.mGlobalPos.mY * 2) + this.mGlobalPos.mX;
+	this.mSprite.mDepth = 2500 - (this.mGlobalPos.mY * 10) + (this.mGlobalPos.mX * 10);
 	this.mTileFrame = this.mZ;
 	
-	if (this.mZ % 2 != 0) {
-		this.mTileFrame = this.mZ + (this.mSprite.mFramesPerLine * this.mSlopeDirection);
+	if (this.mTileFrame != 7) {
+		if (this.mZ % 2 != 0) {
+			this.mTileFrame = this.mZ + (this.mSprite.mFramesPerLine * this.mSlopeDirection);
+		}
+	}
+	else {
+		this.mBlank = true;
 	}
 	
 	this.mSprite.SetCurrentFrame(this.mTileFrame);
 }
 
-GFMapTile.prototype.GetRenderData = function(renderLevel) {
+GFMapTile.prototype.GetRenderData = function() {
 	var arr = new Array(); // an array to store our render data
 	
 	arr.push(this.mSprite);
@@ -37,15 +43,17 @@ GFMapTile.prototype.GetRenderData = function(renderLevel) {
 }
 
 GFMapTile.prototype.ChangeZLevel = function(newLevel) {
-	if ((newLevel * 2) < this.mZ) {
-		var newFrame = 34 - newLevel;
-		if (this.mSprite.mCurrFrame != newFrame) {
-			this.mSprite.SetCurrentFrame(newFrame);
+	if (this.mBlank == false) {
+		if ((newLevel * 2) < this.mZ) {
+			var newFrame = 34 - newLevel;
+			if (this.mSprite.mCurrFrame != newFrame) {
+				this.mSprite.SetCurrentFrame(newFrame);
+			}
 		}
-	}
-	else {
-		if (this.mSprite.mCurrFrame != this.mTileFrame) {
-			this.mSprite.SetCurrentFrame(this.mTileFrame);
+		else {
+			if (this.mSprite.mCurrFrame != this.mTileFrame) {
+				this.mSprite.SetCurrentFrame(this.mTileFrame);
+			}
 		}
 	}
 }
