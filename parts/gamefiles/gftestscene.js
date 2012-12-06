@@ -7,7 +7,7 @@ function GFTestScene() {
 	
 	this.mCam = new Camera();
 	this.mBatch = new RenderBatch();
-	this.mMapSegment = new GFMapSegment();
+	this.mMap = new GFMap();
 	
 	this.mMapControl = new GFGUIMapControl();
 }
@@ -24,11 +24,45 @@ GFTestScene.prototype.Persistent = function() {
 
 // initialises the scene object
 GFTestScene.prototype.SetUp = function() {
-	this.mCam.Translate(new IVec2(60, 100));
-	nmain.game.mClearColour = "#75632F";
+	{
+		var d = new Date();
+		this.mRand.SetSeed(d.getTime());
+		var seed = this.mRand.GetRandInt(0, 99999999);
+		this.mRand.SetSeed(seed);
+	}
 	
-	var bp = new GFBluePrint(); bp.SetUp("20c40c60r10c00c00r00c00c00");
-	this.mMapSegment.mPos.Set(0, 6); this.mMapSegment.SetUp(bp);
+	nmain.game.mClearColour = "#75632F";
+	this.mCam.Translate(new IVec2(60, 100));
+	
+	{
+		var bpc = new GFBluePrintCollection();
+		
+		{
+			var arr = new Array();
+			arr.push("20xc"); arr.push("20or");
+			arr.push("20oc"); arr.push("20x");
+			bpc.mInitStore.push(bpc.Convert(arr));
+		}
+		
+		{
+			var arr = new Array();
+			arr.push("20oc"); arr.push("20xc"); arr.push("20ec"); arr.push("20or");
+			arr.push("20ec"); arr.push("20oc"); arr.push("20oc"); arr.push("20xr");
+			arr.push("20xc"); arr.push("20oc"); arr.push("20oc"); arr.push("20er");
+			arr.push("20oc"); arr.push("20ec"); arr.push("20xc"); arr.push("20o");
+			bpc.mRegStore.push(bpc.Convert(arr));
+		}
+		
+		{
+			var arr = new Array();
+			arr.push("20ec"); arr.push("20oc"); arr.push("20ec"); arr.push("20oc"); arr.push("20er");
+			arr.push("20ec"); arr.push("20oc"); arr.push("20ec"); arr.push("20oc"); arr.push("20e");
+			bpc.mFinStore.push(bpc.Convert(arr));
+		}
+		
+		var mapGen = new GFMapGen();
+		this.mMap.Copy(mapGen.GenerateMap(bpc, 16));
+	}
 	
 	this.mMapControl.SetUp();
 }
@@ -58,7 +92,7 @@ GFTestScene.prototype.Render = function() {
 	this.mBatch.Clear();
 	
 	var arr = new Array();
-	arr = arr.concat(this.mMapSegment.GetRenderData(0));
+	arr = arr.concat(this.mMap.GetRenderData());
 	arr = arr.concat(this.mMapControl.GetRenderData());
 	
 	for (var i = 0; i < arr.length; ++i) {
