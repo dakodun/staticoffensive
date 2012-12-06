@@ -38,6 +38,8 @@ Sprite.prototype.Copy = function(other) {
 	this.mTex = other.mTex ;
 	this.mDepth = other.mDepth;
 	
+	this.mAlpha = other.mAlpha;
+	
 	this.mPos.Copy(other.mPos);
 	this.mClipPos.Copy(other.mClipPos);
 	this.mClipSize.Copy(other.mClipSize);
