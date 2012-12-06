@@ -113,6 +113,49 @@ var util = new function() {
 		
 		return false;
 	};
+	
+	this.RectangleCollision = function(rectAPos, rectASize, rectBPos, rectBSize, touchingCounts) {
+		var intersect = false;
+		
+		var width = rectASize.mX + rectBSize.mX;
+		var height = rectASize.mY + rectBSize.mY;
+		
+		var left = rectAPos.mX;
+		var right = rectBPos.mX + rectBSize.mX;
+		if (rectBPos.mX < rectAPos.mX) {
+			left = rectBPos.mX;
+			right = rectAPos.mX + rectASize.mX;
+		}
+		
+		if (right - left < width || (touchingCounts == true && right - left == width)) {
+			var top = rectAPos.mY;
+			var bottom = rectBPos.mY + rectBSize.mY;
+			if (rectBPos.mY < rectAPos.mY) {
+				top = rectBPos.mY;
+				bottom = rectAPos.mY + rectASize.mY;
+			}
+			
+			if (bottom - top < height || (touchingCounts == true && bottom - top == height)) {
+				intersect = true;
+			}
+		}
+		
+		return intersect;
+	}
+	
+	this.ShuffleArray = function(randGen, inputArr) {
+		var output = new Array();
+		var input = new Array();
+		input = input.concat(inputArr);
+		
+		while (input.length > 0) {
+			var id = randGen.GetRandInt(0, input.length - 1);
+			output.push(input[id]);
+			input.splice(id, 1);
+		}
+		
+		return output;
+	};
 };
 // ...End
 
@@ -1285,6 +1328,8 @@ Sprite.prototype.Copy = function(other) {
 	this.mTex = other.mTex ;
 	this.mDepth = other.mDepth;
 	
+	this.mAlpha = other.mAlpha;
+	
 	this.mPos.Copy(other.mPos);
 	this.mClipPos.Copy(other.mClipPos);
 	this.mClipSize.Copy(other.mClipSize);
@@ -2219,7 +2264,8 @@ function GFBluePrintTile() {
 	this.mPos = new IVec2(0, 0);
 	
 	this.mZ = 0;
-	this.mSpecial = 0;
+	this.mSpecial = "o";
+	this.mSlopeDirection = 0;
 };
 // ...End
 
@@ -2259,7 +2305,8 @@ GFBluePrint.prototype.SetUp = function(bpstring) {
 				var bpTile = new GFBluePrintTile();
 				bpTile.mPos.Set(x, y);
 				bpTile.mZ = Number(tiles[id].charAt(0));
-				bpTile.mSpecial = Number(tiles[id].charAt(1));
+				bpTile.mSlopeDirection = Number(tiles[id].charAt(1));
+				bpTile.mSpecial = tiles[id].charAt(2);
 				this.mTiles.push(bpTile);
 				id++;
 			}
@@ -2269,38 +2316,192 @@ GFBluePrint.prototype.SetUp = function(bpstring) {
 // ...End
 
 
-// GFBluePrintContainer Class...
+// GFBluePrintCollection Class...
 // game file: 
-function GFBluePrintContainer() {
-	this.mInitialBluePrints = new Array();
-	this.mRegularBluePrints = new Array();
-	this.mFinalBluePrints = new Array();
+function GFBluePrintCollection() {
+	this.mInitStore = new Array();
+	this.mRegStore = new Array();
+	this.mFinStore = new Array();
+}
+
+GFBluePrintCollection.prototype.Copy = function(other) {
+	this.mInitStore.splice(0, this.mInitStore.length);
+	this.mInitStore = this.mInitStore.concat(other.mInitStore);
+	
+	this.mRegStore.splice(0, this.mRegStore.length);
+	this.mRegStore = this.mRegStore.concat(other.mRegStore);
+	
+	this.mFinStore.splice(0, this.mFinStore.length);
+	this.mFinStore = this.mFinStore.concat(other.mFinStore);
+}
+
+GFBluePrintCollection.prototype.Convert = function(bparr) {
+	var str = "";
+	for (var i = 0; i < bparr.length; ++i) {
+		str += bparr[i];
+	}
+	
+	return str;
+}
+// ...End
+
+
+// GFMapGen Class...
+// game file: 
+function GFMapGen() {
+	
 };
 
-GFBluePrintContainer.prototype.SetUp = function() {
-	var initArr = new Array();
-	initArr.push("00c02c00r02c00c02r00c02c00");
-	for (var i = 0; i < initArr.length; ++i) {
+GFMapGen.prototype.GenerateMap = function(bpCollection, numParts) {
+	var currScene = nmgrs.sceneMan.mCurrScene;
+	var bpc = new GFBluePrintCollection();
+	bpc.Copy(bpCollection);
+	
+	var map = new GFMap();
+	
+	{
+		var bpid = currScene.mRand.GetRandInt(0, bpc.mInitStore.length - 1);
 		var bp = new GFBluePrint();
-		bp.SetUp(initArr[i]);
-		this.mInitialBluePrints.push(bp);
+		bp.SetUp(bpc.mInitStore[bpid]);
+		
+		var seg = new GFMapSegment();
+		seg.mPos.Set(0, 0); seg.SetUp(bp);
+		map.AddSegment(seg);
 	}
 	
-	var regArr = new Array();
-	regArr.push("01c02c01r02c00c02r01c02c01");
-	for (var i = 0; i < regArr.length; ++i) {
-		var bp = new GFBluePrint();
-		bp.SetUp(regArr[i]);
-		this.mRegularBluePrints.push(bp);
+	var bpIter = 0;
+	for (var i = 0; i < numParts - 1; ++i) {
+		var bpArr = new Array();
+		
+		if (i < numParts - 2) {
+			bpArr = bpArr.concat(util.ShuffleArray(currScene.mRand, bpc.mRegStore));
+		}
+		else {
+			bpArr = bpArr.concat(util.ShuffleArray(currScene.mRand, bpc.mFinStore));
+		}
+		
+		// continue looping until allDone
+		var allDone = false;
+		var success = false;
+		while (allDone == false) {
+			// create a blueprint using the current id
+			var bp = new GFBluePrint();
+			bp.SetUp(bpArr[bpIter]);
+			
+			// create a temporary segment with our chosen blueprint
+			var segTemp = new GFMapSegment();
+			segTemp.mPos.Set(0, 0); segTemp.SetUp(bp);
+			
+			// check entrances against previous segments exits
+			var segLast = map.mSegments.length - 1; // get the id of the previous segment in the map array
+			
+			{
+				// shuffle entrance array
+				var entArr = new Array();
+				entArr = entArr.concat(util.ShuffleArray(currScene.mRand, segTemp.mEntrances));
+				
+				// shuffle exit array
+				var exArr = new Array();
+				exArr = exArr.concat(util.ShuffleArray(currScene.mRand, map.mSegments[segLast].mMapSegment.mExits));
+				
+				// loop our temporary segment's entrance
+				for (var j = 0; j < entArr.length; ++j) {
+					var entrance = entArr[j]; // store a reference to the current entrance
+					
+					// loop our previous segment's exits
+					for (var k = 0; k < exArr.length; ++k) {
+						var exit = exArr[k];
+						var compatArr = new Array();
+						compatArr = compatArr.concat(entrance.GetCompatible(exit));
+						
+						var idArr = new Array();
+						
+						{
+							var idArrTemp = new Array();
+							idArrTemp[0] = 0; idArrTemp[1] = 1; idArrTemp[2] = 2; idArrTemp[3] = 3;
+							idArr = idArr.concat(util.ShuffleArray(currScene.mRand, idArrTemp));
+						}
+						
+						for (var l = 0; l < idArr.length; ++l) {
+							if (compatArr[idArr[l]] == true) {
+								var seg = new GFMapSegment();
+								var x = exit.mGlobalPos.mX - entrance.mGlobalPos.mX; var y = exit.mGlobalPos.mY - entrance.mGlobalPos.mY;
+								
+								if (idArr[l] == 0) {
+									y += 1;
+								}
+								else if (idArr[l] == 1) {
+									x -= 1;
+								}
+								else if (idArr[l] == 2) {
+									y -= 1;
+								}
+								else if (idArr[l] == 3) {
+									x += 1;
+								}
+								
+								seg.mPos.Set(x, y); seg.SetUp(bp);
+								
+								var collision = false;
+								for (var m = 0; m < map.mSegments.length; ++m) {
+									/* alert(map.mSegments[m].mMapSegment.mPos.Output() + " " + map.mSegments[m].mMapSegment.mSize.Output() + " " +
+											seg.mPos.Output()  + " " + seg.mSize.Output()); */
+									
+									if (util.RectangleCollision(map.mSegments[m].mMapSegment.mPos, 
+											map.mSegments[m].mMapSegment.mSize, seg.mPos, seg.mSize, false) == true) { // no collisions
+										
+										collision = true
+										break;
+									}
+								}
+								
+								if (collision == false) {
+									map.AddSegment(seg);
+									allDone = true;
+									success = true;
+									break;
+								}
+							}
+						}
+						
+						if (allDone == true) {
+							break;
+						}
+					}
+					
+					if (allDone == true) {
+						break;
+					}
+				}
+			}
+			
+			if (allDone == false) {
+				bpIter++; // if we reach here, prvious segment was not valid so try next in list
+				
+				// if we've already tried the whole list then there was no possible solution
+				if (bpIter == bpArr.length) {
+					allDone = true;
+					success = false;
+				}
+			}
+		}
+		
+		if (success == false) {
+			break;
+		}
 	}
 	
-	var finArr = new Array();
-	finArr.push("01c01r01c01");
-	for (var i = 0; i < finArr.length; ++i) {
-		var bp = new GFBluePrint();
-		bp.SetUp(finArr[i]);
-		this.mFinalBluePrints.push(bp);
-	}
+	return map;
+}
+// ...End
+
+
+// GFMapSegmentContainer Class...
+// game file: 
+function GFMapSegmentContainer() {
+	this.mMapSegment = new GFMapSegment();
+	this.mRangeStart = new IVec2(0, 0);
+	this.mRangeEnd = new IVec2(0, 0);
 }
 // ...End
 
@@ -2308,12 +2509,145 @@ GFBluePrintContainer.prototype.SetUp = function() {
 // GFMap Class...
 // game file: 
 function GFMap() {
+	this.mSize = new IVec2(0, 0);
 	
+	this.mSegments = new Array();
+	this.mCurrZLevel = 3;
 };
 
-GFMap.prototype.SetUp = function() {
-	// takes array of segments which already have offsets and everything set
-	// adds them all to a global array or something farts
+GFMap.prototype.Copy = function(other) {
+	this.mSize.Copy(other.mSize);
+	
+	this.mSegments.splice(0, this.mSegments.length);
+	this.mSegments = this.mSegments.concat(other.mSegments);
+	
+	this.mCurrZLevel = other.mCurrZLevel;
+}
+
+GFMap.prototype.AddSegment = function(segment) {
+	var segCont = new GFMapSegmentContainer();
+	segCont.mMapSegment.Copy(segment);
+	segCont.mRangeStart.Copy(segment.mPos);
+	segCont.mRangeEnd.Copy(segment.mPos);
+	segCont.mRangeEnd.mX += segment.mSize.mX; segCont.mRangeEnd.mY += segment.mSize.mY;
+	
+	this.mSegments.push(segCont);
+}
+
+GFMap.prototype.GetRenderData = function() {
+	var arr = new Array();
+	
+	for (var i = 0; i < this.mSegments.length; ++i) {
+		arr = arr.concat(this.mSegments[i].mMapSegment.GetRenderData());
+	}
+	
+	return arr;
+}
+
+GFMap.prototype.ChangeZLevel = function(newLevel) {
+	if (this.mCurrZLevel + newLevel <= 3 && this.mCurrZLevel + newLevel >= 0) {
+		this.mCurrZLevel += newLevel;
+		
+		for (var i = 0; i < this.mSegments.length; ++i) {
+			this.mSegments[i].mMapSegment.mCurrZLevel += newLevel;
+			// for our entire map segment array
+			for (var j = 0; j < this.mSegments[i].mMapSegment.mTiles.length; ++j) {
+				this.mSegments[i].mMapSegment.mTiles[j].ChangeZLevel(this.mSegments[i].mMapSegment.mCurrZLevel);
+			}
+		}
+	}
+}
+// ...End
+
+
+// GFMapConnectivity Class...
+// game file: 
+function GFMapConnectivity() {
+	this.mNorth = false;
+	this.mEast = false;
+	this.mSouth = false;
+	this.mWest = false;
+	
+	this.mGlobalPos = new IVec2(0, 0);
+	
+	this.mZ = 0;
+	this.mSlopeDirection = 0;
+};
+
+GFMapConnectivity.prototype.GetCompatible = function(other) {
+	// invalid moves:
+	// moving to or from a block 2 higher
+	// moving to or from a slope 1 higher at the larger end
+	
+	var resultArr = new Array();
+	resultArr[0] = false; resultArr[1] = false;
+	resultArr[2] = false; resultArr[3] = false;
+	
+	var excludeArr = new Array();
+	excludeArr[0] = false; excludeArr[1] = false;
+	excludeArr[2] = false; excludeArr[3] = false;
+	
+	if (this.mZ == other.mZ - 1 || this.mZ == other.mZ || this.mZ == other.mZ + 1) {
+		if (this.mZ % 2 == 0) { // this is flat
+			if (other.mZ % 2 != 0) { // other is a slope
+				if (this.mZ == other.mZ - 1) { // we're lower than other
+					// exclude opposite of other.SlopeDirection
+					excludeArr[(other.mSlopeDirection + 2) % 4] = true;
+				}
+				else { // we're higher than other
+					// exclude other.SlopeDirection
+					excludeArr[other.mSlopeDirection] = true;
+				}
+			}
+		}
+		else { // this is a slope
+			if (other.mZ % 2 == 0) { // other is flat
+				if (this.mZ == other.mZ - 1) { // we're lower than other
+					// exclude opposite of this.SlopeDirection
+					excludeArr[(this.mSlopeDirection + 2) % 4] = true;
+					
+				}
+				else { // we're higher than other
+					// exclude this.SlopeDirection
+					excludeArr[this.mSlopeDirection] = true;
+				}
+			}
+			else { // other is a slope
+				if (this.mSlopeDirection == other.mSlopeDirection) {
+					excludeArr[(this.mSlopeDirection + 2) % 4] = true;
+					excludeArr[this.mSlopeDirection] = true;
+				}
+			}
+		}
+		
+		{
+			if (this.mNorth == true && other.mSouth == true) {
+				if (excludeArr[0] == false) {
+					resultArr[0] = true;
+				}
+			}
+			
+			if (this.mEast == true && other.mWest == true) {
+				if (excludeArr[1] == false) {
+					resultArr[1] = true;
+				}
+			}
+			
+			if (this.mSouth == true && other.mNorth == true) {
+				if (excludeArr[2] == false) {
+					resultArr[2] = true;
+				}
+			}
+			
+			if (this.mWest == true && other.mEast == true) {
+				if (excludeArr[3] == false) {
+					resultArr[3] = true;
+				}
+			}
+		}
+	}
+	
+	return resultArr;
 }
 // ...End
 
@@ -2326,7 +2660,26 @@ function GFMapSegment() {
 	this.mTiles = new Array(); // an array of the tile objects that make up this map segment
 	
 	this.mCurrZLevel = 3;
+	
+	this.mExits = new Array();
+	this.mEntrances = new Array();
 };
+
+GFMapSegment.prototype.Copy = function(other) {
+	this.mPos.Copy(other.mPos);
+	this.mSize.Copy(other.mSize);
+	
+	this.mTiles.splice(0, this.mTiles.length);
+	this.mTiles = this.mTiles.concat(other.mTiles);
+	
+	this.mCurrZLevel = other.mCurrZLevel;
+	
+	this.mExits.splice(0, this.mExits.length);
+	this.mExits = this.mExits.concat(other.mExits);
+	
+	this.mEntrances.splice(0, this.mEntrances.length);
+	this.mEntrances = this.mEntrances.concat(other.mEntrances);
+}
 
 GFMapSegment.prototype.SetUp = function(blueprint) {
 	var tex = nmgrs.resMan.mTexStore.GetResource("tileset_test");
@@ -2337,21 +2690,53 @@ GFMapSegment.prototype.SetUp = function(blueprint) {
 		tile.mLocalPos.Copy(blueprint.mTiles[i].mPos);
 		tile.mGlobalPos.Set(tile.mLocalPos.mX + this.mPos.mX, tile.mLocalPos.mY + this.mPos.mY);
 		tile.mZ = blueprint.mTiles[i].mZ;
+		tile.mSlopeDirection = blueprint.mTiles[i].mSlopeDirection;
 		tile.mSpecial = blueprint.mTiles[i].mSpecial;
 		
 		tile.SetUp(tex);
 		
 		this.mTiles.push(tile);
+		
+		if (tile.mSpecial != "o") {
+			var mc = new GFMapConnectivity();
+			if (tile.mLocalPos.mY == 0) {
+				mc.mNorth = true;
+			}
+			
+			if (tile.mLocalPos.mX == this.mSize.mX - 1) {
+				mc.mEast = true;
+			}
+			
+			if (tile.mLocalPos.mY == this.mSize.mY - 1) {
+				mc.mSouth = true;
+			}
+			
+			if (tile.mLocalPos.mX == 0) {
+				mc.mWest = true;
+			}
+			
+			mc.mGlobalPos.Copy(tile.mGlobalPos);
+			mc.mZ = tile.mZ;
+			mc.mSlopeDirection = tile.mSlopeDirection;
+				
+			if (tile.mSpecial == "x" || tile.mSpecial == "b") {
+				this.mExits.push(mc);
+			}
+			
+			if (tile.mSpecial == "e" || tile.mSpecial == "b") {
+				this.mEntrances.push(mc);
+			}
+		}
 	}
 }
 
 // returns the appropiate render data
-GFMapSegment.prototype.GetRenderData = function(renderLevel) {
+GFMapSegment.prototype.GetRenderData = function() {
 	var arr = new Array(); // an array to store our render data
 	
 	// for our entire map segment array
 	for (var i = 0; i < this.mTiles.length; ++i) {
-		arr = arr.concat(this.mTiles[i].GetRenderData(renderLevel)); // get and add the render data returned by the tile
+		arr = arr.concat(this.mTiles[i].GetRenderData()); // get and add the render data returned by the tile
 	}
 	
 	return arr; // return the retrieved render data
@@ -2377,11 +2762,12 @@ function GFMapTile() {
 	this.mGlobalPos = new IVec2(0, 0); // the position of this tile in the entire map
 	
 	this.mZ = 0;
-	this.mSpecial = 0;
 	this.mSlopeDirection = 0;
+	this.mSpecial = "o";
 	
 	this.mSprite = new Sprite();
 	this.mTileFrame = 0;
+	this.mBlank = false;
 };
 
 GFMapTile.prototype.SetUp = function(tex) {
@@ -2390,17 +2776,22 @@ GFMapTile.prototype.SetUp = function(tex) {
 	
 	this.mSprite.SetAnimatedTexture(tex, 35, 7, -1, -1);
 	this.mSprite.mPos.Set(x, y);
-	this.mSprite.mDepth = 2500 - (this.mGlobalPos.mY * 2) + this.mGlobalPos.mX;
+	this.mSprite.mDepth = 2500 - (this.mGlobalPos.mY * 10) + (this.mGlobalPos.mX * 10);
 	this.mTileFrame = this.mZ;
 	
-	if (this.mZ % 2 != 0) {
-		this.mTileFrame = this.mZ + (this.mSprite.mFramesPerLine * this.mSlopeDirection);
+	if (this.mTileFrame != 7) {
+		if (this.mZ % 2 != 0) {
+			this.mTileFrame = this.mZ + (this.mSprite.mFramesPerLine * this.mSlopeDirection);
+		}
+	}
+	else {
+		this.mBlank = true;
 	}
 	
 	this.mSprite.SetCurrentFrame(this.mTileFrame);
 }
 
-GFMapTile.prototype.GetRenderData = function(renderLevel) {
+GFMapTile.prototype.GetRenderData = function() {
 	var arr = new Array(); // an array to store our render data
 	
 	arr.push(this.mSprite);
@@ -2409,15 +2800,17 @@ GFMapTile.prototype.GetRenderData = function(renderLevel) {
 }
 
 GFMapTile.prototype.ChangeZLevel = function(newLevel) {
-	if ((newLevel * 2) < this.mZ) {
-		var newFrame = 34 - newLevel;
-		if (this.mSprite.mCurrFrame != newFrame) {
-			this.mSprite.SetCurrentFrame(newFrame);
+	if (this.mBlank == false) {
+		if ((newLevel * 2) < this.mZ) {
+			var newFrame = 34 - newLevel;
+			if (this.mSprite.mCurrFrame != newFrame) {
+				this.mSprite.SetCurrentFrame(newFrame);
+			}
 		}
-	}
-	else {
-		if (this.mSprite.mCurrFrame != this.mTileFrame) {
-			this.mSprite.SetCurrentFrame(this.mTileFrame);
+		else {
+			if (this.mSprite.mCurrFrame != this.mTileFrame) {
+				this.mSprite.SetCurrentFrame(this.mTileFrame);
+			}
 		}
 	}
 }
@@ -2432,7 +2825,7 @@ function GFTestScene() {
 	
 	this.mCam = new Camera();
 	this.mBatch = new RenderBatch();
-	this.mMapSegment = new GFMapSegment();
+	this.mMap = new GFMap();
 	
 	this.mMapControl = new GFGUIMapControl();
 }
@@ -2449,11 +2842,45 @@ GFTestScene.prototype.Persistent = function() {
 
 // initialises the scene object
 GFTestScene.prototype.SetUp = function() {
-	this.mCam.Translate(new IVec2(60, 100));
-	nmain.game.mClearColour = "#75632F";
+	{
+		var d = new Date();
+		this.mRand.SetSeed(d.getTime());
+		var seed = this.mRand.GetRandInt(0, 99999999);
+		this.mRand.SetSeed(seed);
+	}
 	
-	var bp = new GFBluePrint(); bp.SetUp("20c40c60r10c00c00r00c00c00");
-	this.mMapSegment.mPos.Set(0, 6); this.mMapSegment.SetUp(bp);
+	nmain.game.mClearColour = "#75632F";
+	this.mCam.Translate(new IVec2(60, 100));
+	
+	{
+		var bpc = new GFBluePrintCollection();
+		
+		{
+			var arr = new Array();
+			arr.push("20xc"); arr.push("20or");
+			arr.push("20oc"); arr.push("20x");
+			bpc.mInitStore.push(bpc.Convert(arr));
+		}
+		
+		{
+			var arr = new Array();
+			arr.push("20oc"); arr.push("20xc"); arr.push("20ec"); arr.push("20or");
+			arr.push("20ec"); arr.push("20oc"); arr.push("20oc"); arr.push("20xr");
+			arr.push("20xc"); arr.push("20oc"); arr.push("20oc"); arr.push("20er");
+			arr.push("20oc"); arr.push("20ec"); arr.push("20xc"); arr.push("20o");
+			bpc.mRegStore.push(bpc.Convert(arr));
+		}
+		
+		{
+			var arr = new Array();
+			arr.push("20ec"); arr.push("20oc"); arr.push("20ec"); arr.push("20oc"); arr.push("20er");
+			arr.push("20ec"); arr.push("20oc"); arr.push("20ec"); arr.push("20oc"); arr.push("20e");
+			bpc.mFinStore.push(bpc.Convert(arr));
+		}
+		
+		var mapGen = new GFMapGen();
+		this.mMap.Copy(mapGen.GenerateMap(bpc, 16));
+	}
 	
 	this.mMapControl.SetUp();
 }
@@ -2483,7 +2910,7 @@ GFTestScene.prototype.Render = function() {
 	this.mBatch.Clear();
 	
 	var arr = new Array();
-	arr = arr.concat(this.mMapSegment.GetRenderData(0));
+	arr = arr.concat(this.mMap.GetRenderData());
 	arr = arr.concat(this.mMapControl.GetRenderData());
 	
 	for (var i = 0; i < arr.length; ++i) {
@@ -2652,19 +3079,19 @@ GFGUIMapControl.prototype.Input = function() {
 		{ // keyboard input
 			var trans = new IVec2(0, 0);
 			if (nmgrs.inputMan.GetKeyboardDown(nkeyboard.key.code.up)) {
-				trans.mX += -2; trans.mY += -1;
-			}
-			
-			if (nmgrs.inputMan.GetKeyboardDown(nkeyboard.key.code.right)) {
-				trans.mX += 2; trans.mY += -1;
-			}
-			
-			if (nmgrs.inputMan.GetKeyboardDown(nkeyboard.key.code.down)) {
 				trans.mX += 2; trans.mY += 1;
 			}
 			
-			if (nmgrs.inputMan.GetKeyboardDown(nkeyboard.key.code.left)) {
+			if (nmgrs.inputMan.GetKeyboardDown(nkeyboard.key.code.right)) {
 				trans.mX += -2; trans.mY += 1;
+			}
+			
+			if (nmgrs.inputMan.GetKeyboardDown(nkeyboard.key.code.down)) {
+				trans.mX += -2; trans.mY += -1;
+			}
+			
+			if (nmgrs.inputMan.GetKeyboardDown(nkeyboard.key.code.left)) {
+				trans.mX += 2; trans.mY += -1;
 			}
 			
 			this.mTranslate.Copy(trans);
@@ -2680,13 +3107,13 @@ GFGUIMapControl.prototype.Input = function() {
 		var currScene = nmgrs.sceneMan.mCurrScene;
 		{ // keyboard input
 			if (nmgrs.inputMan.GetKeyboardPressed(nkeyboard.key.code.q)) {
-				currScene.mMapSegment.ChangeZLevel(-1);
-				this.mZLevelExtra.SetCurrentFrame(currScene.mMapSegment.mCurrZLevel);
+				currScene.mMap.ChangeZLevel(-1);
+				this.mZLevelExtra.SetCurrentFrame(currScene.mMap.mCurrZLevel);
 			}
 			
 			if (nmgrs.inputMan.GetKeyboardPressed(nkeyboard.key.code.e)) {
-				currScene.mMapSegment.ChangeZLevel(1);
-				this.mZLevelExtra.SetCurrentFrame(currScene.mMapSegment.mCurrZLevel);
+				currScene.mMap.ChangeZLevel(1);
+				this.mZLevelExtra.SetCurrentFrame(currScene.mMap.mCurrZLevel);
 			}
 		}
 		
@@ -2701,7 +3128,7 @@ GFGUIMapControl.prototype.Process = function() {
 	// reference to the current scene
 	var currScene = nmgrs.sceneMan.mCurrScene;
 	
-	// process any neccesary keyboard translation
+	// process any necessary keyboard translation
 	if (this.mTranslate.mX != 0 || this.mTranslate.mY != 0) {
 		currScene.mCam.Translate(this.mTranslate);
 	}
@@ -2721,31 +3148,31 @@ GFGUIMapControl.prototype.Process = function() {
 	
 	{ // handle main compass gui elements being held down
 		if (this.mCompassMain[0].mDown == true) {
-			currScene.mCam.Translate(new IVec2(-2, -1));
-			this.mTranslate.mX -= 2; this.mTranslate.mY -= 1;
+			currScene.mCam.Translate(new IVec2(2, 1));
+			this.mTranslate.mX += 2; this.mTranslate.mY += 1;
 		}
 		else if (this.mCompassMain[1].mDown == true) {
-			currScene.mCam.Translate(new IVec2(2, -1));
-			this.mTranslate.mX += 2; this.mTranslate.mY -= 1;
-		}
-		else if (this.mCompassMain[2].mDown == true) {
 			currScene.mCam.Translate(new IVec2(-2, 1));
 			this.mTranslate.mX -= 2; this.mTranslate.mY += 1;
 		}
+		else if (this.mCompassMain[2].mDown == true) {
+			currScene.mCam.Translate(new IVec2(2, -1));
+			this.mTranslate.mX += 2; this.mTranslate.mY -= 1;
+		}
 		else if (this.mCompassMain[3].mDown == true) {
-			currScene.mCam.Translate(new IVec2(2, 1));
-			this.mTranslate.mX += 2; this.mTranslate.mY += 1;
+			currScene.mCam.Translate(new IVec2(-2, -1));
+			this.mTranslate.mX -= 2; this.mTranslate.mY -= 1;
 		}
 	}
 	
 	{ // handle main zlevel gui elements being pressed
 		if (this.mZLevelMain[0].OnClick() == true) {
-			currScene.mMapSegment.ChangeZLevel(1);
-			this.mZLevelExtra.SetCurrentFrame(currScene.mMapSegment.mCurrZLevel);
+			currScene.mMap.ChangeZLevel(1);
+			this.mZLevelExtra.SetCurrentFrame(currScene.mMap.mCurrZLevel);
 		}
 		else if (this.mZLevelMain[1].OnClick() == true) {
-			currScene.mMapSegment.ChangeZLevel(-1);
-			this.mZLevelExtra.SetCurrentFrame(currScene.mMapSegment.mCurrZLevel);
+			currScene.mMap.ChangeZLevel(-1);
+			this.mZLevelExtra.SetCurrentFrame(currScene.mMap.mCurrZLevel);
 		}
 	}
 	
