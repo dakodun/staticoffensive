@@ -162,26 +162,42 @@ RenderBatch.prototype.Render = function(camera) {
 			}
 			
 			if (intersect == true) {
-				nmain.game.mCurrContext.font = txt.mFont;
+				nmain.game.mCurrContext.font = txt.mFontString;
 				nmain.game.mCurrContext.strokeStyle = txt.mColour;
 				
-				nmain.game.mCurrContext.translate(txt.mPos.mX, txt.mPos.mY + txt.mHeight);
+				nmain.game.mCurrContext.translate(txt.mPos.mX, txt.mPos.mY + txt.mFontSize);
 				nmain.game.mCurrContext.rotate(txt.mRotation * (Math.PI / 180));
 				
 				if (txt.mOutline == true) {
 					for (var j = 0; j < txtArr.length; ++j) {
-						nmain.game.mCurrContext.strokeText(txtArr[j], 0, txt.mHeight * j);
+						var hAlign = 0;
+						if (txt.mAlign == "centre") {
+							hAlign = Math.round(0 - (nmain.game.mCurrContext.measureText(txtArr[j]).width / 2));
+						}
+						else if (txt.mAlign == "right") {
+							hAlign = Math.round(0 - nmain.game.mCurrContext.measureText(txtArr[j]).width);
+						}
+						
+						nmain.game.mCurrContext.strokeText(txtArr[j], hAlign, txt.mFontSize * j);
 					}
 				}
 				else {
 					for (var j = 0; j < txtArr.length; ++j) {
+						var hAlign = 0;
+						if (txt.mAlign == "centre") {
+							hAlign = Math.round(0 - (nmain.game.mCurrContext.measureText(txtArr[j]).width / 2));
+						}
+						else if (txt.mAlign == "right") {
+							hAlign = Math.round(0 - nmain.game.mCurrContext.measureText(txtArr[j]).width);
+						}
+						
 						if (txt.mShadow == true) {
 							nmain.game.mCurrContext.fillStyle = txt.mShadowColour;
-							nmain.game.mCurrContext.fillText(txtArr[j], 2, (txt.mHeight * j) + 2);
+							nmain.game.mCurrContext.fillText(txtArr[j], hAlign + 2, (txt.mFontSize * j) + 2);
 						}
 						
 						nmain.game.mCurrContext.fillStyle = txt.mColour;
-						nmain.game.mCurrContext.fillText(txtArr[j], 0, txt.mHeight * j);
+						nmain.game.mCurrContext.fillText(txtArr[j], hAlign, txt.mFontSize * j);
 					}
 				}
 			}
