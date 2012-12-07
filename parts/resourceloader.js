@@ -1,7 +1,8 @@
 // ResourceStore Class...
 // handles the loading of a batch of asynchronous resources such as images or sounds
 function ResourceLoader() {
-	this.mTexQueue = new Array(); // the queue of unprocessed resources
+	this.mTexQueue = new Array(); // the queue of unprocessed textures
+	this.mFontQueue = new Array(); // the queue of unprocessed fonts
 	
 	this.mWorking = false; // indicates if our resourceloader is currently working
 	this.mIntervalID = null; // the handle of the interval that is checking the state of the resources
@@ -28,6 +29,27 @@ ResourceLoader.prototype.QueueTexture = function(texName, texLocation) {
 	this.mTexQueue.sort(ResourceSort); // sort the queue
 }
 
+// adds a font to the queue for future processing
+ResourceLoader.prototype.QueueFont = function(fontName, fontLocation) {
+	// replace with a binary search; queue already sorted, use more efficient insert
+	
+	// if we are currently processing resources then error
+	if (this.mWorking == true) {
+		throw Exception("Resource loader already working.");
+	}
+	
+	// for all textures in the queue
+	for (var i = 0; i < this.mFontQueue.length; ++i) {
+		// if we find a match to the one we are trying to add then error
+		if (this.mFontQueue[i].mResName == fontName) {
+			throw Exception("Resource already exists.");
+		}
+	}
+	
+	this.mFontQueue.push(new QueuedResource(fontName, fontLocation)); // add to the queue
+	this.mFontQueue.sort(ResourceSort); // sort the queue
+}
+
 // processes all resources currently in the queue
 ResourceLoader.prototype.AcquireResources = function() {
 	this.mWorking = true; // indicate we are currently working
@@ -37,6 +59,13 @@ ResourceLoader.prototype.AcquireResources = function() {
 		// add texture to resource manager and load the associated image
 		var tex = nmgrs.resMan.mTexStore.AddResource(new Texture(), this.mTexQueue[i].mResName);
 		tex.LoadFromFile(this.mTexQueue[i].mResLocation);
+	}
+	
+	// for all fonts in the queue
+	for (var i = 0; i < this.mFontQueue.length; ++i) {
+		// add font to resource manager and load the associated font file
+		var font = nmgrs.resMan.mFontStore.AddResource(new Font(), this.mFontQueue[i].mResName);
+		font.LoadFromFile(this.mFontQueue[i].mResName, this.mFontQueue[i].mResLocation);
 	}
 }
 
@@ -57,8 +86,22 @@ ResourceLoader.prototype.ProgressCheck = function() {
 			}
 		}
 		
+		// for all fonts in the queue
+		for (var i = 0; i < this.mFontQueue.length; ++i) {
+			// check if the font has finished loading, whether or not it was successful
+			var font = nmgrs.resMan.mFontStore.GetResource(this.mFontQueue[i].mResName);
+			font.CheckLoadStatus();
+			if (font.mLoaded == "load" || font.mLoaded == "abort" || font.mLoaded == "error") {
+				if (font.mLoaded == "abort" || font.mLoaded == "error") {
+					alert("Font failed to load: " + font.mLoaded);
+				}
+				
+				this.mFontQueue.splice(i, 1); // remove the font from the unprocessed queue
+			}
+		}
+		
 		// if our unprocessed queue is now empty
-		if (this.mTexQueue.length == 0) {
+		if (this.mTexQueue.length == 0 && this.mFontQueue.length == 0) {
 			this.mWorking = false; // we are finished working
 			clearInterval(this.mIntervalID); // stop checking for progress
 			this.mIntervalID = null; // clear interval handle
