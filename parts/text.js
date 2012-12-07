@@ -1,20 +1,21 @@
 // Text Class...
 // renderable text
 function Text() {
-	this.mFont = "12px Arial";
-	this.mFontSize = "12";
-	this.mFontName = "Arial";
+	this.mFont = null;
+	this.mFontSize = 12;
+	this.mFontString = "12px Arial";
 	
 	this.mString = "";
 	this.mColour = "#FFFFFF";
 	this.mShadowColour = "#000000";
 	this.mDepth = 0;
 	
-	this.mPos = new IVec2(0, 12);
+	this.mPos = new IVec2(0, 0);
 	this.mOutline = false;
 	this.mShadow = false;
 	this.mRotation = 0;
-	this.mHeight = 12;
+	
+	this.mAlign = "left";
 }
 
 // returns the type of this object for validity checking
@@ -26,7 +27,7 @@ Text.prototype.Type = function() {
 Text.prototype.Copy = function(other) {
 	this.mFont = other.mFont;
 	this.mFontSize = other.mFontSize;
-	this.mFontName = other.mFontName;
+	this.mFontString = other.mFontString;
 	
 	this.mString = other.mString;
 	this.mColour = other.mColour;
@@ -37,11 +38,13 @@ Text.prototype.Copy = function(other) {
 	this.mOutline = other.mOutline;
 	this.mShadow = other.mShadow;
 	this.mRotation = other.mRotation;
-	this.mHeight = other.mHeight;
+	
+	this.mAlign = other.mAlign;
 }
 
 // return the width of the text
 Text.prototype.GetWidth = function() {
+	var old = nmain.game.mCurrContext.font;
 	nmain.game.mCurrContext.font = this.mFont;
 	
 	var txtArr = this.mString.split("\n");
@@ -53,26 +56,27 @@ Text.prototype.GetWidth = function() {
 		}
 	}
 	
+	nmain.game.mCurrContext.font = old;
+	
 	return strLen;
 }
 
 // return the height of the text
 Text.prototype.GetHeight = function() {
 	var txtArr = this.mString.split("\n");
-	return this.mHeight * txtArr.length;
+	return this.mFontSize * txtArr.length;
+}
+
+// 
+Text.prototype.SetFont = function(font) {
+	this.mFont = font;
+	this.mFontString = String(this.mFontSize) + "px " + this.mFont.mFontName;
 }
 
 // 
 Text.prototype.SetFontSize = function(size) {
-	this.mFontSize = size.toString();
-	this.mFont = this.mFontSize + "px " + this.mFontName;
-	this.mHeight = size;
-}
-
-// 
-Text.prototype.SetFontName = function(name) {
-	this.mFontName = name;
-	this.mFont = this.mFontSize + " " + this.mFontName;
+	this.mFontSize = size;
+	this.mFontString = String(this.mFontSize) + "px " + this.mFont.mFontName;
 }
 // ...End
 
