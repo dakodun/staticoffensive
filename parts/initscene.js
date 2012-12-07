@@ -24,6 +24,11 @@ InitScene.prototype.SetUp = function() {
 		nmgrs.resLoad.QueueTexture("gui_map_zlevelmain", "./res/vis/gui_map_zlevelmain.png");
 		nmgrs.resLoad.QueueTexture("gui_map_zlevelextra", "./res/vis/gui_map_zlevelextra.png");
 		
+		nmgrs.resLoad.QueueTexture("gui_creation_topbar", "./res/vis/gui_creation_topbar.png");
+		
+		nmgrs.resLoad.QueueFont("pf_tempesta_seven", "./res/sys/pf_tempesta_seven");
+		nmgrs.resLoad.QueueFont("pf_tempesta_seven_bold", "./res/sys/pf_tempesta_seven_bold");
+		
 		nmgrs.resLoad.AcquireResources();
 		nmgrs.resLoad.mIntervalID = setInterval(function() {nmgrs.resLoad.ProgressCheck();}, 0);
 	} catch(e) {
@@ -45,6 +50,7 @@ InitScene.prototype.Input = function() {
 InitScene.prototype.Process = function() {
 	if (nmgrs.resLoad.mWorking == false) {
 		nmgrs.sceneMan.ChangeScene(new GFTestScene());
+		// nmgrs.sceneMan.ChangeScene(new GFCreationScene());
 	}
 }
 
