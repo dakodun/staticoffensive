@@ -299,3 +299,4 @@ GFGUIMapControl.prototype.GetRenderData = function() {
 	return arr;
 }
 // ...End
+
