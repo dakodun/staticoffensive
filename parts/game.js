@@ -20,6 +20,10 @@ function Game() {
 	this.mFPSIter = 0;
 	this.mFPSAccum = 0;
 	this.mFPS = 0;
+	
+	this.mStyleSheet = document.createElement('style');
+	this.mStyleSheet.type = 'text/css';
+	document.getElementsByTagName('head')[0].appendChild(this.mStyleSheet);
 };
 
 // initialises the game object
