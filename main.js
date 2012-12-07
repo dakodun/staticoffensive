@@ -998,7 +998,8 @@ ResourceStore.prototype.GetResource = function(resourceName) {
 // ResourceStore Class...
 // handles the loading of a batch of asynchronous resources such as images or sounds
 function ResourceLoader() {
-	this.mTexQueue = new Array(); // the queue of unprocessed resources
+	this.mTexQueue = new Array(); // the queue of unprocessed textures
+	this.mFontQueue = new Array(); // the queue of unprocessed fonts
 	
 	this.mWorking = false; // indicates if our resourceloader is currently working
 	this.mIntervalID = null; // the handle of the interval that is checking the state of the resources
@@ -1025,6 +1026,27 @@ ResourceLoader.prototype.QueueTexture = function(texName, texLocation) {
 	this.mTexQueue.sort(ResourceSort); // sort the queue
 }
 
+// adds a font to the queue for future processing
+ResourceLoader.prototype.QueueFont = function(fontName, fontLocation) {
+	// replace with a binary search; queue already sorted, use more efficient insert
+	
+	// if we are currently processing resources then error
+	if (this.mWorking == true) {
+		throw Exception("Resource loader already working.");
+	}
+	
+	// for all textures in the queue
+	for (var i = 0; i < this.mFontQueue.length; ++i) {
+		// if we find a match to the one we are trying to add then error
+		if (this.mFontQueue[i].mResName == fontName) {
+			throw Exception("Resource already exists.");
+		}
+	}
+	
+	this.mFontQueue.push(new QueuedResource(fontName, fontLocation)); // add to the queue
+	this.mFontQueue.sort(ResourceSort); // sort the queue
+}
+
 // processes all resources currently in the queue
 ResourceLoader.prototype.AcquireResources = function() {
 	this.mWorking = true; // indicate we are currently working
@@ -1034,6 +1056,13 @@ ResourceLoader.prototype.AcquireResources = function() {
 		// add texture to resource manager and load the associated image
 		var tex = nmgrs.resMan.mTexStore.AddResource(new Texture(), this.mTexQueue[i].mResName);
 		tex.LoadFromFile(this.mTexQueue[i].mResLocation);
+	}
+	
+	// for all fonts in the queue
+	for (var i = 0; i < this.mFontQueue.length; ++i) {
+		// add font to resource manager and load the associated font file
+		var font = nmgrs.resMan.mFontStore.AddResource(new Font(), this.mFontQueue[i].mResName);
+		font.LoadFromFile(this.mFontQueue[i].mResName, this.mFontQueue[i].mResLocation);
 	}
 }
 
@@ -1054,8 +1083,22 @@ ResourceLoader.prototype.ProgressCheck = function() {
 			}
 		}
 		
+		// for all fonts in the queue
+		for (var i = 0; i < this.mFontQueue.length; ++i) {
+			// check if the font has finished loading, whether or not it was successful
+			var font = nmgrs.resMan.mFontStore.GetResource(this.mFontQueue[i].mResName);
+			font.CheckLoadStatus();
+			if (font.mLoaded == "load" || font.mLoaded == "abort" || font.mLoaded == "error") {
+				if (font.mLoaded == "abort" || font.mLoaded == "error") {
+					alert("Font failed to load: " + font.mLoaded);
+				}
+				
+				this.mFontQueue.splice(i, 1); // remove the font from the unprocessed queue
+			}
+		}
+		
 		// if our unprocessed queue is now empty
-		if (this.mTexQueue.length == 0) {
+		if (this.mTexQueue.length == 0 && this.mFontQueue.length == 0) {
 			this.mWorking = false; // we are finished working
 			clearInterval(this.mIntervalID); // stop checking for progress
 			this.mIntervalID = null; // clear interval handle
@@ -1076,6 +1119,7 @@ ResourceLoader.prototype.ProgressCheck = function() {
 // holds the resource stores for each individual resource type
 function ResourceManager() {
 	this.mTexStore = new ResourceStore(); // storage for our textures
+	this.mFontStore = new ResourceStore(); // storage for our fonts
 };
 // ...End
 
@@ -1115,23 +1159,76 @@ Texture.prototype.LoadFromFile = function(source) {
 // ...End
 
 
+// Font Class...
+// 
+function Font() {
+	this.mFontName = "";
+	this.mLoaded = ""; // the load status of our font
+	this.mFailTimer = new Timer();
+};
+
+// returns the type of this object for validity checking
+Font.prototype.Type = function() {
+	return "Font";
+};
+
+Font.prototype.LoadFromFile = function(fontName, fontFile) {
+	this.mLoaded = "";
+	this.mFailTimer.Reset();
+	
+	this.mFontName = fontName;
+	var rule = "@font-face { font-family: " + fontName + "; src: url('" + fontFile + ".ttf'), url('" + fontFile + ".eot'); }";
+	
+	if (nmain.game.mStyleSheet.styleSheet) {
+		nmain.game.mStyleSheet.styleSheet.cssText += rule;
+	}
+	else {
+		nmain.game.mStyleSheet.appendChild(document.createTextNode(rule));
+	}
+}
+
+Font.prototype.CheckLoadStatus = function() {
+	var str = "This is the Test String!";
+	var old = nmain.game.mCurrContext.font;
+	
+	nmain.game.mCurrContext.font = "256px Impact";
+	var widthControl = nmain.game.mCurrContext.measureText(str).width;
+	
+	nmain.game.mCurrContext.font = "256px " + this.mFontName + ", Impact";
+	var widthTest = nmain.game.mCurrContext.measureText(str).width;
+	
+	if (widthControl != widthTest) {
+		this.mLoaded = "load";
+	}
+	
+	nmain.game.mCurrContext.font = old;
+	
+	// timeout after 10 seconds
+	if (this.mFailTimer.GetElapsedTime() > 10000) {
+		this.mLoaded = "error";
+	}
+}
+// ...End
+
+
 // Text Class...
 // renderable text
 function Text() {
-	this.mFont = "12px Arial";
-	this.mFontSize = "12";
-	this.mFontName = "Arial";
+	this.mFont = null;
+	this.mFontSize = 12;
+	this.mFontString = "12px Arial";
 	
 	this.mString = "";
 	this.mColour = "#FFFFFF";
 	this.mShadowColour = "#000000";
 	this.mDepth = 0;
 	
-	this.mPos = new IVec2(0, 12);
+	this.mPos = new IVec2(0, 0);
 	this.mOutline = false;
 	this.mShadow = false;
 	this.mRotation = 0;
-	this.mHeight = 12;
+	
+	this.mAlign = "left";
 }
 
 // returns the type of this object for validity checking
@@ -1143,7 +1240,7 @@ Text.prototype.Type = function() {
 Text.prototype.Copy = function(other) {
 	this.mFont = other.mFont;
 	this.mFontSize = other.mFontSize;
-	this.mFontName = other.mFontName;
+	this.mFontString = other.mFontString;
 	
 	this.mString = other.mString;
 	this.mColour = other.mColour;
@@ -1154,11 +1251,13 @@ Text.prototype.Copy = function(other) {
 	this.mOutline = other.mOutline;
 	this.mShadow = other.mShadow;
 	this.mRotation = other.mRotation;
-	this.mHeight = other.mHeight;
+	
+	this.mAlign = other.mAlign;
 }
 
 // return the width of the text
 Text.prototype.GetWidth = function() {
+	var old = nmain.game.mCurrContext.font;
 	nmain.game.mCurrContext.font = this.mFont;
 	
 	var txtArr = this.mString.split("\n");
@@ -1170,26 +1269,27 @@ Text.prototype.GetWidth = function() {
 		}
 	}
 	
+	nmain.game.mCurrContext.font = old;
+	
 	return strLen;
 }
 
 // return the height of the text
 Text.prototype.GetHeight = function() {
 	var txtArr = this.mString.split("\n");
-	return this.mHeight * txtArr.length;
+	return this.mFontSize * txtArr.length;
+}
+
+// 
+Text.prototype.SetFont = function(font) {
+	this.mFont = font;
+	this.mFontString = String(this.mFontSize) + "px " + this.mFont.mFontName;
 }
 
 // 
 Text.prototype.SetFontSize = function(size) {
-	this.mFontSize = size.toString();
-	this.mFont = this.mFontSize + "px " + this.mFontName;
-	this.mHeight = size;
-}
-
-// 
-Text.prototype.SetFontName = function(name) {
-	this.mFontName = name;
-	this.mFont = this.mFontSize + " " + this.mFontName;
+	this.mFontSize = size;
+	this.mFontString = String(this.mFontSize) + "px " + this.mFont.mFontName;
 }
 // ...End
 
@@ -1697,26 +1797,42 @@ RenderBatch.prototype.Render = function(camera) {
 			}
 			
 			if (intersect == true) {
-				nmain.game.mCurrContext.font = txt.mFont;
+				nmain.game.mCurrContext.font = txt.mFontString;
 				nmain.game.mCurrContext.strokeStyle = txt.mColour;
 				
-				nmain.game.mCurrContext.translate(txt.mPos.mX, txt.mPos.mY + txt.mHeight);
+				nmain.game.mCurrContext.translate(txt.mPos.mX, txt.mPos.mY + txt.mFontSize);
 				nmain.game.mCurrContext.rotate(txt.mRotation * (Math.PI / 180));
 				
 				if (txt.mOutline == true) {
 					for (var j = 0; j < txtArr.length; ++j) {
-						nmain.game.mCurrContext.strokeText(txtArr[j], 0, txt.mHeight * j);
+						var hAlign = 0;
+						if (txt.mAlign == "centre") {
+							hAlign = Math.round(0 - (nmain.game.mCurrContext.measureText(txtArr[j]).width / 2));
+						}
+						else if (txt.mAlign == "right") {
+							hAlign = Math.round(0 - nmain.game.mCurrContext.measureText(txtArr[j]).width);
+						}
+						
+						nmain.game.mCurrContext.strokeText(txtArr[j], hAlign, txt.mFontSize * j);
 					}
 				}
 				else {
 					for (var j = 0; j < txtArr.length; ++j) {
+						var hAlign = 0;
+						if (txt.mAlign == "centre") {
+							hAlign = Math.round(0 - (nmain.game.mCurrContext.measureText(txtArr[j]).width / 2));
+						}
+						else if (txt.mAlign == "right") {
+							hAlign = Math.round(0 - nmain.game.mCurrContext.measureText(txtArr[j]).width);
+						}
+						
 						if (txt.mShadow == true) {
 							nmain.game.mCurrContext.fillStyle = txt.mShadowColour;
-							nmain.game.mCurrContext.fillText(txtArr[j], 2, (txt.mHeight * j) + 2);
+							nmain.game.mCurrContext.fillText(txtArr[j], hAlign + 2, (txt.mFontSize * j) + 2);
 						}
 						
 						nmain.game.mCurrContext.fillStyle = txt.mColour;
-						nmain.game.mCurrContext.fillText(txtArr[j], 0, txt.mHeight * j);
+						nmain.game.mCurrContext.fillText(txtArr[j], hAlign, txt.mFontSize * j);
 					}
 				}
 			}
@@ -2043,6 +2159,11 @@ InitScene.prototype.SetUp = function() {
 		nmgrs.resLoad.QueueTexture("gui_map_zlevelmain", "./res/vis/gui_map_zlevelmain.png");
 		nmgrs.resLoad.QueueTexture("gui_map_zlevelextra", "./res/vis/gui_map_zlevelextra.png");
 		
+		nmgrs.resLoad.QueueTexture("gui_creation_topbar", "./res/vis/gui_creation_topbar.png");
+		
+		nmgrs.resLoad.QueueFont("pf_tempesta_seven", "./res/sys/pf_tempesta_seven");
+		nmgrs.resLoad.QueueFont("pf_tempesta_seven_bold", "./res/sys/pf_tempesta_seven_bold");
+		
 		nmgrs.resLoad.AcquireResources();
 		nmgrs.resLoad.mIntervalID = setInterval(function() {nmgrs.resLoad.ProgressCheck();}, 0);
 	} catch(e) {
@@ -2064,6 +2185,7 @@ InitScene.prototype.Input = function() {
 InitScene.prototype.Process = function() {
 	if (nmgrs.resLoad.mWorking == false) {
 		nmgrs.sceneMan.ChangeScene(new GFTestScene());
+		// nmgrs.sceneMan.ChangeScene(new GFCreationScene());
 	}
 }
 
@@ -2096,6 +2218,10 @@ function Game() {
 	this.mFPSIter = 0;
 	this.mFPSAccum = 0;
 	this.mFPS = 0;
+	
+	this.mStyleSheet = document.createElement('style');
+	this.mStyleSheet.type = 'text/css';
+	document.getElementsByTagName('head')[0].appendChild(this.mStyleSheet);
 };
 
 // initialises the game object
@@ -3223,4 +3349,127 @@ GFGUIMapControl.prototype.GetRenderData = function() {
 	return arr;
 }
 // ...End
+
+
+// GFCreationScene Class...
+// game file:
+function GFCreationScene() {
+	this.mPersist = false;
+	
+	this.mCam = new Camera();
+	this.mBatch = new RenderBatch();
+	this.mMap = new GFMapSegment();
+	
+	this.mMapControl = new GFGUIMapControl();
+	this.mCreationControl = new GFGUICreationControl();
+	
+	this.mTestText = new Text();
+}
+
+// returns the type of this object for validity checking
+GFCreationScene.prototype.Type = function() {
+	return "GFCreationScene";
+};
+
+// returns whether this scene is to persist or not (when changing to a new scene -- preserves state)
+GFCreationScene.prototype.Persistent = function() {
+	return this.mPersist;
+};
+
+// initialises the scene object
+GFCreationScene.prototype.SetUp = function() {
+	nmain.game.mClearColour = "#75632F";
+	
+	this.mMapControl.SetUp();
+	this.mCreationControl.SetUp();
+	
+	var font = nmgrs.resMan.mFontStore.GetResource("pf_tempesta_seven_bold");
+	this.mTestText.SetFont(font);
+	this.mTestText.SetFontSize(8);
+	this.mTestText.mString = "AAAAA\nAAAAAAAAA\nAAAAAAAAAAAA";
+	this.mTestText.mAlign = "right";
+	this.mTestText.mShadow = true;
+	this.mTestText.mPos.Set(100, 0);
+}
+
+// cleans up the scene object
+GFCreationScene.prototype.TearDown = function() {
+	
+}
+
+// handles user input
+GFCreationScene.prototype.Input = function() {
+	this.mMapControl.Input();
+}
+
+// handles game logic
+GFCreationScene.prototype.Process = function() {
+	this.mMapControl.Process();
+	this.mCreationControl.Process();
+	
+	this.mCam.Process();
+}
+
+// handles all drawing tasks
+GFCreationScene.prototype.Render = function() {
+	nmain.game.SetIdentity();
+	this.mCam.Apply();
+	
+	this.mBatch.Clear();
+	
+	var arr = new Array();
+	arr = arr.concat(this.mMapControl.GetRenderData());
+	arr = arr.concat(this.mCreationControl.GetRenderData());
+	
+	for (var i = 0; i < arr.length; ++i) {
+		this.mBatch.Add(arr[i]);
+	}
+	
+	
+	this.mBatch.Add(this.mTestText);
+	
+	this.mBatch.Render(this.mCam);
+}
+// ...End
+
+
+// GFGUICreationControl Class...
+// game file:
+function GFGUICreationControl() {
+	this.mTopBar = new Sprite();
+}
+
+GFGUICreationControl.prototype.SetUp = function() {
+	var currScene = nmgrs.sceneMan.mCurrScene;
+	var initOffset = new IVec2();
+	initOffset.Copy(currScene.mCam.mTranslate);
+	
+	{
+		var tex = nmgrs.resMan.mTexStore.GetResource("gui_creation_topbar");
+		
+		this.mTopBar.mPos.Set(8 + initOffset.mX, 10 + initOffset.mY);
+		this.mTopBar.mDepth = -5000;
+		this.mTopBar.SetTexture(tex);
+	}
+};
+
+GFGUICreationControl.prototype.Input = function() {
+	
+}
+
+GFGUICreationControl.prototype.Process = function() {
+	var currScene = nmgrs.sceneMan.mCurrScene;
+	
+	this.mTopBar.mPos.Set(8 + currScene.mCam.mTranslate.mX, 10 + currScene.mCam.mTranslate.mY);
+}
+
+GFGUICreationControl.prototype.GetRenderData = function() {
+	var arr = new Array();
+	
+	arr.push(this.mTopBar);
+	
+	return arr;
+}
+// ...End
+
 
