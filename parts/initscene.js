@@ -18,6 +18,7 @@ InitScene.prototype.Persistent = function() {
 InitScene.prototype.SetUp = function() {
 	try {
 		nmgrs.resLoad.QueueTexture("tileset_test", "./res/vis/tileset_test.png");
+		nmgrs.resLoad.QueueTexture("tileset_test_2", "./res/vis/tileset_test_2.png");
 		
 		nmgrs.resLoad.QueueTexture("gui_map_compassmain", "./res/vis/gui_map_compassmain.png");
 		nmgrs.resLoad.QueueTexture("gui_map_compassextra", "./res/vis/gui_map_compassextra.png");
@@ -25,9 +26,12 @@ InitScene.prototype.SetUp = function() {
 		nmgrs.resLoad.QueueTexture("gui_map_zlevelextra", "./res/vis/gui_map_zlevelextra.png");
 		
 		nmgrs.resLoad.QueueTexture("gui_creation_topbar", "./res/vis/gui_creation_topbar.png");
+		nmgrs.resLoad.QueueTexture("gui_creation_arrows", "./res/vis/gui_creation_arrows.png");
+		nmgrs.resLoad.QueueTexture("gui_creation_texset", "./res/vis/gui_creation_texset.png");
 		
-		nmgrs.resLoad.QueueFont("pf_tempesta_seven", "./res/sys/pf_tempesta_seven");
-		nmgrs.resLoad.QueueFont("pf_tempesta_seven_bold", "./res/sys/pf_tempesta_seven_bold");
+		nmgrs.resLoad.QueueTexture("menu_button", "./res/vis/menu_button.png");
+		
+		nmgrs.resLoad.QueueFont("pixantiqua", "./res/sys/PixAntiqua");
 		
 		nmgrs.resLoad.AcquireResources();
 		nmgrs.resLoad.mIntervalID = setInterval(function() {nmgrs.resLoad.ProgressCheck();}, 0);
@@ -49,8 +53,7 @@ InitScene.prototype.Input = function() {
 // handles game logic
 InitScene.prototype.Process = function() {
 	if (nmgrs.resLoad.mWorking == false) {
-		nmgrs.sceneMan.ChangeScene(new GFTestScene());
-		// nmgrs.sceneMan.ChangeScene(new GFCreationScene());
+		nmgrs.sceneMan.ChangeScene(new GFMenuScene());
 	}
 }
 
