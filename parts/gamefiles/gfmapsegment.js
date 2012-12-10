@@ -119,8 +119,8 @@ GFMapSegment.prototype.Copy = function(other) {
 	this.mEntrances = this.mEntrances.concat(other.mEntrances);
 }
 
-GFMapSegment.prototype.SetUp = function(blueprint) {
-	var tex = nmgrs.resMan.mTexStore.GetResource("tileset_test");
+GFMapSegment.prototype.SetUp = function(blueprint, tileset) {
+	var tex = nmgrs.resMan.mTexStore.GetResource(tileset);
 	this.mSize.Copy(blueprint.mSize);
 	
 	for (var i = 0; i < blueprint.mTiles.length; ++i) {
