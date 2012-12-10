@@ -54,8 +54,11 @@ GUIButton.prototype.Input = function() {
 GUIButton.prototype.Process = function(point) {
 	if (this.mActive == true) {
 		var tl = new IVec2(0, 0); tl.Copy(this.mPos);
+		tl.mX += 2; tl.mY +=  2;
+		
 		var br = new IVec2(0, 0); br.Copy(this.mPos);
-		br.mX += this.mSize.mX; br.mY += this.mSize.mY;
+		br.mX += this.mSize.mX + 3; br.mY += this.mSize.mY + 3;
+		
 		if (util.PointInRectangle(point, tl, br)) {
 			this.mHover = true;
 			if (this.mDown == false) {
