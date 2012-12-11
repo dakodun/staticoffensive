@@ -1,7 +1,15 @@
 // ResourceSort function
 // sorts *Resource objects based on the resource name
 function ResourceSort(first, second) {
-	return second.mResName < first.mResName;
+	var result = 0;
+	if (second.mResName < first.mResName) {
+		result = 1;
+	}
+	else if (first.mResName < second.mResName) {
+		result = -1;
+	}
+	
+	return result;
 };
 // ...End
 
