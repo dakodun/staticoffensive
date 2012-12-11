@@ -61,6 +61,9 @@ function GFGUICreationControl() {
 		this.mTypes[2] = "Exit\nOnly";
 		this.mTypes[3] = "Entrance\n& Exit";
 	}
+	
+	this.mBarMenus = new Array();
+	this.mBarMenus[0] = new GUIDropDown();
 }
 
 GFGUICreationControl.prototype.SetUp = function(initTex) {
@@ -275,6 +278,116 @@ GFGUICreationControl.prototype.SetUp = function(initTex) {
 		this.mSetTexture.mSpriteInactive.SetCurrentFrame(0);
 	}
 	
+	{
+		{
+			var tex = nmgrs.resMan.mTexStore.GetResource("gui_creation_topmenunew");
+			var baseBut = new GUIButton();
+			
+			baseBut.SetUp(new IVec2(8 + initOffset.mX, 10 + initOffset.mY), new IVec2(54, 24), -5000);
+			baseBut.mPos.Set(8, 10);
+			
+			baseBut.mSpriteIdle.SetAnimatedTexture(tex, 3, 1, -1, -1);
+			baseBut.mSpriteIdle.SetCurrentFrame(0);
+			
+			baseBut.mSpriteHover.SetAnimatedTexture(tex, 3, 1, -1, -1);
+			baseBut.mSpriteHover.SetCurrentFrame(1);
+			
+			baseBut.mSpriteDown.SetAnimatedTexture(tex, 3, 1, -1, -1);
+			baseBut.mSpriteDown.SetCurrentFrame(2);
+			
+			baseBut.mSpriteInactive.SetAnimatedTexture(tex, 3, 1, -1, -1);
+			baseBut.mSpriteInactive.SetCurrentFrame(0);
+			
+			this.mBarMenus[0].SetUp(baseBut);
+		}
+		
+		{
+			var tex = nmgrs.resMan.mTexStore.GetResource("gui_creation_texset");
+			var font = nmgrs.resMan.mFontStore.GetResource("pixantiqua");
+			
+			{
+				var itemBut = new GUIButton();
+				itemBut.SetUp(new IVec2(0, 0), new IVec2(162, 38), -5000);
+				
+				itemBut.mSpriteIdle.SetAnimatedTexture(tex, 3, 1, -1, -1);
+				itemBut.mSpriteIdle.SetCurrentFrame(0);
+				
+				itemBut.mSpriteHover.SetAnimatedTexture(tex, 3, 1, -1, -1);
+				itemBut.mSpriteHover.SetCurrentFrame(1);
+				
+				itemBut.mSpriteDown.SetAnimatedTexture(tex, 3, 1, -1, -1);
+				itemBut.mSpriteDown.SetCurrentFrame(2);
+				
+				itemBut.mSpriteInactive.SetAnimatedTexture(tex, 3, 1, -1, -1);
+				itemBut.mSpriteInactive.SetCurrentFrame(0);
+				
+				var itemTxt = new Text();
+				itemTxt.SetFont(font);
+				itemTxt.SetFontSize(12);
+				itemTxt.mString = "create new";
+				itemTxt.mAlign = "left";
+				itemTxt.mPos.Set(20, 10);
+				itemTxt.mColour = "#000000";
+					
+				this.mBarMenus[0].AddItem(itemBut, itemTxt);
+			}
+			
+			{
+				var itemBut = new GUIButton();
+				itemBut.SetUp(new IVec2(0, 0), new IVec2(162, 38), -5000);
+				
+				itemBut.mSpriteIdle.SetAnimatedTexture(tex, 3, 1, -1, -1);
+				itemBut.mSpriteIdle.SetCurrentFrame(0);
+				
+				itemBut.mSpriteHover.SetAnimatedTexture(tex, 3, 1, -1, -1);
+				itemBut.mSpriteHover.SetCurrentFrame(1);
+				
+				itemBut.mSpriteDown.SetAnimatedTexture(tex, 3, 1, -1, -1);
+				itemBut.mSpriteDown.SetCurrentFrame(2);
+				
+				itemBut.mSpriteInactive.SetAnimatedTexture(tex, 3, 1, -1, -1);
+				itemBut.mSpriteInactive.SetCurrentFrame(0);
+				
+				var itemTxt = new Text();
+				itemTxt.SetFont(font);
+				itemTxt.SetFontSize(12);
+				itemTxt.mString = "restore old";
+				itemTxt.mAlign = "left";
+				itemTxt.mPos.Set(20, 10);
+				itemTxt.mColour = "#000000";
+					
+				this.mBarMenus[0].AddItem(itemBut, itemTxt);
+			}
+			
+			{
+				var itemBut = new GUIButton();
+				itemBut.SetUp(new IVec2(0, 0), new IVec2(162, 38), -5000);
+				
+				itemBut.mSpriteIdle.SetAnimatedTexture(tex, 3, 1, -1, -1);
+				itemBut.mSpriteIdle.SetCurrentFrame(0);
+				
+				itemBut.mSpriteHover.SetAnimatedTexture(tex, 3, 1, -1, -1);
+				itemBut.mSpriteHover.SetCurrentFrame(1);
+				
+				itemBut.mSpriteDown.SetAnimatedTexture(tex, 3, 1, -1, -1);
+				itemBut.mSpriteDown.SetCurrentFrame(2);
+				
+				itemBut.mSpriteInactive.SetAnimatedTexture(tex, 3, 1, -1, -1);
+				itemBut.mSpriteInactive.SetCurrentFrame(0);
+				
+				var itemTxt = new Text();
+				itemTxt.SetFont(font);
+				itemTxt.SetFontSize(12);
+				itemTxt.mString = "obliterate";
+				itemTxt.mAlign = "left";
+				itemTxt.mPos.Set(20, 10);
+				itemTxt.mColour = "#000000";
+					
+				this.mBarMenus[0].AddItem(itemBut, itemTxt);
+			}
+		}
+	}
+	
 	this.mTranslate.Copy(currScene.mCam.mTranslate);
 };
 
@@ -284,6 +397,8 @@ GFGUICreationControl.prototype.Input = function() {
 	}
 	
 	this.mSetTexture.Input();
+	
+	this.mBarMenus[0].Input();
 }
 
 GFGUICreationControl.prototype.Process = function() {
@@ -317,6 +432,14 @@ GFGUICreationControl.prototype.Process = function() {
 			var newPos = new IVec2(0, 0); newPos.Copy(this.mSetTexture.GetSpritePositions());
 			newPos.mX += offset.mX; newPos.mY += offset.mY;
 			this.mSetTexture.SetSpritePositions(newPos);
+		}
+		
+		{
+			this.mBarMenus[0].Process(pt);
+			
+			var newPos = new IVec2(0, 0); newPos.Copy(this.mBarMenus[0].GetSpritePositions());
+			newPos.mX += offset.mX; newPos.mY += offset.mY;
+			this.mBarMenus[0].SetSpritePositions(newPos);
 		}
 	}
 	
@@ -374,6 +497,16 @@ GFGUICreationControl.prototype.Process = function() {
 			// this.mCurrentTexture = "tileset_test_2";
 			// this.UpdateTileSprite();
 		}
+		
+		if (this.mBarMenus[0].OnClick(0) == true) {
+			alert("create new");
+		}
+		else if (this.mBarMenus[0].OnClick(1) == true) {
+			alert("restore old");
+		}
+		else if (this.mBarMenus[0].OnClick(2) == true) {
+			alert("obliterate");
+		}
 	}
 	
 	this.mTranslate.Copy(currScene.mCam.mTranslate);
@@ -395,6 +528,8 @@ GFGUICreationControl.prototype.GetRenderData = function() {
 	}
 	
 	arr = arr.concat(this.mSetTexture.GetRenderData());
+	
+	arr = arr.concat(this.mBarMenus[0].GetRenderData());
 	
 	return arr;
 }
