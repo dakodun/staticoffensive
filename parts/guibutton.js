@@ -15,6 +15,22 @@ function GUIButton() {
 	this.mWasClicked = false;
 };
 
+GUIButton.prototype.Copy = function(other) {
+	this.mPos.Copy(other.mPos);
+	this.mSize.Copy(other.mSize);
+	
+	this.mStatus = other.mStatus
+	this.mSpriteIdle.Copy(other.mSpriteIdle);
+	this.mSpriteHover.Copy(other.mSpriteHover);
+	this.mSpriteDown.Copy(other.mSpriteDown);
+	this.mSpriteInactive.Copy(other.mSpriteInactive);
+	
+	this.mActive = other.mActive;
+	this.mHover = other.mHover;
+	this.mDown = other.mDown;
+	this.mWasClicked = other.mWasClicked;
+}
+
 GUIButton.prototype.SetUp = function(pos, size, depth) {
 	this.mPos.Copy(pos);
 	this.mSize.Copy(size);
@@ -90,15 +106,6 @@ GUIButton.prototype.Process = function(point) {
 	}
 }
 
-GUIButton.prototype.OnClick = function() {
-	if (this.mWasClicked == true) {
-		this.mWasClicked = false;
-		return true;
-	}
-	
-	return false;
-}
-
 GUIButton.prototype.GetRenderData = function() {
 	var arr = new Array();
 	if (this.mActive == true) {
@@ -119,6 +126,15 @@ GUIButton.prototype.GetRenderData = function() {
 	return arr;
 }
 
+GUIButton.prototype.OnClick = function() {
+	if (this.mWasClicked == true) {
+		this.mWasClicked = false;
+		return true;
+	}
+	
+	return false;
+}
+
 GUIButton.prototype.GetSpritePositions = function() {
 	return this.mSpriteIdle.mPos;
 }
@@ -137,3 +153,4 @@ GUIButton.prototype.SetSpriteDepths = function(depth) {
 	this.mSpriteInactive.mDepth = depth;
 }
 // ...End
+
