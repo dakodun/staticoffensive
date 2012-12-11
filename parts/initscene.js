@@ -33,6 +33,7 @@ InitScene.prototype.SetUp = function() {
 		nmgrs.resLoad.QueueTexture("gui_creation_topbar", "./res/vis/gui_creation_topbar.png");
 		nmgrs.resLoad.QueueTexture("gui_creation_arrows", "./res/vis/gui_creation_arrows.png");
 		nmgrs.resLoad.QueueTexture("gui_creation_texset", "./res/vis/gui_creation_texset.png");
+		nmgrs.resLoad.QueueTexture("gui_texselect", "./res/vis/gui_texselect.png");
 		
 		nmgrs.resLoad.QueueTexture("menu_button", "./res/vis/menu_button.png");
 		
