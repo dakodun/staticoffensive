@@ -1925,6 +1925,22 @@ function GUIButton() {
 	this.mWasClicked = false;
 };
 
+GUIButton.prototype.Copy = function(other) {
+	this.mPos.Copy(other.mPos);
+	this.mSize.Copy(other.mSize);
+	
+	this.mStatus = other.mStatus
+	this.mSpriteIdle.Copy(other.mSpriteIdle);
+	this.mSpriteHover.Copy(other.mSpriteHover);
+	this.mSpriteDown.Copy(other.mSpriteDown);
+	this.mSpriteInactive.Copy(other.mSpriteInactive);
+	
+	this.mActive = other.mActive;
+	this.mHover = other.mHover;
+	this.mDown = other.mDown;
+	this.mWasClicked = other.mWasClicked;
+}
+
 GUIButton.prototype.SetUp = function(pos, size, depth) {
 	this.mPos.Copy(pos);
 	this.mSize.Copy(size);
@@ -2000,15 +2016,6 @@ GUIButton.prototype.Process = function(point) {
 	}
 }
 
-GUIButton.prototype.OnClick = function() {
-	if (this.mWasClicked == true) {
-		this.mWasClicked = false;
-		return true;
-	}
-	
-	return false;
-}
-
 GUIButton.prototype.GetRenderData = function() {
 	var arr = new Array();
 	if (this.mActive == true) {
@@ -2029,6 +2036,15 @@ GUIButton.prototype.GetRenderData = function() {
 	return arr;
 }
 
+GUIButton.prototype.OnClick = function() {
+	if (this.mWasClicked == true) {
+		this.mWasClicked = false;
+		return true;
+	}
+	
+	return false;
+}
+
 GUIButton.prototype.GetSpritePositions = function() {
 	return this.mSpriteIdle.mPos;
 }
@@ -2047,6 +2063,146 @@ GUIButton.prototype.SetSpriteDepths = function(depth) {
 	this.mSpriteInactive.mDepth = depth;
 }
 // ...End
+
+
+// GUIDropDown Class...
+function GUIDropDown() {
+	this.mPos = new IVec2(0, 0);
+	this.mBase = new GUIButton();
+	
+	this.mItems = new Array();
+	this.mItemsText = new Array();
+	
+	this.mExpanded = false;
+};
+
+GUIDropDown.prototype.SetUp = function(baseButton) {
+	this.mPos.Copy(baseButton.mPos);
+	this.mBase.Copy(baseButton);
+}
+
+GUIDropDown.prototype.Input = function() {
+	this.mBase.Input();
+	
+	if (this.mExpanded == true) {
+		for (var i = 0; i < this.mItems.length; ++i) {
+			this.mItems[i].Input();
+		}
+	}
+	
+	if (this.mExpanded == true) {
+		if (nmgrs.inputMan.GetMousePressed(nmouse.button.code.left)) {
+			var thisClick = this.mBase.mHover;
+			
+			if (thisClick == false) {
+				for (var i = 0; i < this.mItems.length; ++i) {
+					thisClick = this.mItems[i].mHover;
+					if (thisClick == true) {
+						break;
+					}
+				}
+			}
+			
+			if (thisClick == false) {
+				this.mExpanded = !this.mExpanded;
+			}
+		}
+	}
+}
+
+GUIDropDown.prototype.Process = function(point) {
+	this.mBase.Process(point);
+	
+	if (this.mBase.OnClick() == true) {
+		this.mExpanded = !this.mExpanded;
+	}
+	
+	if (this.mExpanded == true) {
+		for (var i = 0; i < this.mItems.length; ++i) {
+			this.mItems[i].Process(point);
+		}
+	}
+}
+
+GUIDropDown.prototype.GetRenderData = function() {
+	var arr = new Array();
+	
+	if (this.mExpanded == true) {
+		arr.push(this.mBase.mSpriteDown);
+		
+		for (var i = 0; i < this.mItems.length; ++i) {
+			arr = arr.concat(this.mItems[i].GetRenderData());
+		}
+		
+		for (var i = 0; i < this.mItemsText.length; ++i) {
+			arr.push(this.mItemsText[i]);
+		}
+	}
+	else {
+		arr = arr.concat(this.mBase.GetRenderData());
+	}
+	
+	return arr;
+}
+
+GUIDropDown.prototype.OnClick = function(itemID) {
+	if (itemID >= 0 && itemID < this.mItems.length) {
+		if (this.mItems[itemID].OnClick()) {
+			this.mExpanded = false;
+			return true;
+		}
+	}
+	
+	return false;
+}
+
+GUIDropDown.prototype.GetSpritePositions = function() {
+	return this.mBase.mSpriteIdle.mPos;
+}
+
+GUIDropDown.prototype.SetSpritePositions = function(pos) {
+	this.mBase.mSpriteIdle.mPos.Copy(pos);
+	this.mBase.mSpriteHover.mPos.Copy(pos);
+	this.mBase.mSpriteDown.mPos.Copy(pos);
+	this.mBase.mSpriteInactive.mPos.Copy(pos);
+}
+
+GUIDropDown.prototype.SetSpriteDepths = function(depth) {
+	this.mBase.mSpriteIdle.mDepth = depth;
+	this.mBase.mSpriteHover.mDepth = depth;
+	this.mBase.mSpriteDown.mDepth = depth;
+	this.mBase.mSpriteInactive.mDepth = depth;
+}
+
+GUIDropDown.prototype.AddItem = function(itemButton, text) {
+	var but = new GUIButton();
+	but.Copy(itemButton);
+	
+	var txt = new Text();
+	txt.Copy(text);
+	
+	var newPos = new IVec2(0, 0);
+	
+	if (this.mItems.length == 0) {
+		newPos.Copy(this.mPos);
+		newPos.mY += this.mBase.mSize.mY;
+	}
+	else {
+		var id = this.mItems.length - 1;
+		newPos.Copy(this.mItems[id].mPos);
+		newPos.mY += this.mItems[id].mSize.mY;
+	}
+	
+	but.mPos.mX += newPos.mX; but.mPos.mY += newPos.mY;
+	but.SetSpritePositions(but.mPos);
+	
+	txt.mPos.mX += newPos.mX; txt.mPos.mY += newPos.mY;
+	
+	this.mItems.push(but);
+	this.mItemsText.push(txt);
+}
+// ...End
+
 
 // RNG Class...
 // a pseudo-random number generator
@@ -2177,6 +2333,7 @@ InitScene.prototype.SetUp = function() {
 		nmgrs.resLoad.QueueTexture("gui_map_zlevelextra", "./res/vis/gui_map_zlevelextra.png");
 		
 		nmgrs.resLoad.QueueTexture("gui_creation_topbar", "./res/vis/gui_creation_topbar.png");
+		nmgrs.resLoad.QueueTexture("gui_creation_topmenunew", "./res/vis/gui_creation_topmenunew.png");
 		nmgrs.resLoad.QueueTexture("gui_creation_arrows", "./res/vis/gui_creation_arrows.png");
 		nmgrs.resLoad.QueueTexture("gui_creation_texset", "./res/vis/gui_creation_texset.png");
 		nmgrs.resLoad.QueueTexture("gui_texselect", "./res/vis/gui_texselect.png");
@@ -3058,7 +3215,7 @@ GFMapGen.prototype.GenerateMap = function(bpCollection, numParts) {
 		bp.SetUp(bpc.mInitStore[bpid]);
 		
 		var seg = new GFMapSegment();
-		seg.mPos.Set(0, 0); seg.SetUp(bp, "tileset_test");
+		seg.mPos.Set(0, 0); seg.SetUp(bp, "tileset_blue");
 		map.AddSegment(seg);
 	}
 	
@@ -3083,7 +3240,7 @@ GFMapGen.prototype.GenerateMap = function(bpCollection, numParts) {
 			
 			// create a temporary segment with our chosen blueprint
 			var segTemp = new GFMapSegment();
-			segTemp.mPos.Set(0, 0); segTemp.SetUp(bp, "tileset_test");
+			segTemp.mPos.Set(0, 0); segTemp.SetUp(bp, "tileset_grasstop");
 			
 			// check entrances against previous segments exits
 			var segLast = map.mSegments.length - 1; // get the id of the previous segment in the map array
@@ -3133,7 +3290,14 @@ GFMapGen.prototype.GenerateMap = function(bpCollection, numParts) {
 									x += 1;
 								}
 								
-								seg.mPos.Set(x, y); seg.SetUp(bp, "tileset_test");
+								seg.mPos.Set(x, y);
+								
+								if (i < numParts - 2) {
+									seg.SetUp(bp, "tileset_grasstop");
+								}
+								else {
+									seg.SetUp(bp, "tileset_red");
+								}
 								
 								var collision = false;
 								for (var m = 0; m < map.mSegments.length; ++m) {
@@ -3875,6 +4039,9 @@ function GFGUICreationControl() {
 		this.mTypes[2] = "Exit\nOnly";
 		this.mTypes[3] = "Entrance\n& Exit";
 	}
+	
+	this.mBarMenus = new Array();
+	this.mBarMenus[0] = new GUIDropDown();
 }
 
 GFGUICreationControl.prototype.SetUp = function(initTex) {
@@ -4089,6 +4256,116 @@ GFGUICreationControl.prototype.SetUp = function(initTex) {
 		this.mSetTexture.mSpriteInactive.SetCurrentFrame(0);
 	}
 	
+	{
+		{
+			var tex = nmgrs.resMan.mTexStore.GetResource("gui_creation_topmenunew");
+			var baseBut = new GUIButton();
+			
+			baseBut.SetUp(new IVec2(8 + initOffset.mX, 10 + initOffset.mY), new IVec2(54, 24), -5000);
+			baseBut.mPos.Set(8, 10);
+			
+			baseBut.mSpriteIdle.SetAnimatedTexture(tex, 3, 1, -1, -1);
+			baseBut.mSpriteIdle.SetCurrentFrame(0);
+			
+			baseBut.mSpriteHover.SetAnimatedTexture(tex, 3, 1, -1, -1);
+			baseBut.mSpriteHover.SetCurrentFrame(1);
+			
+			baseBut.mSpriteDown.SetAnimatedTexture(tex, 3, 1, -1, -1);
+			baseBut.mSpriteDown.SetCurrentFrame(2);
+			
+			baseBut.mSpriteInactive.SetAnimatedTexture(tex, 3, 1, -1, -1);
+			baseBut.mSpriteInactive.SetCurrentFrame(0);
+			
+			this.mBarMenus[0].SetUp(baseBut);
+		}
+		
+		{
+			var tex = nmgrs.resMan.mTexStore.GetResource("gui_creation_texset");
+			var font = nmgrs.resMan.mFontStore.GetResource("pixantiqua");
+			
+			{
+				var itemBut = new GUIButton();
+				itemBut.SetUp(new IVec2(0, 0), new IVec2(162, 38), -5000);
+				
+				itemBut.mSpriteIdle.SetAnimatedTexture(tex, 3, 1, -1, -1);
+				itemBut.mSpriteIdle.SetCurrentFrame(0);
+				
+				itemBut.mSpriteHover.SetAnimatedTexture(tex, 3, 1, -1, -1);
+				itemBut.mSpriteHover.SetCurrentFrame(1);
+				
+				itemBut.mSpriteDown.SetAnimatedTexture(tex, 3, 1, -1, -1);
+				itemBut.mSpriteDown.SetCurrentFrame(2);
+				
+				itemBut.mSpriteInactive.SetAnimatedTexture(tex, 3, 1, -1, -1);
+				itemBut.mSpriteInactive.SetCurrentFrame(0);
+				
+				var itemTxt = new Text();
+				itemTxt.SetFont(font);
+				itemTxt.SetFontSize(12);
+				itemTxt.mString = "create new";
+				itemTxt.mAlign = "left";
+				itemTxt.mPos.Set(20, 10);
+				itemTxt.mColour = "#000000";
+					
+				this.mBarMenus[0].AddItem(itemBut, itemTxt);
+			}
+			
+			{
+				var itemBut = new GUIButton();
+				itemBut.SetUp(new IVec2(0, 0), new IVec2(162, 38), -5000);
+				
+				itemBut.mSpriteIdle.SetAnimatedTexture(tex, 3, 1, -1, -1);
+				itemBut.mSpriteIdle.SetCurrentFrame(0);
+				
+				itemBut.mSpriteHover.SetAnimatedTexture(tex, 3, 1, -1, -1);
+				itemBut.mSpriteHover.SetCurrentFrame(1);
+				
+				itemBut.mSpriteDown.SetAnimatedTexture(tex, 3, 1, -1, -1);
+				itemBut.mSpriteDown.SetCurrentFrame(2);
+				
+				itemBut.mSpriteInactive.SetAnimatedTexture(tex, 3, 1, -1, -1);
+				itemBut.mSpriteInactive.SetCurrentFrame(0);
+				
+				var itemTxt = new Text();
+				itemTxt.SetFont(font);
+				itemTxt.SetFontSize(12);
+				itemTxt.mString = "restore old";
+				itemTxt.mAlign = "left";
+				itemTxt.mPos.Set(20, 10);
+				itemTxt.mColour = "#000000";
+					
+				this.mBarMenus[0].AddItem(itemBut, itemTxt);
+			}
+			
+			{
+				var itemBut = new GUIButton();
+				itemBut.SetUp(new IVec2(0, 0), new IVec2(162, 38), -5000);
+				
+				itemBut.mSpriteIdle.SetAnimatedTexture(tex, 3, 1, -1, -1);
+				itemBut.mSpriteIdle.SetCurrentFrame(0);
+				
+				itemBut.mSpriteHover.SetAnimatedTexture(tex, 3, 1, -1, -1);
+				itemBut.mSpriteHover.SetCurrentFrame(1);
+				
+				itemBut.mSpriteDown.SetAnimatedTexture(tex, 3, 1, -1, -1);
+				itemBut.mSpriteDown.SetCurrentFrame(2);
+				
+				itemBut.mSpriteInactive.SetAnimatedTexture(tex, 3, 1, -1, -1);
+				itemBut.mSpriteInactive.SetCurrentFrame(0);
+				
+				var itemTxt = new Text();
+				itemTxt.SetFont(font);
+				itemTxt.SetFontSize(12);
+				itemTxt.mString = "obliterate";
+				itemTxt.mAlign = "left";
+				itemTxt.mPos.Set(20, 10);
+				itemTxt.mColour = "#000000";
+					
+				this.mBarMenus[0].AddItem(itemBut, itemTxt);
+			}
+		}
+	}
+	
 	this.mTranslate.Copy(currScene.mCam.mTranslate);
 };
 
@@ -4098,6 +4375,8 @@ GFGUICreationControl.prototype.Input = function() {
 	}
 	
 	this.mSetTexture.Input();
+	
+	this.mBarMenus[0].Input();
 }
 
 GFGUICreationControl.prototype.Process = function() {
@@ -4131,6 +4410,14 @@ GFGUICreationControl.prototype.Process = function() {
 			var newPos = new IVec2(0, 0); newPos.Copy(this.mSetTexture.GetSpritePositions());
 			newPos.mX += offset.mX; newPos.mY += offset.mY;
 			this.mSetTexture.SetSpritePositions(newPos);
+		}
+		
+		{
+			this.mBarMenus[0].Process(pt);
+			
+			var newPos = new IVec2(0, 0); newPos.Copy(this.mBarMenus[0].GetSpritePositions());
+			newPos.mX += offset.mX; newPos.mY += offset.mY;
+			this.mBarMenus[0].SetSpritePositions(newPos);
 		}
 	}
 	
@@ -4188,6 +4475,16 @@ GFGUICreationControl.prototype.Process = function() {
 			// this.mCurrentTexture = "tileset_test_2";
 			// this.UpdateTileSprite();
 		}
+		
+		if (this.mBarMenus[0].OnClick(0) == true) {
+			alert("create new");
+		}
+		else if (this.mBarMenus[0].OnClick(1) == true) {
+			alert("restore old");
+		}
+		else if (this.mBarMenus[0].OnClick(2) == true) {
+			alert("obliterate");
+		}
 	}
 	
 	this.mTranslate.Copy(currScene.mCam.mTranslate);
@@ -4209,6 +4506,8 @@ GFGUICreationControl.prototype.GetRenderData = function() {
 	}
 	
 	arr = arr.concat(this.mSetTexture.GetRenderData());
+	
+	arr = arr.concat(this.mBarMenus[0].GetRenderData());
 	
 	return arr;
 }
