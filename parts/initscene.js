@@ -31,6 +31,7 @@ InitScene.prototype.SetUp = function() {
 		nmgrs.resLoad.QueueTexture("gui_map_zlevelextra", "./res/vis/gui_map_zlevelextra.png");
 		
 		nmgrs.resLoad.QueueTexture("gui_creation_topbar", "./res/vis/gui_creation_topbar.png");
+		nmgrs.resLoad.QueueTexture("gui_creation_topmenunew", "./res/vis/gui_creation_topmenunew.png");
 		nmgrs.resLoad.QueueTexture("gui_creation_arrows", "./res/vis/gui_creation_arrows.png");
 		nmgrs.resLoad.QueueTexture("gui_creation_texset", "./res/vis/gui_creation_texset.png");
 		nmgrs.resLoad.QueueTexture("gui_texselect", "./res/vis/gui_texselect.png");
