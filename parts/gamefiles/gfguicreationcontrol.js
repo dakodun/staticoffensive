@@ -16,7 +16,7 @@ function GFGUICreationControl() {
 	this.mCurrTileText[5] = new Text();
 	
 	this.mCurrTileText[6] = new Text();
-	// this.mCurrTileText[7] = new Text();
+	this.mCurrTileText[7] = new Text();
 	
 	this.mOptionsArrows = new Array();
 	this.mOptionsArrows[0] = new GUIButton();
@@ -141,6 +141,13 @@ GFGUICreationControl.prototype.SetUp = function(initTex) {
 		this.mCurrTileText[6].mAlign = "centre";
 		this.mCurrTileText[6].mPos.Set(540, 323);
 		this.mCurrTileText[6].mShadow = true;
+		
+		this.mCurrTileText[7].SetFont(font);
+		this.mCurrTileText[7].SetFontSize(12);
+		this.mCurrTileText[7].mString = this.mCurrentTexture;
+		this.mCurrTileText[7].mAlign = "centre";
+		this.mCurrTileText[7].mPos.Set(540, 360);
+		this.mCurrTileText[7].mColour = "#000000";
 	}
 	
 	{
@@ -360,12 +367,12 @@ GFGUICreationControl.prototype.Process = function() {
 			this.mCurrTileText[5].mString = this.mTypes[this.mCurrentType];
 		}
 		else if (this.mSetTexture.OnClick() == true) {
-			// currScene.mPersist = true;
-			// nmgrs.sceneMan.ReadyScene(new GFTexSelScene());
-			// nmgrs.sceneMan.SwitchScene();
+			currScene.mPersist = true;
+			nmgrs.sceneMan.ReadyScene(new GFTexSelScene());
+			nmgrs.sceneMan.SwitchScene();
 			
-			this.mCurrentTexture = "tileset_test_2";
-			this.UpdateTileSprite();
+			// this.mCurrentTexture = "tileset_test_2";
+			// this.UpdateTileSprite();
 		}
 	}
 	
@@ -393,6 +400,8 @@ GFGUICreationControl.prototype.GetRenderData = function() {
 }
 
 GFGUICreationControl.prototype.UpdateTileSprite = function() {
+	this.mCurrTileText[7].mString = this.mCurrentTexture;
+	
 	var tex = nmgrs.resMan.mTexStore.GetResource(this.mCurrentTexture);
 	this.mCurrTile.mSprite.SetAnimatedTexture(tex, 35, 7, -1, -1);
 	
