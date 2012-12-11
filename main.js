@@ -915,7 +915,15 @@ SceneManager.prototype.SwitchScene = function() {
 // ResourceSort function
 // sorts *Resource objects based on the resource name
 function ResourceSort(first, second) {
-	return second.mResName < first.mResName;
+	var result = 0;
+	if (second.mResName < first.mResName) {
+		result = 1;
+	}
+	else if (first.mResName < second.mResName) {
+		result = -1;
+	}
+	
+	return result;
 };
 // ...End
 
@@ -2156,7 +2164,12 @@ InitScene.prototype.Persistent = function() {
 InitScene.prototype.SetUp = function() {
 	try {
 		nmgrs.resLoad.QueueTexture("tileset_test", "./res/vis/tileset_test.png");
-		nmgrs.resLoad.QueueTexture("tileset_test_2", "./res/vis/tileset_test_2.png");
+		nmgrs.resLoad.QueueTexture("tileset_test2", "./res/vis/tileset_test2.png");
+		nmgrs.resLoad.QueueTexture("tileset_dirtwhole", "./res/vis/tileset_dirtwhole.png");
+		nmgrs.resLoad.QueueTexture("tileset_grasstop", "./res/vis/tileset_grasstop.png");
+		nmgrs.resLoad.QueueTexture("tileset_grasswhole", "./res/vis/tileset_grasswhole.png");
+		nmgrs.resLoad.QueueTexture("tileset_blue", "./res/vis/tileset_blue.png");
+		nmgrs.resLoad.QueueTexture("tileset_red", "./res/vis/tileset_red.png");
 		
 		nmgrs.resLoad.QueueTexture("gui_map_compassmain", "./res/vis/gui_map_compassmain.png");
 		nmgrs.resLoad.QueueTexture("gui_map_compassextra", "./res/vis/gui_map_compassextra.png");
@@ -2166,6 +2179,7 @@ InitScene.prototype.SetUp = function() {
 		nmgrs.resLoad.QueueTexture("gui_creation_topbar", "./res/vis/gui_creation_topbar.png");
 		nmgrs.resLoad.QueueTexture("gui_creation_arrows", "./res/vis/gui_creation_arrows.png");
 		nmgrs.resLoad.QueueTexture("gui_creation_texset", "./res/vis/gui_creation_texset.png");
+		nmgrs.resLoad.QueueTexture("gui_texselect", "./res/vis/gui_texselect.png");
 		
 		nmgrs.resLoad.QueueTexture("menu_button", "./res/vis/menu_button.png");
 		
@@ -2570,6 +2584,27 @@ GFCreationScene.prototype.Render = function() {
 // game file:
 function GFTexSelScene() {
 	this.mPersist = false;
+	
+	this.mBatch = new RenderBatch();
+	
+	this.mTexSelections = new Array();
+	this.mCurrPage = 0;
+	this.mMaxPage = 0;
+	
+	this.mPagePos = new Array();
+	this.mPagePos[0] = new IVec2(20, 22);
+	this.mPagePos[1] = new IVec2(233, 22);
+	this.mPagePos[2] = new IVec2(447, 22);
+	this.mPagePos[3] = new IVec2(20, 262);
+	this.mPagePos[4] = new IVec2(233, 262);
+	this.mPagePos[5] = new IVec2(447, 262);
+	
+	this.mArrows = new Array();
+	this.mArrows[0] = new GUIButton();
+	this.mArrows[1] = new GUIButton();
+	
+	this.mCancel = new GUIButton();
+	this.mCancelText = new Text();
 }
 
 // returns the type of this object for validity checking
@@ -2584,7 +2619,86 @@ GFTexSelScene.prototype.Persistent = function() {
 
 // initialises the scene object
 GFTexSelScene.prototype.SetUp = function() {
+	for (var i = 0; i < nmgrs.resMan.mTexStore.mStore.length; ++i) {
+		var str = nmgrs.resMan.mTexStore.mStore[i].mResName;
+		if (str.length >= 7) {
+			if (str.substr(0, 7) == "tileset") {
+				var id = this.mTexSelections.length % 6;
+				var texSel = new GFTexSelection();
+				texSel.SetUp(this.mPagePos[id], str);
+				
+				this.mTexSelections.push(texSel);
+			}
+		}
+	}
 	
+	this.mMaxPage = Math.floor(this.mTexSelections.length / 7);
+	
+	{
+		var tex = nmgrs.resMan.mTexStore.GetResource("gui_creation_arrows");
+		
+		{
+			this.mArrows[0].SetUp(new IVec2(8, 434), new IVec2(22, 38), -5000);
+			
+			this.mArrows[0].mSpriteIdle.SetAnimatedTexture(tex, 6, 3, -1, -1);
+			this.mArrows[0].mSpriteIdle.SetCurrentFrame(0);
+			
+			this.mArrows[0].mSpriteHover.SetAnimatedTexture(tex, 6, 3, -1, -1);
+			this.mArrows[0].mSpriteHover.SetCurrentFrame(1);
+			
+			this.mArrows[0].mSpriteDown.SetAnimatedTexture(tex, 6, 3, -1, -1);
+			this.mArrows[0].mSpriteDown.SetCurrentFrame(2);
+			
+			this.mArrows[0].mSpriteInactive.SetAnimatedTexture(tex, 6, 3, -1, -1);
+			this.mArrows[0].mSpriteInactive.SetCurrentFrame(0);
+		}
+		
+		{
+			this.mArrows[1].SetUp(new IVec2(610, 434), new IVec2(22, 38), -5000);
+			
+			this.mArrows[1].mSpriteIdle.SetAnimatedTexture(tex, 6, 3, -1, -1);
+			this.mArrows[1].mSpriteIdle.SetCurrentFrame(3);
+			
+			this.mArrows[1].mSpriteHover.SetAnimatedTexture(tex, 6, 3, -1, -1);
+			this.mArrows[1].mSpriteHover.SetCurrentFrame(4);
+			
+			this.mArrows[1].mSpriteDown.SetAnimatedTexture(tex, 6, 3, -1, -1);
+			this.mArrows[1].mSpriteDown.SetCurrentFrame(5);
+			
+			this.mArrows[1].mSpriteInactive.SetAnimatedTexture(tex, 6, 3, -1, -1);
+			this.mArrows[1].mSpriteInactive.SetCurrentFrame(3);
+		}
+	}
+	
+	{
+		{
+			var tex = nmgrs.resMan.mTexStore.GetResource("gui_creation_texset");
+			
+			this.mCancel.SetUp(new IVec2(239, 434), new IVec2(162, 38), -5000);
+			
+			this.mCancel.mSpriteIdle.SetAnimatedTexture(tex, 3, 1, -1, -1);
+			this.mCancel.mSpriteIdle.SetCurrentFrame(0);
+			
+			this.mCancel.mSpriteHover.SetAnimatedTexture(tex, 3, 1, -1, -1);
+			this.mCancel.mSpriteHover.SetCurrentFrame(1);
+			
+			this.mCancel.mSpriteDown.SetAnimatedTexture(tex, 3, 1, -1, -1);
+			this.mCancel.mSpriteDown.SetCurrentFrame(2);
+			
+			this.mCancel.mSpriteInactive.SetAnimatedTexture(tex, 3, 1, -1, -1);
+			this.mCancel.mSpriteInactive.SetCurrentFrame(0);
+		}
+		
+		{
+			var font = nmgrs.resMan.mFontStore.GetResource("pixantiqua");
+			this.mCancelText.SetFont(font);
+			this.mCancelText.SetFontSize(24);
+			this.mCancelText.mString = "Cancel";
+			this.mCancelText.mAlign = "centre";
+			this.mCancelText.mPos.Set(320, 437);
+			this.mCancelText.mShadow = true;
+		}
+	}
 }
 
 // cleans up the scene object
@@ -2594,24 +2708,103 @@ GFTexSelScene.prototype.TearDown = function() {
 
 // handles user input
 GFTexSelScene.prototype.Input = function() {
-	if (nmgrs.inputMan.GetMousePressed(nmouse.button.code.left)) {
-		this.mPersist = true;
-		nmgrs.sceneMan.ReadyScene(new GFCreationScene());
-		
-		// set the current texture
-		
-		nmgrs.sceneMan.SwitchScene();
+	for (var i = 0; i < this.mArrows.length; ++i) {
+		this.mArrows[i].Input();
+	}
+	
+	this.mCancel.Input();
+	
+	var max = ((this.mCurrPage + 1) * 6);
+	if (max > this.mTexSelections.length) {
+		max = this.mTexSelections.length;
+	}
+	
+	for (var i = this.mCurrPage * 6; i < max; ++i) {
+		this.mTexSelections[i].Input();
 	}
 }
 
 // handles game logic
 GFTexSelScene.prototype.Process = function() {
+	{
+		var pt = new IVec2(0, 0);
+		pt.Copy(nmgrs.inputMan.GetLocalMouseCoords());
+		
+		for (var i = 0; i < this.mArrows.length; ++i) {
+			this.mArrows[i].Process(pt);
+		}
+		
+		this.mCancel.Process(pt);
+		
+		for (var i = 0; i < this.mTexSelections.length; ++i) {
+			this.mTexSelections[i].Process(pt);
+		}
+	}
 	
+	{
+		if (this.mArrows[0].OnClick() == true) {
+			this.mCurrPage--;
+			if (this.mCurrPage < 0) {
+				this.mCurrPage = 0;
+			}
+		}
+		else if (this.mArrows[1].OnClick() == true) {
+			this.mCurrPage++;
+			if (this.mCurrPage > this.mMaxPage) {
+				this.mCurrPage = this.mMaxPage;
+			}
+		}
+		else if (this.mCancel.OnClick() == true) {
+			nmgrs.sceneMan.ChangeScene(new GFCreationScene());
+		}
+		else {
+			for (var i = 0; i < this.mTexSelections.length; ++i) {
+				if (this.mTexSelections[i].OnClick() == true) {
+					this.mPersist = true;
+					nmgrs.sceneMan.ReadyScene(new GFCreationScene());
+					nmgrs.sceneMan.mReadyScene.mCreationControl.mCurrentTexture = this.mTexSelections[i].mTextureStr;
+					nmgrs.sceneMan.mReadyScene.mCreationControl.UpdateTileSprite();
+					nmgrs.sceneMan.SwitchScene();
+					break;
+				}
+			}
+		}
+	}
 }
 
 // handles all drawing tasks
 GFTexSelScene.prototype.Render = function() {
-	// display a grid of textures with sample maps and texture name
+	nmain.game.SetIdentity();
+	this.mBatch.Clear();
+	
+	var arr = new Array();
+	var max = ((this.mCurrPage + 1) * 6);
+	if (max > this.mTexSelections.length) {
+		max = this.mTexSelections.length;
+	}
+	
+	for (var i = this.mCurrPage * 6; i < max; ++i) {
+		arr = arr.concat(this.mTexSelections[i].GetRenderData());
+	}
+	
+	{
+		if (this.mCurrPage != 0) {
+			arr = arr.concat(this.mArrows[0].GetRenderData());
+		}
+		
+		if (this.mCurrPage != this.mMaxPage) {
+			arr = arr.concat(this.mArrows[1].GetRenderData());
+		}
+	}
+	
+	arr = arr.concat(this.mCancel.GetRenderData());
+	arr.push(this.mCancelText);
+	
+	for (var i = 0; i < arr.length; ++i) {
+		this.mBatch.Add(arr[i]);
+	}
+	
+	this.mBatch.Render();
 }
 // ...End
 
@@ -3637,7 +3830,7 @@ function GFGUICreationControl() {
 	this.mCurrTileText[5] = new Text();
 	
 	this.mCurrTileText[6] = new Text();
-	// this.mCurrTileText[7] = new Text();
+	this.mCurrTileText[7] = new Text();
 	
 	this.mOptionsArrows = new Array();
 	this.mOptionsArrows[0] = new GUIButton();
@@ -3762,6 +3955,13 @@ GFGUICreationControl.prototype.SetUp = function(initTex) {
 		this.mCurrTileText[6].mAlign = "centre";
 		this.mCurrTileText[6].mPos.Set(540, 323);
 		this.mCurrTileText[6].mShadow = true;
+		
+		this.mCurrTileText[7].SetFont(font);
+		this.mCurrTileText[7].SetFontSize(12);
+		this.mCurrTileText[7].mString = this.mCurrentTexture;
+		this.mCurrTileText[7].mAlign = "centre";
+		this.mCurrTileText[7].mPos.Set(540, 360);
+		this.mCurrTileText[7].mColour = "#000000";
 	}
 	
 	{
@@ -3981,12 +4181,12 @@ GFGUICreationControl.prototype.Process = function() {
 			this.mCurrTileText[5].mString = this.mTypes[this.mCurrentType];
 		}
 		else if (this.mSetTexture.OnClick() == true) {
-			// currScene.mPersist = true;
-			// nmgrs.sceneMan.ReadyScene(new GFTexSelScene());
-			// nmgrs.sceneMan.SwitchScene();
+			currScene.mPersist = true;
+			nmgrs.sceneMan.ReadyScene(new GFTexSelScene());
+			nmgrs.sceneMan.SwitchScene();
 			
-			this.mCurrentTexture = "tileset_test_2";
-			this.UpdateTileSprite();
+			// this.mCurrentTexture = "tileset_test_2";
+			// this.UpdateTileSprite();
 		}
 	}
 	
@@ -4014,6 +4214,8 @@ GFGUICreationControl.prototype.GetRenderData = function() {
 }
 
 GFGUICreationControl.prototype.UpdateTileSprite = function() {
+	this.mCurrTileText[7].mString = this.mCurrentTexture;
+	
 	var tex = nmgrs.resMan.mTexStore.GetResource(this.mCurrentTexture);
 	this.mCurrTile.mSprite.SetAnimatedTexture(tex, 35, 7, -1, -1);
 	
@@ -4040,23 +4242,83 @@ GFGUICreationControl.prototype.UpdateTileSprite = function() {
 function GFTexSelection() {
 	this.mPos = new IVec2(0, 0);
 	
+	this.mTextureStr = "";
+	
 	this.mSegment = new GFMapSegment();
 	this.mTexDisp = new Text();
+	this.mButton = new GUIButton();
 }
 
-GFTexSelection.prototype.SetUp = function(tex) {
-	var bp = new GFBluePrint();
-	bp.SetUp("60oc53oc40or70oc70oc30or00oc11oc20o");
+GFTexSelection.prototype.SetUp = function(pos, texStr) {
+	this.mPos.Copy(pos);
+	this.mTextureStr = texStr;
 	
-	var seg = new GFMapSegment();
-	seg.SetUp(bp, tex);
+	{
+		var font = nmgrs.resMan.mFontStore.GetResource("pixantiqua");
+		this.mTexDisp.SetFont(font);
+		this.mTexDisp.SetFontSize(12);
+		this.mTexDisp.mString = texStr;
+		this.mTexDisp.mAlign = "centre";
+		this.mTexDisp.mPos.Set(this.mPos.mX + 86, this.mPos.mY + 118);
+		this.mTexDisp.mShadow = true;
+	}
 	
-	this.mSegment.Copy(seg);
+	{
+		var bp = new GFBluePrint();
+		bp.SetUp("60oc53oc40or60oc70oc30or00oc11oc20o");
+		
+		var seg = new GFMapSegment();
+		seg.mPos.Set(0, 0); seg.SetUp(bp, texStr);
+		
+		this.mSegment.Copy(seg);
+		
+		this.mSegment.mTiles[3].ChangeZLevel(0);
+		for (var i = 0; i < this.mSegment.mTiles.length; ++i) {
+			this.mSegment.mTiles[i].mSprite.mPos.mX += this.mPos.mX;
+			this.mSegment.mTiles[i].mSprite.mPos.mY += this.mPos.mY + 20;
+		}
+	}
 	
-	this.mTexDisp = tex;
+	{
+		var tex = nmgrs.resMan.mTexStore.GetResource("gui_texselect");
+		
+		this.mButton.SetUp(new IVec2(this.mPos.mX - 9, this.mPos.mY - 9), new IVec2(190, 152), -5000);
+		
+		this.mButton.mSpriteIdle.SetAnimatedTexture(tex, 3, 1, -1, -1);
+		this.mButton.mSpriteIdle.SetCurrentFrame(0);
+		
+		this.mButton.mSpriteHover.SetAnimatedTexture(tex, 3, 1, -1, -1);
+		this.mButton.mSpriteHover.SetCurrentFrame(1);
+		
+		this.mButton.mSpriteDown.SetAnimatedTexture(tex, 3, 1, -1, -1);
+		this.mButton.mSpriteDown.SetCurrentFrame(2);
+		
+		this.mButton.mSpriteInactive.SetAnimatedTexture(tex, 3, 1, -1, -1);
+		this.mButton.mSpriteInactive.SetCurrentFrame(0);
+	}
+}
+
+GFTexSelection.prototype.Input = function() {
+	this.mButton.Input();
+}
+
+GFTexSelection.prototype.Process = function(point) {
+	this.mButton.Process(point);
 }
 
 GFTexSelection.prototype.GetRenderData = function() {
+	var arr = new Array();
 	
+	arr = arr.concat(this.mSegment.GetRenderData());
+	arr.push(this.mTexDisp);
+	arr = arr.concat(this.mButton.GetRenderData());
+	
+	return arr;
 }
+
+GFTexSelection.prototype.OnClick = function() {
+	return this.mButton.OnClick();
+}
+// ...End
+
 
