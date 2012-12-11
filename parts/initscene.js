@@ -18,7 +18,12 @@ InitScene.prototype.Persistent = function() {
 InitScene.prototype.SetUp = function() {
 	try {
 		nmgrs.resLoad.QueueTexture("tileset_test", "./res/vis/tileset_test.png");
-		nmgrs.resLoad.QueueTexture("tileset_test_2", "./res/vis/tileset_test_2.png");
+		nmgrs.resLoad.QueueTexture("tileset_test2", "./res/vis/tileset_test2.png");
+		nmgrs.resLoad.QueueTexture("tileset_dirtwhole", "./res/vis/tileset_dirtwhole.png");
+		nmgrs.resLoad.QueueTexture("tileset_grasstop", "./res/vis/tileset_grasstop.png");
+		nmgrs.resLoad.QueueTexture("tileset_grasswhole", "./res/vis/tileset_grasswhole.png");
+		nmgrs.resLoad.QueueTexture("tileset_blue", "./res/vis/tileset_blue.png");
+		nmgrs.resLoad.QueueTexture("tileset_red", "./res/vis/tileset_red.png");
 		
 		nmgrs.resLoad.QueueTexture("gui_map_compassmain", "./res/vis/gui_map_compassmain.png");
 		nmgrs.resLoad.QueueTexture("gui_map_compassextra", "./res/vis/gui_map_compassextra.png");
