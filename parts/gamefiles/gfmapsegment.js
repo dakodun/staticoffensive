@@ -13,10 +13,6 @@ function GFMapConnectivity() {
 };
 
 GFMapConnectivity.prototype.GetCompatible = function(other) {
-	// invalid moves:
-	// moving to or from a block 2 higher
-	// moving to or from a slope 1 higher at the larger end
-	
 	var resultArr = new Array();
 	resultArr[0] = false; resultArr[1] = false;
 	resultArr[2] = false; resultArr[3] = false;
@@ -119,11 +115,12 @@ GFMapSegment.prototype.Copy = function(other) {
 	this.mEntrances = this.mEntrances.concat(other.mEntrances);
 }
 
-GFMapSegment.prototype.SetUp = function(blueprint, tileset) {
-	var tex = nmgrs.resMan.mTexStore.GetResource(tileset);
+GFMapSegment.prototype.SetUp = function(blueprint) {
 	this.mSize.Copy(blueprint.mSize);
 	
 	for (var i = 0; i < blueprint.mTiles.length; ++i) {
+		var tex = nmgrs.resMan.mTexStore.GetResource(blueprint.mTiles[i].mTex);
+		
 		var tile = new GFMapTile();
 		tile.mLocalPos.Copy(blueprint.mTiles[i].mPos);
 		tile.mGlobalPos.Set(tile.mLocalPos.mX + this.mPos.mX, tile.mLocalPos.mY + this.mPos.mY);
