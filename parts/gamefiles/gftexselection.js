@@ -26,10 +26,10 @@ GFTexSelection.prototype.SetUp = function(pos, texStr) {
 	
 	{
 		var bp = new GFBluePrint();
-		bp.SetUp("60oc53oc40or60oc70oc30or00oc11oc20o");
+		bp.SetUp("a:" + texStr + ";{60oa?53oa?40oa!60oa?70oa?30oa!00oa?11oa?20oa}");
 		
 		var seg = new GFMapSegment();
-		seg.mPos.Set(0, 0); seg.SetUp(bp, texStr);
+		seg.mPos.Set(0, 0); seg.SetUp(bp);
 		
 		this.mSegment.Copy(seg);
 		

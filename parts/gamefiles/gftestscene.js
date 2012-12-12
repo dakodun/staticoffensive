@@ -39,24 +39,35 @@ GFTestScene.prototype.SetUp = function() {
 		
 		{
 			var arr = new Array();
-			arr.push("20xc"); arr.push("20or");
-			arr.push("20oc"); arr.push("20x");
+			arr.push("a:tileset_blue;");
+			arr.push("{");
+			arr.push("20xa?"); arr.push("20oa!");
+			arr.push("20oa?"); arr.push("20xa");
+			arr.push("}");
 			bpc.mInitStore.push(bpc.Convert(arr));
 		}
 		
 		{
 			var arr = new Array();
-			arr.push("20oc"); arr.push("20xc"); arr.push("20ec"); arr.push("20or");
-			arr.push("20ec"); arr.push("20oc"); arr.push("20oc"); arr.push("20xr");
-			arr.push("20xc"); arr.push("20oc"); arr.push("20oc"); arr.push("20er");
-			arr.push("20oc"); arr.push("20ec"); arr.push("20xc"); arr.push("20o");
+			arr.push("a:tileset_dirtwhole;");
+			arr.push("b:tileset_grasstop;");
+			arr.push("c:tileset_grasswhole;");
+			arr.push("{");
+			arr.push("20ob?"); arr.push("20xb?"); arr.push("20eb?"); arr.push("20ob!");
+			arr.push("20ec?"); arr.push("20oa?"); arr.push("20ob?"); arr.push("20xb!");
+			arr.push("20xc?"); arr.push("20ob?"); arr.push("20ob?"); arr.push("20ea!");
+			arr.push("20oa?"); arr.push("20ec?"); arr.push("20xa?"); arr.push("20ob");
+			arr.push("}");
 			bpc.mRegStore.push(bpc.Convert(arr));
 		}
 		
 		{
 			var arr = new Array();
-			arr.push("20ec"); arr.push("20oc"); arr.push("20ec"); arr.push("20oc"); arr.push("20er");
-			arr.push("20ec"); arr.push("20oc"); arr.push("20ec"); arr.push("20oc"); arr.push("20e");
+			arr.push("a:tileset_red;");
+			arr.push("{");
+			arr.push("20ea?"); arr.push("20oa?"); arr.push("20ea?"); arr.push("20oa?"); arr.push("20ea!");
+			arr.push("20ea?"); arr.push("20oa?"); arr.push("20ea?"); arr.push("20oa?"); arr.push("20ea");
+			arr.push("}");
 			bpc.mFinStore.push(bpc.Convert(arr));
 		}
 		

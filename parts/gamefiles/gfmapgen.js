@@ -17,7 +17,7 @@ GFMapGen.prototype.GenerateMap = function(bpCollection, numParts) {
 		bp.SetUp(bpc.mInitStore[bpid]);
 		
 		var seg = new GFMapSegment();
-		seg.mPos.Set(0, 0); seg.SetUp(bp, "tileset_blue");
+		seg.mPos.Set(0, 0); seg.SetUp(bp);
 		map.AddSegment(seg);
 	}
 	
@@ -42,7 +42,7 @@ GFMapGen.prototype.GenerateMap = function(bpCollection, numParts) {
 			
 			// create a temporary segment with our chosen blueprint
 			var segTemp = new GFMapSegment();
-			segTemp.mPos.Set(0, 0); segTemp.SetUp(bp, "tileset_grasstop");
+			segTemp.mPos.Set(0, 0); segTemp.SetUp(bp);
 			
 			// check entrances against previous segments exits
 			var segLast = map.mSegments.length - 1; // get the id of the previous segment in the map array
@@ -94,12 +94,7 @@ GFMapGen.prototype.GenerateMap = function(bpCollection, numParts) {
 								
 								seg.mPos.Set(x, y);
 								
-								if (i < numParts - 2) {
-									seg.SetUp(bp, "tileset_grasstop");
-								}
-								else {
-									seg.SetUp(bp, "tileset_red");
-								}
+								seg.SetUp(bp);
 								
 								var collision = false;
 								for (var m = 0; m < map.mSegments.length; ++m) {
