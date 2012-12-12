@@ -302,86 +302,89 @@ GFGUICreationControl.prototype.SetUp = function(initTex) {
 		}
 		
 		{
-			var tex = nmgrs.resMan.mTexStore.GetResource("gui_creation_texset");
+			var tex = nmgrs.resMan.mTexStore.GetResource("gui_creation_dropback");
 			var font = nmgrs.resMan.mFontStore.GetResource("pixantiqua");
 			
 			{
 				var itemBut = new GUIButton();
-				itemBut.SetUp(new IVec2(0, 0), new IVec2(162, 38), -5000);
+				itemBut.SetUp(new IVec2(0, 0), new IVec2(176, 16), -5000);
 				
-				itemBut.mSpriteIdle.SetAnimatedTexture(tex, 3, 1, -1, -1);
-				itemBut.mSpriteIdle.SetCurrentFrame(0);
+				itemBut.mSpriteIdle.SetAnimatedTexture(tex, 6, 1, -1, -1);
+				itemBut.mSpriteIdle.SetCurrentFrame(3);
 				
-				itemBut.mSpriteHover.SetAnimatedTexture(tex, 3, 1, -1, -1);
-				itemBut.mSpriteHover.SetCurrentFrame(1);
+				itemBut.mSpriteHover.SetAnimatedTexture(tex, 6, 1, -1, -1);
+				itemBut.mSpriteHover.SetCurrentFrame(4);
 				
-				itemBut.mSpriteDown.SetAnimatedTexture(tex, 3, 1, -1, -1);
-				itemBut.mSpriteDown.SetCurrentFrame(2);
+				itemBut.mSpriteDown.SetAnimatedTexture(tex, 6, 1, -1, -1);
+				itemBut.mSpriteDown.SetCurrentFrame(5);
 				
-				itemBut.mSpriteInactive.SetAnimatedTexture(tex, 3, 1, -1, -1);
-				itemBut.mSpriteInactive.SetCurrentFrame(0);
+				itemBut.mSpriteInactive.SetAnimatedTexture(tex, 6, 1, -1, -1);
+				itemBut.mSpriteInactive.SetCurrentFrame(3);
 				
 				var itemTxt = new Text();
+				itemTxt.mDepth = -5001;
 				itemTxt.SetFont(font);
 				itemTxt.SetFontSize(12);
 				itemTxt.mString = "create new";
 				itemTxt.mAlign = "left";
-				itemTxt.mPos.Set(20, 10);
-				itemTxt.mColour = "#000000";
+				itemTxt.mPos.Set(26, 0);
+				itemTxt.mColour = "#4A4A66";
 					
 				this.mBarMenus[0].AddItem(itemBut, itemTxt);
 			}
 			
 			{
 				var itemBut = new GUIButton();
-				itemBut.SetUp(new IVec2(0, 0), new IVec2(162, 38), -5000);
+				itemBut.SetUp(new IVec2(0, 0), new IVec2(176, 16), -5000);
 				
-				itemBut.mSpriteIdle.SetAnimatedTexture(tex, 3, 1, -1, -1);
+				itemBut.mSpriteIdle.SetAnimatedTexture(tex, 6, 1, -1, -1);
 				itemBut.mSpriteIdle.SetCurrentFrame(0);
 				
-				itemBut.mSpriteHover.SetAnimatedTexture(tex, 3, 1, -1, -1);
+				itemBut.mSpriteHover.SetAnimatedTexture(tex, 6, 1, -1, -1);
 				itemBut.mSpriteHover.SetCurrentFrame(1);
 				
-				itemBut.mSpriteDown.SetAnimatedTexture(tex, 3, 1, -1, -1);
+				itemBut.mSpriteDown.SetAnimatedTexture(tex, 6, 1, -1, -1);
 				itemBut.mSpriteDown.SetCurrentFrame(2);
 				
-				itemBut.mSpriteInactive.SetAnimatedTexture(tex, 3, 1, -1, -1);
+				itemBut.mSpriteInactive.SetAnimatedTexture(tex, 6, 1, -1, -1);
 				itemBut.mSpriteInactive.SetCurrentFrame(0);
 				
 				var itemTxt = new Text();
+				itemTxt.mDepth = -5001;
 				itemTxt.SetFont(font);
 				itemTxt.SetFontSize(12);
 				itemTxt.mString = "restore old";
 				itemTxt.mAlign = "left";
-				itemTxt.mPos.Set(20, 10);
-				itemTxt.mColour = "#000000";
+				itemTxt.mPos.Set(26, 0);
+				itemTxt.mColour = "#4A4A66";
 					
 				this.mBarMenus[0].AddItem(itemBut, itemTxt);
 			}
 			
 			{
 				var itemBut = new GUIButton();
-				itemBut.SetUp(new IVec2(0, 0), new IVec2(162, 38), -5000);
+				itemBut.SetUp(new IVec2(0, 0), new IVec2(176, 16), -5000);
 				
-				itemBut.mSpriteIdle.SetAnimatedTexture(tex, 3, 1, -1, -1);
-				itemBut.mSpriteIdle.SetCurrentFrame(0);
+				itemBut.mSpriteIdle.SetAnimatedTexture(tex, 6, 1, -1, -1);
+				itemBut.mSpriteIdle.SetCurrentFrame(3);
 				
-				itemBut.mSpriteHover.SetAnimatedTexture(tex, 3, 1, -1, -1);
-				itemBut.mSpriteHover.SetCurrentFrame(1);
+				itemBut.mSpriteHover.SetAnimatedTexture(tex, 6, 1, -1, -1);
+				itemBut.mSpriteHover.SetCurrentFrame(4);
 				
-				itemBut.mSpriteDown.SetAnimatedTexture(tex, 3, 1, -1, -1);
-				itemBut.mSpriteDown.SetCurrentFrame(2);
+				itemBut.mSpriteDown.SetAnimatedTexture(tex, 6, 1, -1, -1);
+				itemBut.mSpriteDown.SetCurrentFrame(5);
 				
-				itemBut.mSpriteInactive.SetAnimatedTexture(tex, 3, 1, -1, -1);
-				itemBut.mSpriteInactive.SetCurrentFrame(0);
+				itemBut.mSpriteInactive.SetAnimatedTexture(tex, 6, 1, -1, -1);
+				itemBut.mSpriteInactive.SetCurrentFrame(3);
 				
 				var itemTxt = new Text();
+				itemTxt.mDepth = -5001;
 				itemTxt.SetFont(font);
 				itemTxt.SetFontSize(12);
 				itemTxt.mString = "obliterate";
 				itemTxt.mAlign = "left";
-				itemTxt.mPos.Set(20, 10);
-				itemTxt.mColour = "#000000";
+				itemTxt.mPos.Set(26, 0);
+				itemTxt.mColour = "#4A4A66";
 					
 				this.mBarMenus[0].AddItem(itemBut, itemTxt);
 			}
