@@ -584,6 +584,10 @@ document.onkeyup = function(e) {
 	nmgrs.inputMan.HandleKeyUp(e);
 }
 
+document.onkeypress = function(e) {
+	nmgrs.inputMan.HandleKeyPress(e);
+}
+
 // register our call back to handle mouse movement
 document.onmousemove = function(e) {
 	nmgrs.inputMan.HandleMouseMove(e);
@@ -617,6 +621,8 @@ function InputManager() {
 	
 	this.mLocalMouseCoords = new IVec2(0, 0); // coordinates of the mouse in the canvas
 	this.mGlobalMouseCoords = new IVec2(0, 0); // coordinates of the mouse in the page
+	
+	this.mTextInput = "";
 }
 
 // process the input manager (update key and button states)
@@ -640,6 +646,8 @@ InputManager.prototype.Process = function() {
 			this.mButtonStates[i] = 0; // it is now up
 		}
 	}
+	
+	this.mTextInput = "";
 }
 
 // handle key down
@@ -647,6 +655,14 @@ InputManager.prototype.HandleKeyDown = function(e) {
 	// if key was previously up
 	if (this.mKeyStates[e.keyCode] == 0) {
 		this.mKeyStates[e.keyCode] = 2; // key is now pressed (note: not down)
+	}
+}
+
+InputManager.prototype.HandleKeyPress = function(e) {
+	if ((e.which >= 65 && e.which <= 90) || (e.which >= 97 && e.which <= 122) ||
+			(e.which >= 48 && e.which <=57)) {
+		
+		this.mTextInput += String.fromCharCode(e.which);
 	}
 }
 
@@ -1641,6 +1657,65 @@ Sprite.prototype.GetHeight = function() {
 // ...End
 
 
+// RenderData Class...
+// 
+function RenderData() {
+	this.mData = new Array();
+	
+	this.mDepth = 0;
+	
+	this.mPos = new IVec2(0, 0);
+	this.mSize = new IVec2(0, 0);
+	this.mRotation = 0;
+};
+
+// returns the type of this object for validity checking
+RenderData.prototype.Type = function() {
+	return "RenderData";
+}
+
+// make a copy of another (other) renderdata (copy constructor)
+RenderData.prototype.Copy = function(other) {
+	this.mData.splice(0, this.mData.length);
+	this.mData = this.mData.concat(other.mData);
+	
+	this.mDepth = other.mDepth;
+	
+	this.mPos.Copy(other.mPos);
+	this.mSize.Copy(other.mSize);
+	this.mRotation = other.mRotation;
+}
+
+// return the width of the render data
+RenderData.prototype.GetWidth = function() {
+	return this.mSize.mX;
+}
+
+// return the height of the render data
+RenderData.prototype.GetHeight = function() {
+	return this.mSize.mY;
+}
+
+RenderData.prototype.CreateFromArray = function(size, data) {
+	this.mSize.Copy(size);
+	
+	this.mData.splice(0, this.mData.length);
+	this.mData = this.mData.concat(data);
+}
+
+RenderData.prototype.CreateFromScreen = function(screen, pos, size) {
+	this.mSize.Copy(size);
+	
+	var imgData = screen.getImageData(pos.mX, pos.mX, this.mSize.mX, this.mSize.mY);
+	this.mData.splice(0, this.mData.length);
+	
+	for (var i = 0; i < imgData.data.length; ++i) {
+		this.mData.push(imgData.data[i]);
+	}
+}
+// ..End
+
+
 // DepthSort function
 // sorts renderable resources based on depth
 function DepthSort(first, second) {
@@ -1678,6 +1753,9 @@ RenderBatch.prototype.Add = function(object) {
 	else if (object.Type() == "Shape") {
 		this.AddShape(object);
 	}
+	else if (object.Type() == "RenderData") {
+		this.AddRenderData(object);
+	}
 }
 
 // add a sprite to the render batch
@@ -1709,6 +1787,16 @@ RenderBatch.prototype.AddShape = function(shape) {
 	shp.Copy(shape);
 	
 	this.mRenderData.push(shp);
+	// this.mRenderData.sort(DepthSort); // sort the queue
+}
+
+// add render data to the render batch
+RenderBatch.prototype.AddRenderData = function(renderData) {
+	this.mNeedSort = true;
+	var renData = new RenderData();
+	renData.Copy(renderData);
+	
+	this.mRenderData.push(renData);
 	// this.mRenderData.sort(DepthSort); // sort the queue
 }
 
@@ -1898,6 +1986,46 @@ RenderBatch.prototype.Render = function(camera) {
 				}
 				
 				nmain.game.mCurrContext.globalAlpha = oldAlpha;
+			}
+		}
+		else if (this.mRenderData[i].Type() == "RenderData") {
+			var renData = this.mRenderData[i];
+			
+			var idTL = new IVec2(renData.mPos.mX, renData.mPos.mY);
+			var idBR = new IVec2(renData.mPos.mX + renData.GetWidth(), renData.mPos.mY + renData.GetHeight());
+			
+			var intersect = false;
+			var left = idTL.mX;
+			var right = scrBR.mX;
+			if (scrTL.mX < idTL.mX) {
+				left = scrTL.mX;
+				right = idBR.mX;
+			}
+			
+			if (right - left < renData.GetWidth() + nmain.game.mCanvasSize.mX) {
+				var top = idTL.mY;
+				var bottom = scrBR.mY;
+				if (scrTL.mY < idTL.mY) {
+					top = scrTL.mY;
+					bottom = idBR.mY;
+				}
+				
+				if (bottom - top < renData.GetHeight() + nmain.game.mCanvasSize.mY) {
+					intersect = true;
+				}
+			}
+			
+			if (intersect == true) {
+				nmain.game.mCurrContext.translate(renData.mPos.mX, renData.mPos.mY);
+				nmain.game.mCurrContext.rotate(renData.mRotation * (Math.PI / 180));
+				
+				var imgData = nmain.game.mCurrContext.createImageData(renData.GetWidth(), renData.GetHeight());
+				
+				for (var j = 0; j < imgData.data.length; ++j) {
+					imgData.data[j] = renData.mData[j];
+				}
+				
+				nmain.game.mCurrContext.putImageData(imgData, 0, 0);
 			}
 		}
 		
