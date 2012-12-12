@@ -2334,6 +2334,7 @@ InitScene.prototype.SetUp = function() {
 		
 		nmgrs.resLoad.QueueTexture("gui_creation_topbar", "./res/vis/gui_creation_topbar.png");
 		nmgrs.resLoad.QueueTexture("gui_creation_topmenunew", "./res/vis/gui_creation_topmenunew.png");
+		nmgrs.resLoad.QueueTexture("gui_creation_dropback", "./res/vis/gui_creation_dropback.png");
 		nmgrs.resLoad.QueueTexture("gui_creation_arrows", "./res/vis/gui_creation_arrows.png");
 		nmgrs.resLoad.QueueTexture("gui_creation_texset", "./res/vis/gui_creation_texset.png");
 		nmgrs.resLoad.QueueTexture("gui_texselect", "./res/vis/gui_texselect.png");
@@ -2602,24 +2603,35 @@ GFTestScene.prototype.SetUp = function() {
 		
 		{
 			var arr = new Array();
-			arr.push("20xc"); arr.push("20or");
-			arr.push("20oc"); arr.push("20x");
+			arr.push("a:tileset_blue;");
+			arr.push("{");
+			arr.push("20xa?"); arr.push("20oa!");
+			arr.push("20oa?"); arr.push("20xa");
+			arr.push("}");
 			bpc.mInitStore.push(bpc.Convert(arr));
 		}
 		
 		{
 			var arr = new Array();
-			arr.push("20oc"); arr.push("20xc"); arr.push("20ec"); arr.push("20or");
-			arr.push("20ec"); arr.push("20oc"); arr.push("20oc"); arr.push("20xr");
-			arr.push("20xc"); arr.push("20oc"); arr.push("20oc"); arr.push("20er");
-			arr.push("20oc"); arr.push("20ec"); arr.push("20xc"); arr.push("20o");
+			arr.push("a:tileset_dirtwhole;");
+			arr.push("b:tileset_grasstop;");
+			arr.push("c:tileset_grasswhole;");
+			arr.push("{");
+			arr.push("20ob?"); arr.push("20xb?"); arr.push("20eb?"); arr.push("20ob!");
+			arr.push("20ec?"); arr.push("20oa?"); arr.push("20ob?"); arr.push("20xb!");
+			arr.push("20xc?"); arr.push("20ob?"); arr.push("20ob?"); arr.push("20ea!");
+			arr.push("20oa?"); arr.push("20ec?"); arr.push("20xa?"); arr.push("20ob");
+			arr.push("}");
 			bpc.mRegStore.push(bpc.Convert(arr));
 		}
 		
 		{
 			var arr = new Array();
-			arr.push("20ec"); arr.push("20oc"); arr.push("20ec"); arr.push("20oc"); arr.push("20er");
-			arr.push("20ec"); arr.push("20oc"); arr.push("20ec"); arr.push("20oc"); arr.push("20e");
+			arr.push("a:tileset_red;");
+			arr.push("{");
+			arr.push("20ea?"); arr.push("20oa?"); arr.push("20ea?"); arr.push("20oa?"); arr.push("20ea!");
+			arr.push("20ea?"); arr.push("20oa?"); arr.push("20ea?"); arr.push("20oa?"); arr.push("20ea");
+			arr.push("}");
 			bpc.mFinStore.push(bpc.Convert(arr));
 		}
 		
@@ -3116,6 +3128,8 @@ function GFBluePrintTile() {
 	this.mZ = 0;
 	this.mSpecial = "o";
 	this.mSlopeDirection = 0;
+	
+	this.mTex = "";
 };
 // ...End
 
@@ -3135,17 +3149,28 @@ GFBluePrint.prototype.Copy = function(other) {
 }
 
 GFBluePrint.prototype.SetUp = function(bpstring) {
-	var rows = bpstring.split('r');
+	var ind = bpstring.indexOf('{');
+	var texStr = bpstring.substr(0, ind);
+	var texArr = texStr.split(';'); texArr.pop();
+	var textures = new Array();
+	
+	for (var i = 0; i < texArr.length; ++i) {
+		var texInd = texArr[i].substr(0, 1);
+		textures[texInd] = texArr[i].substr(2, texArr[i].length - 2);
+	}
+	
+	var tileStr = bpstring.substr(ind + 1, (bpstring.length - ind) - 2);
+	var rows = tileStr.split('!');
 	var tiles = new Array();
 	
 	if (rows.length > 0) {
 		{
-			var cols = rows[0].split('c');
+			var cols = rows[0].split('?');
 			this.mSize.Set(cols.length, rows.length);
 		}
 		
 		for (var i = 0; i < rows.length; ++i) {
-			var split = rows[i].split('c');
+			var split = rows[i].split('?');
 			tiles = tiles.concat(split);
 		}
 		
@@ -3157,6 +3182,9 @@ GFBluePrint.prototype.SetUp = function(bpstring) {
 				bpTile.mZ = Number(tiles[id].charAt(0));
 				bpTile.mSlopeDirection = Number(tiles[id].charAt(1));
 				bpTile.mSpecial = tiles[id].charAt(2);
+				
+				bpTile.mTex = textures[tiles[id].charAt(3)];
+				
 				this.mTiles.push(bpTile);
 				id++;
 			}
@@ -3215,7 +3243,7 @@ GFMapGen.prototype.GenerateMap = function(bpCollection, numParts) {
 		bp.SetUp(bpc.mInitStore[bpid]);
 		
 		var seg = new GFMapSegment();
-		seg.mPos.Set(0, 0); seg.SetUp(bp, "tileset_blue");
+		seg.mPos.Set(0, 0); seg.SetUp(bp);
 		map.AddSegment(seg);
 	}
 	
@@ -3240,7 +3268,7 @@ GFMapGen.prototype.GenerateMap = function(bpCollection, numParts) {
 			
 			// create a temporary segment with our chosen blueprint
 			var segTemp = new GFMapSegment();
-			segTemp.mPos.Set(0, 0); segTemp.SetUp(bp, "tileset_grasstop");
+			segTemp.mPos.Set(0, 0); segTemp.SetUp(bp);
 			
 			// check entrances against previous segments exits
 			var segLast = map.mSegments.length - 1; // get the id of the previous segment in the map array
@@ -3292,12 +3320,7 @@ GFMapGen.prototype.GenerateMap = function(bpCollection, numParts) {
 								
 								seg.mPos.Set(x, y);
 								
-								if (i < numParts - 2) {
-									seg.SetUp(bp, "tileset_grasstop");
-								}
-								else {
-									seg.SetUp(bp, "tileset_red");
-								}
+								seg.SetUp(bp);
 								
 								var collision = false;
 								for (var m = 0; m < map.mSegments.length; ++m) {
@@ -3432,10 +3455,6 @@ function GFMapConnectivity() {
 };
 
 GFMapConnectivity.prototype.GetCompatible = function(other) {
-	// invalid moves:
-	// moving to or from a block 2 higher
-	// moving to or from a slope 1 higher at the larger end
-	
 	var resultArr = new Array();
 	resultArr[0] = false; resultArr[1] = false;
 	resultArr[2] = false; resultArr[3] = false;
@@ -3538,11 +3557,12 @@ GFMapSegment.prototype.Copy = function(other) {
 	this.mEntrances = this.mEntrances.concat(other.mEntrances);
 }
 
-GFMapSegment.prototype.SetUp = function(blueprint, tileset) {
-	var tex = nmgrs.resMan.mTexStore.GetResource(tileset);
+GFMapSegment.prototype.SetUp = function(blueprint) {
 	this.mSize.Copy(blueprint.mSize);
 	
 	for (var i = 0; i < blueprint.mTiles.length; ++i) {
+		var tex = nmgrs.resMan.mTexStore.GetResource(blueprint.mTiles[i].mTex);
+		
 		var tile = new GFMapTile();
 		tile.mLocalPos.Copy(blueprint.mTiles[i].mPos);
 		tile.mGlobalPos.Set(tile.mLocalPos.mX + this.mPos.mX, tile.mLocalPos.mY + this.mPos.mY);
@@ -4280,86 +4300,89 @@ GFGUICreationControl.prototype.SetUp = function(initTex) {
 		}
 		
 		{
-			var tex = nmgrs.resMan.mTexStore.GetResource("gui_creation_texset");
+			var tex = nmgrs.resMan.mTexStore.GetResource("gui_creation_dropback");
 			var font = nmgrs.resMan.mFontStore.GetResource("pixantiqua");
 			
 			{
 				var itemBut = new GUIButton();
-				itemBut.SetUp(new IVec2(0, 0), new IVec2(162, 38), -5000);
+				itemBut.SetUp(new IVec2(0, 0), new IVec2(176, 16), -5000);
 				
-				itemBut.mSpriteIdle.SetAnimatedTexture(tex, 3, 1, -1, -1);
-				itemBut.mSpriteIdle.SetCurrentFrame(0);
+				itemBut.mSpriteIdle.SetAnimatedTexture(tex, 6, 1, -1, -1);
+				itemBut.mSpriteIdle.SetCurrentFrame(3);
 				
-				itemBut.mSpriteHover.SetAnimatedTexture(tex, 3, 1, -1, -1);
-				itemBut.mSpriteHover.SetCurrentFrame(1);
+				itemBut.mSpriteHover.SetAnimatedTexture(tex, 6, 1, -1, -1);
+				itemBut.mSpriteHover.SetCurrentFrame(4);
 				
-				itemBut.mSpriteDown.SetAnimatedTexture(tex, 3, 1, -1, -1);
-				itemBut.mSpriteDown.SetCurrentFrame(2);
+				itemBut.mSpriteDown.SetAnimatedTexture(tex, 6, 1, -1, -1);
+				itemBut.mSpriteDown.SetCurrentFrame(5);
 				
-				itemBut.mSpriteInactive.SetAnimatedTexture(tex, 3, 1, -1, -1);
-				itemBut.mSpriteInactive.SetCurrentFrame(0);
+				itemBut.mSpriteInactive.SetAnimatedTexture(tex, 6, 1, -1, -1);
+				itemBut.mSpriteInactive.SetCurrentFrame(3);
 				
 				var itemTxt = new Text();
+				itemTxt.mDepth = -5001;
 				itemTxt.SetFont(font);
 				itemTxt.SetFontSize(12);
 				itemTxt.mString = "create new";
 				itemTxt.mAlign = "left";
-				itemTxt.mPos.Set(20, 10);
-				itemTxt.mColour = "#000000";
+				itemTxt.mPos.Set(26, 0);
+				itemTxt.mColour = "#4A4A66";
 					
 				this.mBarMenus[0].AddItem(itemBut, itemTxt);
 			}
 			
 			{
 				var itemBut = new GUIButton();
-				itemBut.SetUp(new IVec2(0, 0), new IVec2(162, 38), -5000);
+				itemBut.SetUp(new IVec2(0, 0), new IVec2(176, 16), -5000);
 				
-				itemBut.mSpriteIdle.SetAnimatedTexture(tex, 3, 1, -1, -1);
+				itemBut.mSpriteIdle.SetAnimatedTexture(tex, 6, 1, -1, -1);
 				itemBut.mSpriteIdle.SetCurrentFrame(0);
 				
-				itemBut.mSpriteHover.SetAnimatedTexture(tex, 3, 1, -1, -1);
+				itemBut.mSpriteHover.SetAnimatedTexture(tex, 6, 1, -1, -1);
 				itemBut.mSpriteHover.SetCurrentFrame(1);
 				
-				itemBut.mSpriteDown.SetAnimatedTexture(tex, 3, 1, -1, -1);
+				itemBut.mSpriteDown.SetAnimatedTexture(tex, 6, 1, -1, -1);
 				itemBut.mSpriteDown.SetCurrentFrame(2);
 				
-				itemBut.mSpriteInactive.SetAnimatedTexture(tex, 3, 1, -1, -1);
+				itemBut.mSpriteInactive.SetAnimatedTexture(tex, 6, 1, -1, -1);
 				itemBut.mSpriteInactive.SetCurrentFrame(0);
 				
 				var itemTxt = new Text();
+				itemTxt.mDepth = -5001;
 				itemTxt.SetFont(font);
 				itemTxt.SetFontSize(12);
 				itemTxt.mString = "restore old";
 				itemTxt.mAlign = "left";
-				itemTxt.mPos.Set(20, 10);
-				itemTxt.mColour = "#000000";
+				itemTxt.mPos.Set(26, 0);
+				itemTxt.mColour = "#4A4A66";
 					
 				this.mBarMenus[0].AddItem(itemBut, itemTxt);
 			}
 			
 			{
 				var itemBut = new GUIButton();
-				itemBut.SetUp(new IVec2(0, 0), new IVec2(162, 38), -5000);
+				itemBut.SetUp(new IVec2(0, 0), new IVec2(176, 16), -5000);
 				
-				itemBut.mSpriteIdle.SetAnimatedTexture(tex, 3, 1, -1, -1);
-				itemBut.mSpriteIdle.SetCurrentFrame(0);
+				itemBut.mSpriteIdle.SetAnimatedTexture(tex, 6, 1, -1, -1);
+				itemBut.mSpriteIdle.SetCurrentFrame(3);
 				
-				itemBut.mSpriteHover.SetAnimatedTexture(tex, 3, 1, -1, -1);
-				itemBut.mSpriteHover.SetCurrentFrame(1);
+				itemBut.mSpriteHover.SetAnimatedTexture(tex, 6, 1, -1, -1);
+				itemBut.mSpriteHover.SetCurrentFrame(4);
 				
-				itemBut.mSpriteDown.SetAnimatedTexture(tex, 3, 1, -1, -1);
-				itemBut.mSpriteDown.SetCurrentFrame(2);
+				itemBut.mSpriteDown.SetAnimatedTexture(tex, 6, 1, -1, -1);
+				itemBut.mSpriteDown.SetCurrentFrame(5);
 				
-				itemBut.mSpriteInactive.SetAnimatedTexture(tex, 3, 1, -1, -1);
-				itemBut.mSpriteInactive.SetCurrentFrame(0);
+				itemBut.mSpriteInactive.SetAnimatedTexture(tex, 6, 1, -1, -1);
+				itemBut.mSpriteInactive.SetCurrentFrame(3);
 				
 				var itemTxt = new Text();
+				itemTxt.mDepth = -5001;
 				itemTxt.SetFont(font);
 				itemTxt.SetFontSize(12);
 				itemTxt.mString = "obliterate";
 				itemTxt.mAlign = "left";
-				itemTxt.mPos.Set(20, 10);
-				itemTxt.mColour = "#000000";
+				itemTxt.mPos.Set(26, 0);
+				itemTxt.mColour = "#4A4A66";
 					
 				this.mBarMenus[0].AddItem(itemBut, itemTxt);
 			}
@@ -4564,10 +4587,10 @@ GFTexSelection.prototype.SetUp = function(pos, texStr) {
 	
 	{
 		var bp = new GFBluePrint();
-		bp.SetUp("60oc53oc40or60oc70oc30or00oc11oc20o");
+		bp.SetUp("a:" + texStr + ";{60oa?53oa?40oa!60oa?70oa?30oa!00oa?11oa?20oa}");
 		
 		var seg = new GFMapSegment();
-		seg.mPos.Set(0, 0); seg.SetUp(bp, texStr);
+		seg.mPos.Set(0, 0); seg.SetUp(bp);
 		
 		this.mSegment.Copy(seg);
 		
