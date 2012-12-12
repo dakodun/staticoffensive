@@ -6,6 +6,8 @@ function GFBluePrintTile() {
 	this.mZ = 0;
 	this.mSpecial = "o";
 	this.mSlopeDirection = 0;
+	
+	this.mTex = "";
 };
 // ...End
 
@@ -25,17 +27,28 @@ GFBluePrint.prototype.Copy = function(other) {
 }
 
 GFBluePrint.prototype.SetUp = function(bpstring) {
-	var rows = bpstring.split('r');
+	var ind = bpstring.indexOf('{');
+	var texStr = bpstring.substr(0, ind);
+	var texArr = texStr.split(';'); texArr.pop();
+	var textures = new Array();
+	
+	for (var i = 0; i < texArr.length; ++i) {
+		var texInd = texArr[i].substr(0, 1);
+		textures[texInd] = texArr[i].substr(2, texArr[i].length - 2);
+	}
+	
+	var tileStr = bpstring.substr(ind + 1, (bpstring.length - ind) - 2);
+	var rows = tileStr.split('!');
 	var tiles = new Array();
 	
 	if (rows.length > 0) {
 		{
-			var cols = rows[0].split('c');
+			var cols = rows[0].split('?');
 			this.mSize.Set(cols.length, rows.length);
 		}
 		
 		for (var i = 0; i < rows.length; ++i) {
-			var split = rows[i].split('c');
+			var split = rows[i].split('?');
 			tiles = tiles.concat(split);
 		}
 		
@@ -47,6 +60,9 @@ GFBluePrint.prototype.SetUp = function(bpstring) {
 				bpTile.mZ = Number(tiles[id].charAt(0));
 				bpTile.mSlopeDirection = Number(tiles[id].charAt(1));
 				bpTile.mSpecial = tiles[id].charAt(2);
+				
+				bpTile.mTex = textures[tiles[id].charAt(3)];
+				
 				this.mTiles.push(bpTile);
 				id++;
 			}
