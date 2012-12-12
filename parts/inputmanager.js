@@ -9,6 +9,10 @@ document.onkeyup = function(e) {
 	nmgrs.inputMan.HandleKeyUp(e);
 }
 
+document.onkeypress = function(e) {
+	nmgrs.inputMan.HandleKeyPress(e);
+}
+
 // register our call back to handle mouse movement
 document.onmousemove = function(e) {
 	nmgrs.inputMan.HandleMouseMove(e);
@@ -42,6 +46,8 @@ function InputManager() {
 	
 	this.mLocalMouseCoords = new IVec2(0, 0); // coordinates of the mouse in the canvas
 	this.mGlobalMouseCoords = new IVec2(0, 0); // coordinates of the mouse in the page
+	
+	this.mTextInput = "";
 }
 
 // process the input manager (update key and button states)
@@ -65,6 +71,8 @@ InputManager.prototype.Process = function() {
 			this.mButtonStates[i] = 0; // it is now up
 		}
 	}
+	
+	this.mTextInput = "";
 }
 
 // handle key down
@@ -72,6 +80,14 @@ InputManager.prototype.HandleKeyDown = function(e) {
 	// if key was previously up
 	if (this.mKeyStates[e.keyCode] == 0) {
 		this.mKeyStates[e.keyCode] = 2; // key is now pressed (note: not down)
+	}
+}
+
+InputManager.prototype.HandleKeyPress = function(e) {
+	if ((e.which >= 65 && e.which <= 90) || (e.which >= 97 && e.which <= 122) ||
+			(e.which >= 48 && e.which <=57)) {
+		
+		this.mTextInput += String.fromCharCode(e.which);
 	}
 }
 
