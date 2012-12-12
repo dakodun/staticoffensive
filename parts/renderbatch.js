@@ -35,6 +35,9 @@ RenderBatch.prototype.Add = function(object) {
 	else if (object.Type() == "Shape") {
 		this.AddShape(object);
 	}
+	else if (object.Type() == "RenderData") {
+		this.AddRenderData(object);
+	}
 }
 
 // add a sprite to the render batch
@@ -66,6 +69,16 @@ RenderBatch.prototype.AddShape = function(shape) {
 	shp.Copy(shape);
 	
 	this.mRenderData.push(shp);
+	// this.mRenderData.sort(DepthSort); // sort the queue
+}
+
+// add render data to the render batch
+RenderBatch.prototype.AddRenderData = function(renderData) {
+	this.mNeedSort = true;
+	var renData = new RenderData();
+	renData.Copy(renderData);
+	
+	this.mRenderData.push(renData);
 	// this.mRenderData.sort(DepthSort); // sort the queue
 }
 
@@ -255,6 +268,46 @@ RenderBatch.prototype.Render = function(camera) {
 				}
 				
 				nmain.game.mCurrContext.globalAlpha = oldAlpha;
+			}
+		}
+		else if (this.mRenderData[i].Type() == "RenderData") {
+			var renData = this.mRenderData[i];
+			
+			var idTL = new IVec2(renData.mPos.mX, renData.mPos.mY);
+			var idBR = new IVec2(renData.mPos.mX + renData.GetWidth(), renData.mPos.mY + renData.GetHeight());
+			
+			var intersect = false;
+			var left = idTL.mX;
+			var right = scrBR.mX;
+			if (scrTL.mX < idTL.mX) {
+				left = scrTL.mX;
+				right = idBR.mX;
+			}
+			
+			if (right - left < renData.GetWidth() + nmain.game.mCanvasSize.mX) {
+				var top = idTL.mY;
+				var bottom = scrBR.mY;
+				if (scrTL.mY < idTL.mY) {
+					top = scrTL.mY;
+					bottom = idBR.mY;
+				}
+				
+				if (bottom - top < renData.GetHeight() + nmain.game.mCanvasSize.mY) {
+					intersect = true;
+				}
+			}
+			
+			if (intersect == true) {
+				nmain.game.mCurrContext.translate(renData.mPos.mX, renData.mPos.mY);
+				nmain.game.mCurrContext.rotate(renData.mRotation * (Math.PI / 180));
+				
+				var imgData = nmain.game.mCurrContext.createImageData(renData.GetWidth(), renData.GetHeight());
+				
+				for (var j = 0; j < imgData.data.length; ++j) {
+					imgData.data[j] = renData.mData[j];
+				}
+				
+				nmain.game.mCurrContext.putImageData(imgData, 0, 0);
 			}
 		}
 		
