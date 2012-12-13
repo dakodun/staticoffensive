@@ -40,7 +40,7 @@ Shape.prototype.Copy = function(other) {
 }
 
 // 
-Shape.prototype.Reset = function() {
+Shape.prototype.Clear = function() {
 	this.mPoints.splice(0, this.mPoints.length);
 	this.mSize.Set(0, 0);
 	for (var i = 0; i < this.mBounds.length; ++i) {
