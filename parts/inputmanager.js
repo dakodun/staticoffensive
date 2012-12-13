@@ -81,13 +81,17 @@ InputManager.prototype.HandleKeyDown = function(e) {
 	if (this.mKeyStates[e.keyCode] == 0) {
 		this.mKeyStates[e.keyCode] = 2; // key is now pressed (note: not down)
 	}
+	
+	if (e.keyCode == 8) {
+		e.preventDefault();
+	}
 }
 
 InputManager.prototype.HandleKeyPress = function(e) {
-	if ((e.which >= 65 && e.which <= 90) || (e.which >= 97 && e.which <= 122) ||
-			(e.which >= 48 && e.which <=57)) {
-		
-		this.mTextInput += String.fromCharCode(e.which);
+	if ((e.which >= 32 && e.which <= 126) || (e.which == 163)  || (e.which == 172)) {
+		if (e.ctrlKey == false && e.altKey == false) {
+			this.mTextInput += String.fromCharCode(e.which);
+		}
 	}
 }
 
