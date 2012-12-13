@@ -94,17 +94,35 @@ GUIDropDown.prototype.GetSpritePositions = function() {
 }
 
 GUIDropDown.prototype.SetSpritePositions = function(pos) {
-	this.mBase.mSpriteIdle.mPos.Copy(pos);
-	this.mBase.mSpriteHover.mPos.Copy(pos);
-	this.mBase.mSpriteDown.mPos.Copy(pos);
-	this.mBase.mSpriteInactive.mPos.Copy(pos);
+	var posDif = new IVec2(0, 0);
+	posDif.Copy(this.mBase.GetSpritePositions());
+	posDif.Set(pos.mX - posDif.mX, pos.mY - posDif.mY);
+	
+	this.mBase.SetSpritePositions(pos);
+	
+	for (var i = 0; i < this.mItems.length; ++i) {
+		{
+			var newPos = new IVec2(0, 0);
+			newPos.Copy(this.mItems[i].GetSpritePositions());
+			newPos.mX += posDif.mX; newPos.mY += posDif.mY;
+			this.mItems[i].SetSpritePositions(newPos);
+		}
+		
+		{
+			var newPos = new IVec2(0, 0);
+			newPos.Copy(this.mItemsText[i].mPos);
+			newPos.mX += posDif.mX; newPos.mY += posDif.mY;
+			this.mItemsText[i].mPos.Copy(newPos);
+		}
+	}
 }
 
 GUIDropDown.prototype.SetSpriteDepths = function(depth) {
-	this.mBase.mSpriteIdle.mDepth = depth;
-	this.mBase.mSpriteHover.mDepth = depth;
-	this.mBase.mSpriteDown.mDepth = depth;
-	this.mBase.mSpriteInactive.mDepth = depth;
+	this.mBase.SetSpriteDepths(depth);
+	
+	for (var i = 0; i < this.mItems.length; ++i) {
+		this.mItems[i].SetSpriteDepths(depth);
+	}
 }
 
 GUIDropDown.prototype.AddItem = function(itemButton, text) {
@@ -117,7 +135,7 @@ GUIDropDown.prototype.AddItem = function(itemButton, text) {
 	var newPos = new IVec2(0, 0);
 	
 	if (this.mItems.length == 0) {
-		newPos.Copy(this.mPos);
+		newPos.Copy(this.mBase.mSpriteIdle.mPos);
 		newPos.mY += this.mBase.mSize.mY;
 	}
 	else {
