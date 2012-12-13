@@ -25,18 +25,21 @@ RenderBatch.prototype.TearDown = function() {
 	
 }
 
-RenderBatch.prototype.Add = function(object) {
-	if (object.Type() == "Sprite") {
-		this.AddSprite(object);
+RenderBatch.prototype.Add = function(renderable) {
+	if (renderable.Type() == "Sprite") {
+		this.AddSprite(renderable);
 	}
-	else if (object.Type() == "Text") {
-		this.AddText(object);
+	else if (renderable.Type() == "Text") {
+		this.AddText(renderable);
 	}
-	else if (object.Type() == "Shape") {
-		this.AddShape(object);
+	else if (renderable.Type() == "Shape") {
+		this.AddShape(renderable);
 	}
-	else if (object.Type() == "RenderData") {
-		this.AddRenderData(object);
+	else if (renderable.Type() == "RenderData") {
+		this.AddRenderData(renderable);
+	}
+	else if (renderable.Type() == "RenderCanvas") {
+		this.AddRenderCanvas(renderable);
 	}
 }
 
@@ -82,16 +85,31 @@ RenderBatch.prototype.AddRenderData = function(renderData) {
 	// this.mRenderData.sort(DepthSort); // sort the queue
 }
 
+// add render canvas to the render batch
+RenderBatch.prototype.AddRenderCanvas = function(renderCanvas) {
+	this.mNeedSort = true;
+	var renCanv = new RenderCanvas();
+	renCanv.Copy(renderCanvas);
+	
+	this.mRenderData.push(renCanv);
+	// this.mRenderData.sort(DepthSort); // sort the queue
+}
+
 // clear the render batch
 RenderBatch.prototype.Clear = function() {
 	this.mRenderData.splice(0, this.mRenderData.length);
 }
 
 // render the render batch to the context
-RenderBatch.prototype.Render = function(camera) {
+RenderBatch.prototype.Render = function(camera, target) {
 	var cam = new Camera();
 	if (camera) {
 		cam.Copy(camera);
+	}
+	
+	var targ = nmain.game.mCurrContext;
+	if (target) {
+		targ = target;
 	}
 	
 	if (this.mNeedSort == true) {
@@ -103,7 +121,7 @@ RenderBatch.prototype.Render = function(camera) {
 	var scrBR = new IVec2(nmain.game.mCanvasSize.mX + cam.mTranslate.mX, nmain.game.mCanvasSize.mY + cam.mTranslate.mY);
 	
 	for (var i = 0; i < this.mRenderData.length; ++i) {
-		nmain.game.mCurrContext.save();
+		targ.save();
 		
 		if (this.mRenderData[i].Type() == "Sprite") {
 			var spr = this.mRenderData[i];
@@ -133,17 +151,17 @@ RenderBatch.prototype.Render = function(camera) {
 			}
 			
 			if (intersect == true) {
-				var oldAlpha = nmain.game.mCurrContext.globalAlpha;
-				nmain.game.mCurrContext.globalAlpha = spr.mAlpha;
+				var oldAlpha = targ.globalAlpha;
+				targ.globalAlpha = spr.mAlpha;
 				
-				nmain.game.mCurrContext.translate(spr.GetPosition().mX, spr.GetPosition().mY);
-				nmain.game.mCurrContext.rotate(spr.mRotation * (Math.PI / 180));
+				targ.translate(spr.GetPosition().mX, spr.GetPosition().mY);
+				targ.rotate(spr.mRotation * (Math.PI / 180));
 				
-				nmain.game.mCurrContext.drawImage(spr.mTex.mImg, spr.mClipPos.mX, spr.mClipPos.mY,
+				targ.drawImage(spr.mTex.mImg, spr.mClipPos.mX, spr.mClipPos.mY,
 						spr.mClipSize.mX, spr.mClipSize.mY, 0, 0,
 						spr.GetWidth() * spr.mScale.mX, spr.GetHeight() * spr.mScale.mY);
 				
-				nmain.game.mCurrContext.globalAlpha = oldAlpha;
+				targ.globalAlpha = oldAlpha;
 			}
 		}
 		else if (this.mRenderData[i].Type() == "Text") {
@@ -175,42 +193,42 @@ RenderBatch.prototype.Render = function(camera) {
 			}
 			
 			if (intersect == true) {
-				nmain.game.mCurrContext.font = txt.mFontString;
-				nmain.game.mCurrContext.strokeStyle = txt.mColour;
+				targ.font = txt.mFontString;
+				targ.strokeStyle = txt.mColour;
 				
-				nmain.game.mCurrContext.translate(txt.mPos.mX, txt.mPos.mY + txt.mFontSize);
-				nmain.game.mCurrContext.rotate(txt.mRotation * (Math.PI / 180));
+				targ.translate(txt.mPos.mX, txt.mPos.mY + txt.mFontSize);
+				targ.rotate(txt.mRotation * (Math.PI / 180));
 				
 				if (txt.mOutline == true) {
 					for (var j = 0; j < txtArr.length; ++j) {
 						var hAlign = 0;
 						if (txt.mAlign == "centre") {
-							hAlign = Math.round(0 - (nmain.game.mCurrContext.measureText(txtArr[j]).width / 2));
+							hAlign = Math.round(0 - (targ.measureText(txtArr[j]).width / 2));
 						}
 						else if (txt.mAlign == "right") {
-							hAlign = Math.round(0 - nmain.game.mCurrContext.measureText(txtArr[j]).width);
+							hAlign = Math.round(0 - targ.measureText(txtArr[j]).width);
 						}
 						
-						nmain.game.mCurrContext.strokeText(txtArr[j], hAlign, txt.mFontSize * j);
+						targ.strokeText(txtArr[j], hAlign, txt.mFontSize * j);
 					}
 				}
 				else {
 					for (var j = 0; j < txtArr.length; ++j) {
 						var hAlign = 0;
 						if (txt.mAlign == "centre") {
-							hAlign = Math.round(0 - (nmain.game.mCurrContext.measureText(txtArr[j]).width / 2));
+							hAlign = Math.round(0 - (targ.measureText(txtArr[j]).width / 2));
 						}
 						else if (txt.mAlign == "right") {
-							hAlign = Math.round(0 - nmain.game.mCurrContext.measureText(txtArr[j]).width);
+							hAlign = Math.round(0 - targ.measureText(txtArr[j]).width);
 						}
 						
 						if (txt.mShadow == true) {
-							nmain.game.mCurrContext.fillStyle = txt.mShadowColour;
-							nmain.game.mCurrContext.fillText(txtArr[j], hAlign + 2, (txt.mFontSize * j) + 2);
+							targ.fillStyle = txt.mShadowColour;
+							targ.fillText(txtArr[j], hAlign + 2, (txt.mFontSize * j) + 2);
 						}
 						
-						nmain.game.mCurrContext.fillStyle = txt.mColour;
-						nmain.game.mCurrContext.fillText(txtArr[j], hAlign, txt.mFontSize * j);
+						targ.fillStyle = txt.mColour;
+						targ.fillText(txtArr[j], hAlign, txt.mFontSize * j);
 					}
 				}
 			}
@@ -244,30 +262,30 @@ RenderBatch.prototype.Render = function(camera) {
 			}
 			
 			if (intersect == true) {
-				nmain.game.mCurrContext.fillStyle = shp.mColour;
-				nmain.game.mCurrContext.strokeStyle = shp.mColour;
-				var oldAlpha = nmain.game.mCurrContext.globalAlpha;
-				nmain.game.mCurrContext.globalAlpha = shp.mAlpha;
+				targ.fillStyle = shp.mColour;
+				targ.strokeStyle = shp.mColour;
+				var oldAlpha = targ.globalAlpha;
+				targ.globalAlpha = shp.mAlpha;
 				
-				nmain.game.mCurrContext.beginPath();
-				nmain.game.mCurrContext.moveTo(pos.mX, pos.mY);
+				targ.beginPath();
+				targ.moveTo(pos.mX, pos.mY);
 				
 				for (var j = 0; j < shp.mPoints.length; ++j) {
 					var pt = new IVec2();
 					pt.Copy(shp.mPoints[j]);
-					nmain.game.mCurrContext.lineTo(pos.mX + pt.mX, pos.mY + pt.mY);
+					targ.lineTo(pos.mX + pt.mX, pos.mY + pt.mY);
 				}
 				
-				nmain.game.mCurrContext.closePath();
+				targ.closePath();
 				
 				if (shp.mOutline == false) {
-					nmain.game.mCurrContext.fill();
+					targ.fill();
 				}
 				else {
-					nmain.game.mCurrContext.stroke();
+					targ.stroke();
 				}
 				
-				nmain.game.mCurrContext.globalAlpha = oldAlpha;
+				targ.globalAlpha = oldAlpha;
 			}
 		}
 		else if (this.mRenderData[i].Type() == "RenderData") {
@@ -298,20 +316,53 @@ RenderBatch.prototype.Render = function(camera) {
 			}
 			
 			if (intersect == true) {
-				nmain.game.mCurrContext.translate(renData.mPos.mX, renData.mPos.mY);
-				nmain.game.mCurrContext.rotate(renData.mRotation * (Math.PI / 180));
+				targ.translate(renData.mPos.mX, renData.mPos.mY);
+				targ.rotate(renData.mRotation * (Math.PI / 180));
 				
-				var imgData = nmain.game.mCurrContext.createImageData(renData.GetWidth(), renData.GetHeight());
-				
-				for (var j = 0; j < imgData.data.length; ++j) {
-					imgData.data[j] = renData.mData[j];
+				targ.putImageData(renData.mImageData, renData.mPos.mX, renData.mPos.mY);
+			}
+		}
+		else if (this.mRenderData[i].Type() == "RenderCanvas") {
+			var canv = this.mRenderData[i];
+			
+			var canvTL = new IVec2(canv.mPos.mX, canv.mPos.mY);
+			var canvBR = new IVec2(canv.mPos.mX + canv.GetWidth(), canv.mPos.mY + canv.GetHeight());
+			
+			var intersect = false;
+			var left = canvTL.mX;
+			var right = scrBR.mX;
+			if (scrTL.mX < canvTL.mX) {
+				left = scrTL.mX;
+				right = canvBR.mX;
+			}
+			
+			if (right - left < canv.GetWidth() + nmain.game.mCanvasSize.mX) {
+				var top = canvTL.mY;
+				var bottom = scrBR.mY;
+				if (scrTL.mY < canvTL.mY) {
+					top = scrTL.mY;
+					bottom = canvBR.mY;
 				}
 				
-				nmain.game.mCurrContext.putImageData(imgData, 0, 0);
+				if (bottom - top < canv.GetHeight() + nmain.game.mCanvasSize.mY) {
+					intersect = true;
+				}
+			}
+			
+			if (intersect == true) {
+				var oldAlpha = targ.globalAlpha;
+				targ.globalAlpha = canv.mAlpha;
+				
+				targ.translate(canv.mPos.mX, canv.mPos.mY);
+				targ.rotate(canv.mRotation * (Math.PI / 180));
+				
+				targ.drawImage(canv.mCanvas, 0, 0);
+				
+				targ.globalAlpha = oldAlpha;
 			}
 		}
 		
-		nmain.game.mCurrContext.restore();
+		targ.restore();
 	}
 }
 
