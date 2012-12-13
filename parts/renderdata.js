@@ -1,7 +1,7 @@
 // RenderData Class...
 // 
 function RenderData() {
-	this.mData = new Array();
+	this.mImageData = null;
 	
 	this.mDepth = 0;
 	
@@ -17,9 +17,7 @@ RenderData.prototype.Type = function() {
 
 // make a copy of another (other) renderdata (copy constructor)
 RenderData.prototype.Copy = function(other) {
-	this.mData.splice(0, this.mData.length);
-	this.mData = this.mData.concat(other.mData);
-	
+	this.mImageData = other.mImageData;
 	this.mDepth = other.mDepth;
 	
 	this.mPos.Copy(other.mPos);
@@ -40,19 +38,16 @@ RenderData.prototype.GetHeight = function() {
 RenderData.prototype.CreateFromArray = function(size, data) {
 	this.mSize.Copy(size);
 	
-	this.mData.splice(0, this.mData.length);
-	this.mData = this.mData.concat(data);
+	this.mImageData = nmain.game.mCurrContext.createImageData(this.GetWidth(), this.GetHeight());
+	for (var i = 0; i < data.length; ++i) {
+		this.mImageData.data[i] = data[i];
+	}
 }
 
 RenderData.prototype.CreateFromScreen = function(screen, pos, size) {
 	this.mSize.Copy(size);
 	
-	var imgData = screen.getImageData(pos.mX, pos.mX, this.mSize.mX, this.mSize.mY);
-	this.mData.splice(0, this.mData.length);
-	
-	for (var i = 0; i < imgData.data.length; ++i) {
-		this.mData.push(imgData.data[i]);
-	}
+	this.mImageData = screen.getImageData(pos.mX, pos.mX, this.mSize.mX, this.mSize.mY);
 }
 // ..End
 
