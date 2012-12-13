@@ -556,7 +556,9 @@ var nkeyboard = {
 			left 	: 37,
 			up 		: 38,
 			right 	: 39,
-			down 	: 40
+			down 	: 40,
+			
+			backspace: 8
 		}
 	}
 };
@@ -656,13 +658,17 @@ InputManager.prototype.HandleKeyDown = function(e) {
 	if (this.mKeyStates[e.keyCode] == 0) {
 		this.mKeyStates[e.keyCode] = 2; // key is now pressed (note: not down)
 	}
+	
+	if (e.keyCode == 8) {
+		e.preventDefault();
+	}
 }
 
 InputManager.prototype.HandleKeyPress = function(e) {
-	if ((e.which >= 65 && e.which <= 90) || (e.which >= 97 && e.which <= 122) ||
-			(e.which >= 48 && e.which <=57)) {
-		
-		this.mTextInput += String.fromCharCode(e.which);
+	if ((e.which >= 32 && e.which <= 126) || (e.which == 163)  || (e.which == 172)) {
+		if (e.ctrlKey == false && e.altKey == false) {
+			this.mTextInput += String.fromCharCode(e.which);
+		}
 	}
 }
 
@@ -1281,21 +1287,23 @@ Text.prototype.Copy = function(other) {
 
 // return the width of the text
 Text.prototype.GetWidth = function() {
-	var old = nmain.game.mCurrContext.font;
-	nmain.game.mCurrContext.font = this.mFont;
-	
-	var txtArr = this.mString.split("\n");
 	var longest = 0;
-	for (var i = 0; i < txtArr.length; ++i) {
-		var strLen = nmain.game.mCurrContext.measureText(txtArr[i]).width;
-		if (strLen > longest) {
-			longest = strLen;
+	if (this.mString.length > 0) {
+		var old = nmain.game.mCurrContext.font;
+		nmain.game.mCurrContext.font = this.mFontString;
+		
+		var txtArr = this.mString.split("\n");
+		for (var i = 0; i < txtArr.length; ++i) {
+			var strLen = nmain.game.mCurrContext.measureText(txtArr[i]).width;
+			if (strLen > longest) {
+				longest = strLen;
+			}
 		}
+		
+		nmain.game.mCurrContext.font = old;
 	}
 	
-	nmain.game.mCurrContext.font = old;
-	
-	return strLen;
+	return longest;
 }
 
 // return the height of the text
@@ -1360,7 +1368,7 @@ Shape.prototype.Copy = function(other) {
 }
 
 // 
-Shape.prototype.Reset = function() {
+Shape.prototype.Clear = function() {
 	this.mPoints.splice(0, this.mPoints.length);
 	this.mSize.Set(0, 0);
 	for (var i = 0; i < this.mBounds.length; ++i) {
@@ -1660,7 +1668,7 @@ Sprite.prototype.GetHeight = function() {
 // RenderData Class...
 // 
 function RenderData() {
-	this.mData = new Array();
+	this.mImageData = null;
 	
 	this.mDepth = 0;
 	
@@ -1676,9 +1684,7 @@ RenderData.prototype.Type = function() {
 
 // make a copy of another (other) renderdata (copy constructor)
 RenderData.prototype.Copy = function(other) {
-	this.mData.splice(0, this.mData.length);
-	this.mData = this.mData.concat(other.mData);
-	
+	this.mImageData = other.mImageData;
 	this.mDepth = other.mDepth;
 	
 	this.mPos.Copy(other.mPos);
@@ -1699,21 +1705,84 @@ RenderData.prototype.GetHeight = function() {
 RenderData.prototype.CreateFromArray = function(size, data) {
 	this.mSize.Copy(size);
 	
-	this.mData.splice(0, this.mData.length);
-	this.mData = this.mData.concat(data);
+	this.mImageData = nmain.game.mCurrContext.createImageData(this.GetWidth(), this.GetHeight());
+	for (var i = 0; i < data.length; ++i) {
+		this.mImageData.data[i] = data[i];
+	}
 }
 
 RenderData.prototype.CreateFromScreen = function(screen, pos, size) {
 	this.mSize.Copy(size);
 	
-	var imgData = screen.getImageData(pos.mX, pos.mX, this.mSize.mX, this.mSize.mY);
-	this.mData.splice(0, this.mData.length);
-	
-	for (var i = 0; i < imgData.data.length; ++i) {
-		this.mData.push(imgData.data[i]);
-	}
+	this.mImageData = screen.getImageData(pos.mX, pos.mX, this.mSize.mX, this.mSize.mY);
 }
 // ..End
+
+
+// RenderCanvas Class...
+// a renderable canvas (like an image)
+function RenderCanvas() {
+	this.mCanvas = document.createElement('canvas');
+	this.mCanvas.width = 0; this.mCanvas.height = 0;
+	this.mContext = this.mCanvas.getContext("2d");
+	
+	this.mDepth = 0;
+	
+	this.mAlpha = 1.0;
+	
+	this.mPos = new IVec2(0, 0);
+	this.mSize = new IVec2(0, 0);
+	this.mRotation = 0;
+};
+
+// returns the type of this object for validity checking
+RenderCanvas.prototype.Type = function() {
+	return "RenderCanvas";
+}
+
+// make a copy of another (other) rendercanvas (copy constructor)
+RenderCanvas.prototype.Copy = function(other) {
+	this.Clear();
+	this.SetDimensions(other.mSize);
+	this.mContext.drawImage(other.mCanvas, 0, 0);
+	
+	this.mDepth = other.mDepth;
+	
+	this.mAlpha = other.mAlpha;
+	
+	this.mPos.Copy(other.mPos);
+	this.mSize.Copy(other.mSize);
+	this.mRotation = other.mRotation;
+}
+
+RenderCanvas.prototype.RenderTo = function(renderable) {
+	var batch = new RenderBatch();
+	batch.Clear();
+	
+	batch.Add(renderable);
+	
+	batch.Render(null, this.mContext);
+}
+
+RenderCanvas.prototype.Clear = function() {
+	this.mContext.setTransform(1, 0, 0, 1, 0, 0);
+	this.mContext.clearRect(0, 0, this.mSize.mX, this.mSize.mY);
+}
+
+RenderCanvas.prototype.SetDimensions = function(size) {
+	this.mSize.Copy(size);
+	
+	this.mCanvas.width = this.mSize.mX; this.mCanvas.height = this.mSize.mY;
+}
+
+RenderCanvas.prototype.GetWidth = function() {
+	return this.mSize.mX;
+}
+
+RenderCanvas.prototype.GetHeight = function() {
+	return this.mSize.mY;
+}
+// ...End
 
 
 // DepthSort function
@@ -1743,18 +1812,21 @@ RenderBatch.prototype.TearDown = function() {
 	
 }
 
-RenderBatch.prototype.Add = function(object) {
-	if (object.Type() == "Sprite") {
-		this.AddSprite(object);
+RenderBatch.prototype.Add = function(renderable) {
+	if (renderable.Type() == "Sprite") {
+		this.AddSprite(renderable);
 	}
-	else if (object.Type() == "Text") {
-		this.AddText(object);
+	else if (renderable.Type() == "Text") {
+		this.AddText(renderable);
 	}
-	else if (object.Type() == "Shape") {
-		this.AddShape(object);
+	else if (renderable.Type() == "Shape") {
+		this.AddShape(renderable);
 	}
-	else if (object.Type() == "RenderData") {
-		this.AddRenderData(object);
+	else if (renderable.Type() == "RenderData") {
+		this.AddRenderData(renderable);
+	}
+	else if (renderable.Type() == "RenderCanvas") {
+		this.AddRenderCanvas(renderable);
 	}
 }
 
@@ -1800,16 +1872,31 @@ RenderBatch.prototype.AddRenderData = function(renderData) {
 	// this.mRenderData.sort(DepthSort); // sort the queue
 }
 
+// add render canvas to the render batch
+RenderBatch.prototype.AddRenderCanvas = function(renderCanvas) {
+	this.mNeedSort = true;
+	var renCanv = new RenderCanvas();
+	renCanv.Copy(renderCanvas);
+	
+	this.mRenderData.push(renCanv);
+	// this.mRenderData.sort(DepthSort); // sort the queue
+}
+
 // clear the render batch
 RenderBatch.prototype.Clear = function() {
 	this.mRenderData.splice(0, this.mRenderData.length);
 }
 
 // render the render batch to the context
-RenderBatch.prototype.Render = function(camera) {
+RenderBatch.prototype.Render = function(camera, target) {
 	var cam = new Camera();
 	if (camera) {
 		cam.Copy(camera);
+	}
+	
+	var targ = nmain.game.mCurrContext;
+	if (target) {
+		targ = target;
 	}
 	
 	if (this.mNeedSort == true) {
@@ -1821,7 +1908,7 @@ RenderBatch.prototype.Render = function(camera) {
 	var scrBR = new IVec2(nmain.game.mCanvasSize.mX + cam.mTranslate.mX, nmain.game.mCanvasSize.mY + cam.mTranslate.mY);
 	
 	for (var i = 0; i < this.mRenderData.length; ++i) {
-		nmain.game.mCurrContext.save();
+		targ.save();
 		
 		if (this.mRenderData[i].Type() == "Sprite") {
 			var spr = this.mRenderData[i];
@@ -1851,17 +1938,17 @@ RenderBatch.prototype.Render = function(camera) {
 			}
 			
 			if (intersect == true) {
-				var oldAlpha = nmain.game.mCurrContext.globalAlpha;
-				nmain.game.mCurrContext.globalAlpha = spr.mAlpha;
+				var oldAlpha = targ.globalAlpha;
+				targ.globalAlpha = spr.mAlpha;
 				
-				nmain.game.mCurrContext.translate(spr.GetPosition().mX, spr.GetPosition().mY);
-				nmain.game.mCurrContext.rotate(spr.mRotation * (Math.PI / 180));
+				targ.translate(spr.GetPosition().mX, spr.GetPosition().mY);
+				targ.rotate(spr.mRotation * (Math.PI / 180));
 				
-				nmain.game.mCurrContext.drawImage(spr.mTex.mImg, spr.mClipPos.mX, spr.mClipPos.mY,
+				targ.drawImage(spr.mTex.mImg, spr.mClipPos.mX, spr.mClipPos.mY,
 						spr.mClipSize.mX, spr.mClipSize.mY, 0, 0,
 						spr.GetWidth() * spr.mScale.mX, spr.GetHeight() * spr.mScale.mY);
 				
-				nmain.game.mCurrContext.globalAlpha = oldAlpha;
+				targ.globalAlpha = oldAlpha;
 			}
 		}
 		else if (this.mRenderData[i].Type() == "Text") {
@@ -1893,42 +1980,42 @@ RenderBatch.prototype.Render = function(camera) {
 			}
 			
 			if (intersect == true) {
-				nmain.game.mCurrContext.font = txt.mFontString;
-				nmain.game.mCurrContext.strokeStyle = txt.mColour;
+				targ.font = txt.mFontString;
+				targ.strokeStyle = txt.mColour;
 				
-				nmain.game.mCurrContext.translate(txt.mPos.mX, txt.mPos.mY + txt.mFontSize);
-				nmain.game.mCurrContext.rotate(txt.mRotation * (Math.PI / 180));
+				targ.translate(txt.mPos.mX, txt.mPos.mY + txt.mFontSize);
+				targ.rotate(txt.mRotation * (Math.PI / 180));
 				
 				if (txt.mOutline == true) {
 					for (var j = 0; j < txtArr.length; ++j) {
 						var hAlign = 0;
 						if (txt.mAlign == "centre") {
-							hAlign = Math.round(0 - (nmain.game.mCurrContext.measureText(txtArr[j]).width / 2));
+							hAlign = Math.round(0 - (targ.measureText(txtArr[j]).width / 2));
 						}
 						else if (txt.mAlign == "right") {
-							hAlign = Math.round(0 - nmain.game.mCurrContext.measureText(txtArr[j]).width);
+							hAlign = Math.round(0 - targ.measureText(txtArr[j]).width);
 						}
 						
-						nmain.game.mCurrContext.strokeText(txtArr[j], hAlign, txt.mFontSize * j);
+						targ.strokeText(txtArr[j], hAlign, txt.mFontSize * j);
 					}
 				}
 				else {
 					for (var j = 0; j < txtArr.length; ++j) {
 						var hAlign = 0;
 						if (txt.mAlign == "centre") {
-							hAlign = Math.round(0 - (nmain.game.mCurrContext.measureText(txtArr[j]).width / 2));
+							hAlign = Math.round(0 - (targ.measureText(txtArr[j]).width / 2));
 						}
 						else if (txt.mAlign == "right") {
-							hAlign = Math.round(0 - nmain.game.mCurrContext.measureText(txtArr[j]).width);
+							hAlign = Math.round(0 - targ.measureText(txtArr[j]).width);
 						}
 						
 						if (txt.mShadow == true) {
-							nmain.game.mCurrContext.fillStyle = txt.mShadowColour;
-							nmain.game.mCurrContext.fillText(txtArr[j], hAlign + 2, (txt.mFontSize * j) + 2);
+							targ.fillStyle = txt.mShadowColour;
+							targ.fillText(txtArr[j], hAlign + 2, (txt.mFontSize * j) + 2);
 						}
 						
-						nmain.game.mCurrContext.fillStyle = txt.mColour;
-						nmain.game.mCurrContext.fillText(txtArr[j], hAlign, txt.mFontSize * j);
+						targ.fillStyle = txt.mColour;
+						targ.fillText(txtArr[j], hAlign, txt.mFontSize * j);
 					}
 				}
 			}
@@ -1962,30 +2049,30 @@ RenderBatch.prototype.Render = function(camera) {
 			}
 			
 			if (intersect == true) {
-				nmain.game.mCurrContext.fillStyle = shp.mColour;
-				nmain.game.mCurrContext.strokeStyle = shp.mColour;
-				var oldAlpha = nmain.game.mCurrContext.globalAlpha;
-				nmain.game.mCurrContext.globalAlpha = shp.mAlpha;
+				targ.fillStyle = shp.mColour;
+				targ.strokeStyle = shp.mColour;
+				var oldAlpha = targ.globalAlpha;
+				targ.globalAlpha = shp.mAlpha;
 				
-				nmain.game.mCurrContext.beginPath();
-				nmain.game.mCurrContext.moveTo(pos.mX, pos.mY);
+				targ.beginPath();
+				targ.moveTo(pos.mX, pos.mY);
 				
 				for (var j = 0; j < shp.mPoints.length; ++j) {
 					var pt = new IVec2();
 					pt.Copy(shp.mPoints[j]);
-					nmain.game.mCurrContext.lineTo(pos.mX + pt.mX, pos.mY + pt.mY);
+					targ.lineTo(pos.mX + pt.mX, pos.mY + pt.mY);
 				}
 				
-				nmain.game.mCurrContext.closePath();
+				targ.closePath();
 				
 				if (shp.mOutline == false) {
-					nmain.game.mCurrContext.fill();
+					targ.fill();
 				}
 				else {
-					nmain.game.mCurrContext.stroke();
+					targ.stroke();
 				}
 				
-				nmain.game.mCurrContext.globalAlpha = oldAlpha;
+				targ.globalAlpha = oldAlpha;
 			}
 		}
 		else if (this.mRenderData[i].Type() == "RenderData") {
@@ -2016,20 +2103,53 @@ RenderBatch.prototype.Render = function(camera) {
 			}
 			
 			if (intersect == true) {
-				nmain.game.mCurrContext.translate(renData.mPos.mX, renData.mPos.mY);
-				nmain.game.mCurrContext.rotate(renData.mRotation * (Math.PI / 180));
+				targ.translate(renData.mPos.mX, renData.mPos.mY);
+				targ.rotate(renData.mRotation * (Math.PI / 180));
 				
-				var imgData = nmain.game.mCurrContext.createImageData(renData.GetWidth(), renData.GetHeight());
-				
-				for (var j = 0; j < imgData.data.length; ++j) {
-					imgData.data[j] = renData.mData[j];
+				targ.putImageData(renData.mImageData, renData.mPos.mX, renData.mPos.mY);
+			}
+		}
+		else if (this.mRenderData[i].Type() == "RenderCanvas") {
+			var canv = this.mRenderData[i];
+			
+			var canvTL = new IVec2(canv.mPos.mX, canv.mPos.mY);
+			var canvBR = new IVec2(canv.mPos.mX + canv.GetWidth(), canv.mPos.mY + canv.GetHeight());
+			
+			var intersect = false;
+			var left = canvTL.mX;
+			var right = scrBR.mX;
+			if (scrTL.mX < canvTL.mX) {
+				left = scrTL.mX;
+				right = canvBR.mX;
+			}
+			
+			if (right - left < canv.GetWidth() + nmain.game.mCanvasSize.mX) {
+				var top = canvTL.mY;
+				var bottom = scrBR.mY;
+				if (scrTL.mY < canvTL.mY) {
+					top = scrTL.mY;
+					bottom = canvBR.mY;
 				}
 				
-				nmain.game.mCurrContext.putImageData(imgData, 0, 0);
+				if (bottom - top < canv.GetHeight() + nmain.game.mCanvasSize.mY) {
+					intersect = true;
+				}
+			}
+			
+			if (intersect == true) {
+				var oldAlpha = targ.globalAlpha;
+				targ.globalAlpha = canv.mAlpha;
+				
+				targ.translate(canv.mPos.mX, canv.mPos.mY);
+				targ.rotate(canv.mRotation * (Math.PI / 180));
+				
+				targ.drawImage(canv.mCanvas, 0, 0);
+				
+				targ.globalAlpha = oldAlpha;
 			}
 		}
 		
-		nmain.game.mCurrContext.restore();
+		targ.restore();
 	}
 }
 
@@ -2289,17 +2409,35 @@ GUIDropDown.prototype.GetSpritePositions = function() {
 }
 
 GUIDropDown.prototype.SetSpritePositions = function(pos) {
-	this.mBase.mSpriteIdle.mPos.Copy(pos);
-	this.mBase.mSpriteHover.mPos.Copy(pos);
-	this.mBase.mSpriteDown.mPos.Copy(pos);
-	this.mBase.mSpriteInactive.mPos.Copy(pos);
+	var posDif = new IVec2(0, 0);
+	posDif.Copy(this.mBase.GetSpritePositions());
+	posDif.Set(pos.mX - posDif.mX, pos.mY - posDif.mY);
+	
+	this.mBase.SetSpritePositions(pos);
+	
+	for (var i = 0; i < this.mItems.length; ++i) {
+		{
+			var newPos = new IVec2(0, 0);
+			newPos.Copy(this.mItems[i].GetSpritePositions());
+			newPos.mX += posDif.mX; newPos.mY += posDif.mY;
+			this.mItems[i].SetSpritePositions(newPos);
+		}
+		
+		{
+			var newPos = new IVec2(0, 0);
+			newPos.Copy(this.mItemsText[i].mPos);
+			newPos.mX += posDif.mX; newPos.mY += posDif.mY;
+			this.mItemsText[i].mPos.Copy(newPos);
+		}
+	}
 }
 
 GUIDropDown.prototype.SetSpriteDepths = function(depth) {
-	this.mBase.mSpriteIdle.mDepth = depth;
-	this.mBase.mSpriteHover.mDepth = depth;
-	this.mBase.mSpriteDown.mDepth = depth;
-	this.mBase.mSpriteInactive.mDepth = depth;
+	this.mBase.SetSpriteDepths(depth);
+	
+	for (var i = 0; i < this.mItems.length; ++i) {
+		this.mItems[i].SetSpriteDepths(depth);
+	}
 }
 
 GUIDropDown.prototype.AddItem = function(itemButton, text) {
@@ -2312,7 +2450,7 @@ GUIDropDown.prototype.AddItem = function(itemButton, text) {
 	var newPos = new IVec2(0, 0);
 	
 	if (this.mItems.length == 0) {
-		newPos.Copy(this.mPos);
+		newPos.Copy(this.mBase.mSpriteIdle.mPos);
 		newPos.mY += this.mBase.mSize.mY;
 	}
 	else {
@@ -2328,6 +2466,371 @@ GUIDropDown.prototype.AddItem = function(itemButton, text) {
 	
 	this.mItems.push(but);
 	this.mItemsText.push(txt);
+}
+// ...End
+
+
+// GUIInputBox Class...
+function GUIInputBoxCaret() {
+	this.mShape = new Shape();
+	
+	this.mFlash = 0;
+	this.mPlace = 0;
+	
+	this.mScroll = 0;
+	this.mScrollTimer = 0;
+	
+	this.mLeftBound = 0;
+	this.mRightBound = 0;
+}
+
+GUIInputBoxCaret.prototype.SetUp = function(pos, depth, leftBound, rightBound) {
+	this.mShape.mPos.Copy(pos);
+	this.mShape.mDepth = depth;
+	this.mShape.mColour = "#000000";
+	
+	this.mLeftBound = leftBound;
+	this.mRightBound = rightBound;
+}
+
+GUIInputBoxCaret.prototype.Input = function(inputText) {
+	if (nmgrs.inputMan.GetKeyboardPressed(nkeyboard.key.code.left)) {
+		this.mPlace--;
+		if (this.mPlace < 0) {
+			this.mPlace = 0;
+		}
+		
+		this.mScroll = -1;
+		this.mScrollTimer = 0;
+		this.mFlash = 0;
+	}
+	else if (nmgrs.inputMan.GetKeyboardPressed(nkeyboard.key.code.right)) {
+		this.mPlace++;
+		if (this.mPlace > inputText.mString.length) {
+			this.mPlace = inputText.mString.length;
+		}
+		
+		this.mScroll = 1;
+		this.mScrollTimer = 0;
+		this.mFlash = 0;
+	}
+	else if (nmgrs.inputMan.GetKeyboardDown(nkeyboard.key.code.left) == false &&
+			nmgrs.inputMan.GetKeyboardDown(nkeyboard.key.code.right) == false) {
+		
+		if (this.mScroll != 0) {
+			this.mScroll = 0;
+			this.mFlash = 0;
+		}
+	}
+}
+
+GUIInputBoxCaret.prototype.Process = function(inputText, renderCanvas) {
+	// if we are scorlling with the arrow keys
+	if (this.mScroll != 0) {
+		// if scroll timer has elapse
+		if (this.mScrollTimer > 0.5) {
+			this.mPlace += this.mScroll; // move the caret's place in the text
+			
+			// check boundaries
+			if (this.mPlace < 0) {
+				this.mPlace = 0;
+			}
+			else if (this.mPlace > inputText.mString.length) {
+				this.mPlace = inputText.mString.length;
+			}
+			
+			this.mScrollTimer = 0.48; // lower scroll timer (partially reset)
+		}
+		else {
+			this.mScrollTimer += 1 / nmain.game.mFrameLimit; // increment the timer
+		}
+	}
+	else {
+		// process the caret flash timer (caret doesn't flash when moving)
+		if (this.mFlash > 2) {
+			this.mFlash = 0;
+		}
+		else {
+			this.mFlash += 2 / nmain.game.mFrameLimit;
+		}
+	}
+	
+	// if caret's position in text has been moved
+	if (true) {
+		// create a new text object, copy our input text and then create a substring
+		var txt = new Text();
+		txt.Copy(inputText);
+		txt.mString = inputText.mString.substr(0, this.mPlace);
+		
+		this.mShape.mPos.mX = inputText.mPos.mX + renderCanvas.mPos.mX + txt.GetWidth() - 1; // move the caret's position on canvas
+		
+		// if the caret is past the left bound
+		if (this.mShape.mPos.mX > this.mRightBound) {
+			var diff = this.mShape.mPos.mX - this.mRightBound; // find out how much past it is
+			
+			// move the text and caret's position on canvas
+			inputText.mPos.mX -= diff;
+			this.mShape.mPos.mX -= diff;
+			
+			// redraw the render canvase
+			renderCanvas.Clear();
+			renderCanvas.RenderTo(inputText);
+		}
+		else if (this.mShape.mPos.mX < this.mLeftBound - 1) { // otherwise if it is past the right bound
+			var diff = (this.mLeftBound - 1) - this.mShape.mPos.mX;
+			
+			inputText.mPos.mX += diff;
+			this.mShape.mPos.mX += diff;
+			
+			renderCanvas.Clear();
+			renderCanvas.RenderTo(inputText);
+		}
+	}
+}
+
+GUIInputBoxCaret.prototype.GetRenderData = function() {
+	var arr = new Array();
+	
+	if (this.mFlash < 1) {
+		arr.push(this.mShape);
+	}
+	
+	return arr;
+}
+
+GUIInputBoxCaret.prototype.SetSize = function(size) {
+	this.mShape.Clear();
+	
+	this.mShape.AddPoint(new IVec2(size.mX, 0));
+	this.mShape.AddPoint(new IVec2(size.mX, size.mY));
+	this.mShape.AddPoint(new IVec2(0, size.mY));
+}
+// ...End
+
+
+// GUIInputBox Class...
+function GUIInputBox() {
+	this.mPos = new IVec2(0, 0);
+	this.mSize = new IVec2(0, 0);
+	this.mDepth = 0;
+	
+	this.mStatus = "idle";
+	this.mSpriteIdle = new Sprite();
+	this.mSpriteHover = new Sprite();
+	this.mSpriteFocus = new Sprite();
+	this.mSpriteInactive = new Sprite();
+	
+	this.mInputText = new Text();
+	this.mBox = new GUIButton();
+	this.mHasFocus = false;
+	
+	this.mCaret = new GUIInputBoxCaret();
+	
+	this.mBackspace = false;
+	this.mBackspaceTimer = 0;
+	
+	this.mRenderCanvas = new RenderCanvas();
+	this.mInputString = "";
+	
+	this.mActive = true;
+};
+
+GUIInputBox.prototype.SetUp = function(pos, size, depth) {
+	this.mPos.Copy(pos);
+	this.mSize.Copy(size);
+	this.mDepth = depth;
+	
+	this.mBox.SetUp(pos, size, depth);
+	
+	this.mRenderCanvas.mPos.mX += pos.mX;
+	this.mRenderCanvas.mPos.mY += pos.mY;
+	
+	var dim = new IVec2(0, 0); dim.Copy(this.mRenderCanvas.mSize);
+	dim.mY += size.mY;
+	dim.mX += size.mX;
+	this.mRenderCanvas.SetDimensions(dim);
+	
+	this.mRenderCanvas.mDepth = depth - 1;
+	
+	{
+		this.mSpriteIdle.mPos.Copy(pos);
+		this.mSpriteIdle.mDepth = depth;
+		
+		this.mSpriteHover.mPos.Copy(pos);
+		this.mSpriteHover.mDepth = depth;
+		
+		this.mSpriteFocus.mPos.Copy(pos);
+		this.mSpriteFocus.mDepth = depth;
+		
+		this.mSpriteInactive.mPos.Copy(pos);
+		this.mSpriteInactive.mDepth = depth;
+	}
+	
+	{
+		this.mCaret.SetUp(this.mRenderCanvas.mPos, depth - 2, this.mRenderCanvas.mPos.mX,
+				this.mRenderCanvas.mPos.mX + this.mRenderCanvas.mSize.mX);
+		this.mCaret.SetSize(new IVec2(1, size.mY - 10));
+		this.mCaret.mShape.mColour = "#4A4A4A";
+	}
+}
+
+GUIInputBox.prototype.Input = function() {
+	if (this.mHasFocus == true) {
+		this.mInputString += nmgrs.inputMan.mTextInput;
+		
+		if (nmgrs.inputMan.GetKeyboardPressed(nkeyboard.key.code.backspace)) {
+			this.mBackspace = true;
+			this.mBackspaceTimer = 0;
+			
+			if (this.mInputText.mString.length > 0) {
+				var newStr = this.mInputText.mString.substr(0, this.mCaret.mPlace - 1);
+				newStr += this.mInputText.mString.substr(this.mCaret.mPlace,  this.mInputText.mString.length - this.mCaret.mPlace);
+				
+				this.mInputText.mString = newStr;
+				this.mCaret.mPlace--;
+				if (this.mCaret.mPlace < 0) {
+					this.mCaret.mPlace = 0;
+				}
+				
+				// if text is wider and is able to fill the render canvas
+				/* if (this.mInputText.GetWidth() >= this.mRenderCanvas.mSize.mX) {
+					// if text is not currently filling the render canvas
+					if (this.mInputText.mPos.mX + this.mInputText.GetWidth() <
+							this.mRenderCanvas.mPos.mX + this.mRenderCanvas.mSize.mX) {
+						
+						// move the tet to ensure render canvas is filled
+						var shift = (this.mRenderCanvas.mPos.mX + this.mRenderCanvas.mSize.mX) -
+								(this.mInputText.mPos.mX + this.mInputText.GetWidth());
+						this.mInputText.mPos.mX += shift;
+						
+						
+					}
+				} */
+				
+				this.mRenderCanvas.Clear();
+				this.mRenderCanvas.RenderTo(this.mInputText);
+			}
+		}
+		else if (nmgrs.inputMan.GetKeyboardReleased(nkeyboard.key.code.backspace)) {
+			this.mBackspace = false;
+		}
+		
+		this.mCaret.Input(this.mInputText);
+	}
+	
+	this.mBox.Input();
+	if (this.mHasFocus == true) {
+		if (nmgrs.inputMan.GetMousePressed(nmouse.button.code.left)) {
+			if (this.mBox.mHover == false) {
+				this.mHasFocus = !this.mHasFocus;
+			}
+		}
+	}
+}
+
+GUIInputBox.prototype.Process = function(point) {
+	this.mBox.Process(point);
+	
+	if (this.mBox.OnClick() == true) {
+		if (this.mHasFocus == false) {
+			this.mHasFocus = true;
+			this.mCaret.mFlash = 0;
+		}
+	}
+	
+	if (this.mBackspace == true) {
+		if (this.mBackspaceTimer > 0.5) {
+			var newStr = this.mInputText.mString.substr(0, this.mCaret.mPlace - 1);
+			newStr += this.mInputText.mString.substr(this.mCaret.mPlace,  this.mInputText.mString.length - this.mCaret.mPlace);
+			
+			this.mInputText.mString = newStr;
+			this.mCaret.mPlace--;
+			if (this.mCaret.mPlace < 0) {
+				this.mCaret.mPlace = 0;
+			}
+			
+			this.mBackspaceTimer = 0.48;
+			
+			this.mRenderCanvas.Clear();
+			this.mRenderCanvas.RenderTo(this.mInputText);
+		}
+		else {
+			this.mBackspaceTimer += 1 / nmain.game.mFrameLimit;
+		}
+	}
+	
+	if (this.mInputString.length > 0) {
+		var newStr = this.mInputText.mString.substr(0, this.mCaret.mPlace);
+		newStr += this.mInputString;
+		newStr += this.mInputText.mString.substr(this.mCaret.mPlace,  this.mInputText.mString.length - this.mCaret.mPlace);
+		
+		this.mInputText.mString = newStr;
+		this.mCaret.mPlace += this.mInputString.length;
+		this.mInputString = "";
+		
+		this.mRenderCanvas.Clear();
+		this.mRenderCanvas.RenderTo(this.mInputText);
+	}
+	
+	{
+		this.mCaret.Process(this.mInputText, this.mRenderCanvas);
+	}
+	
+	{
+		if (this.mActive == true) {
+			if (this.mHasFocus == false) {
+				if (this.mBox.mHover == true) {
+					this.mStatus = "hover";
+				}
+				else {
+					this.mStatus = "idle";
+				}
+			}
+			else {
+				this.mStatus = "focus";
+			}
+		}
+		
+		if (this.mActive == true) {
+			if (this.mStatus == "hover") {
+				this.mSpriteHover.Process();
+			}
+			else if (this.mStatus == "focus") {
+				this.mSpriteFocus.Process()
+			}
+			else {
+				this.mSpriteIdle.Process()
+			}
+		}
+		else {
+			this.mSpriteInactive.Process()
+		}
+	}
+}
+
+GUIInputBox.prototype.GetRenderData = function() {
+	var arr = new Array();
+	
+	arr.push(this.mRenderCanvas);
+	
+	if (this.mActive == true) {
+		if (this.mStatus == "hover") {
+			arr.push(this.mSpriteHover);
+		}
+		else if (this.mStatus == "focus") {
+			arr.push(this.mSpriteFocus);
+			
+			arr = arr.concat(this.mCaret.GetRenderData());
+		}
+		else {
+			arr.push(this.mSpriteIdle);
+		}
+	}
+	else {
+		arr.push(this.mSpriteInactive);
+	}
+	
+	return arr;
 }
 // ...End
 
@@ -2463,6 +2966,7 @@ InitScene.prototype.SetUp = function() {
 		nmgrs.resLoad.QueueTexture("gui_creation_topbar", "./res/vis/gui_creation_topbar.png");
 		nmgrs.resLoad.QueueTexture("gui_creation_topmenunew", "./res/vis/gui_creation_topmenunew.png");
 		nmgrs.resLoad.QueueTexture("gui_creation_dropback", "./res/vis/gui_creation_dropback.png");
+		nmgrs.resLoad.QueueTexture("gui_creation_inputbox", "./res/vis/gui_creation_inputbox.png");
 		nmgrs.resLoad.QueueTexture("gui_creation_arrows", "./res/vis/gui_creation_arrows.png");
 		nmgrs.resLoad.QueueTexture("gui_creation_texset", "./res/vis/gui_creation_texset.png");
 		nmgrs.resLoad.QueueTexture("gui_texselect", "./res/vis/gui_texselect.png");
@@ -3120,6 +3624,8 @@ function GFMenuScene() {
 	this.mButtonsText = new Array();
 	this.mButtonsText[0] = new Text();
 	this.mButtonsText[1] = new Text();
+	
+	this.mInput = new GUIInputBox();
 }
 
 // returns the type of this object for validity checking
@@ -3182,6 +3688,7 @@ GFMenuScene.prototype.SetUp = function() {
 		this.mButtonsText[0].mAlign = "centre";
 		this.mButtonsText[0].mPos.Set(320, 35);
 		this.mButtonsText[0].mShadow = true;
+		this.mButtonsText[0].mDepth = -5000;
 		
 		this.mButtonsText[1].SetFont(font);
 		this.mButtonsText[1].SetFontSize(24);
@@ -3189,6 +3696,33 @@ GFMenuScene.prototype.SetUp = function() {
 		this.mButtonsText[1].mAlign = "centre";
 		this.mButtonsText[1].mPos.Set(320, 115);
 		this.mButtonsText[1].mShadow = true;
+		this.mButtonsText[1].mDepth = -5000;
+	}
+	
+	{
+		var tex = nmgrs.resMan.mTexStore.GetResource("gui_creation_inputbox");
+		var font = nmgrs.resMan.mFontStore.GetResource("pixantiqua");
+		
+		this.mInput.mInputText.SetFont(font);
+		this.mInput.mInputText.SetFontSize(12);
+		this.mInput.mInputText.mColour = "#000000";
+		
+		this.mInput.mRenderCanvas.mPos.Set(16, 5);
+		this.mInput.mRenderCanvas.mSize.Set(-16, -5);
+		
+		this.mInput.SetUp(new IVec2(0, 0), new IVec2(126, 26), -5000);
+		
+		this.mInput.mSpriteIdle.SetAnimatedTexture(tex, 3, 1, -1, -1);
+		this.mInput.mSpriteIdle.SetCurrentFrame(0);
+		
+		this.mInput.mSpriteHover.SetAnimatedTexture(tex, 3, 1, -1, -1);
+		this.mInput.mSpriteHover.SetCurrentFrame(1);
+		
+		this.mInput.mSpriteFocus.SetAnimatedTexture(tex, 3, 1, -1, -1);
+		this.mInput.mSpriteFocus.SetCurrentFrame(2);
+		
+		this.mInput.mSpriteInactive.SetAnimatedTexture(tex, 3, 1, -1, -1);
+		this.mInput.mSpriteInactive.SetCurrentFrame(0);
 	}
 }
 
@@ -3202,6 +3736,8 @@ GFMenuScene.prototype.Input = function() {
 	for (var i = 0; i < this.mButtons.length; ++i) {
 		this.mButtons[i].Input();
 	}
+	
+	this.mInput.Input();
 }
 
 // handles game logic
@@ -3213,6 +3749,8 @@ GFMenuScene.prototype.Process = function() {
 		for (var i = 0; i < this.mButtons.length; ++i) {
 			this.mButtons[i].Process(pt);
 		}
+		
+		this.mInput.Process(pt);
 	}
 	
 	{
@@ -3238,6 +3776,8 @@ GFMenuScene.prototype.Render = function() {
 	for (var i = 0; i < this.mButtonsText.length; ++i) {
 		arr.push(this.mButtonsText[i]);
 	}
+	
+	arr = arr.concat(this.mInput.GetRenderData());
 	
 	for (var i = 0; i < arr.length; ++i) {
 		this.mBatch.Add(arr[i]);
