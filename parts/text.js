@@ -44,21 +44,23 @@ Text.prototype.Copy = function(other) {
 
 // return the width of the text
 Text.prototype.GetWidth = function() {
-	var old = nmain.game.mCurrContext.font;
-	nmain.game.mCurrContext.font = this.mFont;
-	
-	var txtArr = this.mString.split("\n");
 	var longest = 0;
-	for (var i = 0; i < txtArr.length; ++i) {
-		var strLen = nmain.game.mCurrContext.measureText(txtArr[i]).width;
-		if (strLen > longest) {
-			longest = strLen;
+	if (this.mString.length > 0) {
+		var old = nmain.game.mCurrContext.font;
+		nmain.game.mCurrContext.font = this.mFontString;
+		
+		var txtArr = this.mString.split("\n");
+		for (var i = 0; i < txtArr.length; ++i) {
+			var strLen = nmain.game.mCurrContext.measureText(txtArr[i]).width;
+			if (strLen > longest) {
+				longest = strLen;
+			}
 		}
+		
+		nmain.game.mCurrContext.font = old;
 	}
 	
-	nmain.game.mCurrContext.font = old;
-	
-	return strLen;
+	return longest;
 }
 
 // return the height of the text
