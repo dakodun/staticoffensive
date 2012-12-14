@@ -3570,7 +3570,7 @@ function GFMenuScene() {
 	this.mButtonsText[0] = new Text();
 	this.mButtonsText[1] = new Text();
 	
-	this.mInput = new GUIInputBox();
+	// this.mInput = new GUIInputBox();
 }
 
 // returns the type of this object for validity checking
@@ -3644,7 +3644,7 @@ GFMenuScene.prototype.SetUp = function() {
 		this.mButtonsText[1].mDepth = -5000;
 	}
 	
-	{
+	/* {
 		var tex = nmgrs.resMan.mTexStore.GetResource("gui_creation_inputbox");
 		var font = nmgrs.resMan.mFontStore.GetResource("pixantiqua");
 		
@@ -3670,7 +3670,7 @@ GFMenuScene.prototype.SetUp = function() {
 		this.mInput.mSpriteInactive.SetCurrentFrame(0);
 		
 		// this.mInput.mMaxChars = 5;
-	}
+	} */
 }
 
 // cleans up the scene object
@@ -3684,7 +3684,7 @@ GFMenuScene.prototype.Input = function() {
 		this.mButtons[i].Input();
 	}
 	
-	this.mInput.Input();
+	// this.mInput.Input();
 }
 
 // handles game logic
@@ -3697,7 +3697,7 @@ GFMenuScene.prototype.Process = function() {
 			this.mButtons[i].Process(pt);
 		}
 		
-		this.mInput.Process(pt);
+		// this.mInput.Process(pt);
 	}
 	
 	{
@@ -3724,7 +3724,7 @@ GFMenuScene.prototype.Render = function() {
 		arr.push(this.mButtonsText[i]);
 	}
 	
-	arr = arr.concat(this.mInput.GetRenderData());
+	// arr = arr.concat(this.mInput.GetRenderData());
 	
 	for (var i = 0; i < arr.length; ++i) {
 		this.mBatch.Add(arr[i]);
@@ -3929,8 +3929,6 @@ function GFGUICreationBar() {
 	
 	this.mMenus = new Array();
 	this.mMenus[0] = new GUIDropDown();
-	
-	GFGUICreationNewDialogue
 }
 
 GFGUICreationBar.prototype.SetUp = function(initOffset) {
