@@ -1,3 +1,10 @@
+// window callbacks...
+// register our call back to handle window resize
+window.onresize = function(e) {
+	nmain.game.HandleResize(e);
+}
+// ...End
+
 // Game Class...
 // a game object contains all the logic and data of our game
 function Game() {
@@ -36,18 +43,7 @@ Game.prototype.SetUp = function() {
 	this.mCanvas.push(document.getElementById("backbuffer"));
 	this.mContext.push(this.mCanvas[1].getContext("2d"));
 	
-	{ // http://www.quirksmode.org/js/findpos.html
-		var currObj = this.mCanvas[0];
-		var currX = 0, currY = 0;
-		if (currObj.offsetParent) {
-			do {
-				currX += currObj.offsetLeft;
-				currY += currObj.offsetTop;
-			} while (currObj = currObj.offsetParent);
-			
-			this.mCanvasPos.Set(currX, currY);
-		}
-	}
+	this.FindCanvasPosition();
 	
 	this.mCanvasSize.Set(this.mCanvas[0].width, this.mCanvas[0].height); // set dimensions of the canvas
 	this.mCurrContext = this.mContext[this.mBufferIter]; // set reference to current buffer
@@ -81,8 +77,6 @@ Game.prototype.Run = function() {
 		// interpolate for smoother running, baby
 		
 		updateDisplay = true; // we need to redisplay
-		
-		
 	}
 	
 	this.mFPSIter++;
@@ -152,6 +146,25 @@ Game.prototype.SwapBuffers = function() {
 // set the current transform to the identity matrix
 Game.prototype.SetIdentity = function() {
 	this.mCurrContext.setTransform(1, 0, 0, 1, 0, 0); // identity matrix
+}
+
+Game.prototype.FindCanvasPosition = function() {
+	{ // http://www.quirksmode.org/js/findpos.html
+		var currObj = this.mCanvas[0];
+		var currX = 0, currY = 0;
+		if (currObj.offsetParent) {
+			do {
+				currX += currObj.offsetLeft;
+				currY += currObj.offsetTop;
+			} while (currObj = currObj.offsetParent);
+			
+			this.mCanvasPos.Set(currX, currY);
+		}
+	}
+}
+
+Game.prototype.HandleResize = function(e) {
+	this.FindCanvasPosition();
 }
 // ...End
 
