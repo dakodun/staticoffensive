@@ -409,5 +409,38 @@ GUIInputBox.prototype.GetRenderData = function() {
 	
 	return arr;
 }
+
+GUIInputBox.prototype.GetSpritePositions = function() {
+	return this.mSpriteIdle.mPos;
+}
+
+GUIInputBox.prototype.SetSpritePositions = function(pos) {
+	var offset = new IVec2(0, 0);
+	offset.mX = pos.mX - this.mSpriteIdle.mPos.mX;
+	offset.mY = pos.mY - this.mSpriteIdle.mPos.mY;
+	
+	this.mSpriteIdle.mPos.Copy(pos);
+	this.mSpriteHover.mPos.Copy(pos);
+	this.mSpriteFocus.mPos.Copy(pos);
+	this.mSpriteInactive.mPos.Copy(pos);
+	
+	this.mCaret.mShape.mPos.mX += offset.mX;
+	this.mCaret.mShape.mPos.mY += offset.mY;
+	this.mCaret.mLeftBound += offset.mX;
+	this.mCaret.mRightBound += offset.mX;
+	
+	this.mRenderCanvas.mPos.mX += offset.mX;
+	this.mRenderCanvas.mPos.mY += offset.mY;
+}
+
+GUIInputBox.prototype.SetSpriteDepths = function(depth) {
+	this.mSpriteIdle.mDepth = depth;
+	this.mSpriteHover.mDepth = depth;
+	this.mSpriteFocus.mDepth = depth;
+	this.mSpriteInactive.mDepth = depth;
+	
+	this.mCaret.mShape.mDepth = depth - 2;
+	this.mRenderCanvas.mDepth = depth - 1;
+}
 // ...End
 
