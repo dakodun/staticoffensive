@@ -180,8 +180,8 @@ GFTexSelScene.prototype.Process = function() {
 				if (this.mTexSelections[i].OnClick() == true) {
 					this.mPersist = true;
 					nmgrs.sceneMan.ReadyScene(new GFCreationScene());
-					nmgrs.sceneMan.mReadyScene.mCreationControl.mCurrentTexture = this.mTexSelections[i].mTextureStr;
-					nmgrs.sceneMan.mReadyScene.mCreationControl.UpdateTileSprite();
+					nmgrs.sceneMan.mReadyScene.mCreationControl.mTileControl.mCurrentTexture = this.mTexSelections[i].mTextureStr;
+					nmgrs.sceneMan.mReadyScene.mCreationControl.mTileControl.UpdateTileSprite();
 					nmgrs.sceneMan.SwitchScene();
 					break;
 				}
