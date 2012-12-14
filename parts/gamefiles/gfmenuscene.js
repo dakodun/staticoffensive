@@ -12,8 +12,6 @@ function GFMenuScene() {
 	this.mButtonsText = new Array();
 	this.mButtonsText[0] = new Text();
 	this.mButtonsText[1] = new Text();
-	
-	// this.mInput = new GUIInputBox();
 }
 
 // returns the type of this object for validity checking
@@ -86,34 +84,6 @@ GFMenuScene.prototype.SetUp = function() {
 		this.mButtonsText[1].mShadow = true;
 		this.mButtonsText[1].mDepth = -5000;
 	}
-	
-	/* {
-		var tex = nmgrs.resMan.mTexStore.GetResource("gui_creation_inputbox");
-		var font = nmgrs.resMan.mFontStore.GetResource("pixantiqua");
-		
-		this.mInput.mInputText.SetFont(font);
-		this.mInput.mInputText.SetFontSize(12);
-		this.mInput.mInputText.mColour = "#000000";
-		
-		this.mInput.mRenderCanvas.mPos.Set(16, 5);
-		this.mInput.mRenderCanvas.mSize.Set(-16, -5);
-		
-		this.mInput.SetUp(new IVec2(20, 100), new IVec2(126, 26), -5000);//, this.mInput.mNumbers);
-		
-		this.mInput.mSpriteIdle.SetAnimatedTexture(tex, 3, 1, -1, -1);
-		this.mInput.mSpriteIdle.SetCurrentFrame(0);
-		
-		this.mInput.mSpriteHover.SetAnimatedTexture(tex, 3, 1, -1, -1);
-		this.mInput.mSpriteHover.SetCurrentFrame(1);
-		
-		this.mInput.mSpriteFocus.SetAnimatedTexture(tex, 3, 1, -1, -1);
-		this.mInput.mSpriteFocus.SetCurrentFrame(2);
-		
-		this.mInput.mSpriteInactive.SetAnimatedTexture(tex, 3, 1, -1, -1);
-		this.mInput.mSpriteInactive.SetCurrentFrame(0);
-		
-		// this.mInput.mMaxChars = 5;
-	} */
 }
 
 // cleans up the scene object
@@ -126,8 +96,6 @@ GFMenuScene.prototype.Input = function() {
 	for (var i = 0; i < this.mButtons.length; ++i) {
 		this.mButtons[i].Input();
 	}
-	
-	// this.mInput.Input();
 }
 
 // handles game logic
@@ -139,8 +107,6 @@ GFMenuScene.prototype.Process = function() {
 		for (var i = 0; i < this.mButtons.length; ++i) {
 			this.mButtons[i].Process(pt);
 		}
-		
-		// this.mInput.Process(pt);
 	}
 	
 	{
@@ -166,8 +132,6 @@ GFMenuScene.prototype.Render = function() {
 	for (var i = 0; i < this.mButtonsText.length; ++i) {
 		arr.push(this.mButtonsText[i]);
 	}
-	
-	// arr = arr.concat(this.mInput.GetRenderData());
 	
 	for (var i = 0; i < arr.length; ++i) {
 		this.mBatch.Add(arr[i]);
