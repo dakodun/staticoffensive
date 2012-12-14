@@ -91,31 +91,15 @@ GFGUICreationTileControl.prototype.Input = function() {
 	this.mSetTexture.Input();
 }
 
-GFGUICreationTileControl.prototype.Process = function(point, offset) {
+GFGUICreationTileControl.prototype.Process = function(point) {
 	var currScene = nmgrs.sceneMan.mCurrScene;
 	
 	{
-		this.mCurrTile.mSprite.mPos.mX += offset.mX; this.mCurrTile.mSprite.mPos.mY += offset.mY;
-		
-		for (var i = 0; i < this.mCurrTileText.length; ++i) {
-			this.mCurrTileText[i].mPos.mX += offset.mX; this.mCurrTileText[i].mPos.mY += offset.mY;
-		}
-		
 		for (var i = 0; i < this.mOptionsArrows.length; ++i) {
 			this.mOptionsArrows[i].Process(point);
-			
-			var newPos = new IVec2(0, 0); newPos.Copy(this.mOptionsArrows[i].GetSpritePositions());
-			newPos.mX += offset.mX; newPos.mY += offset.mY;
-			this.mOptionsArrows[i].SetSpritePositions(newPos);
 		}
 		
-		{
-			this.mSetTexture.Process(point);
-			
-			var newPos = new IVec2(0, 0); newPos.Copy(this.mSetTexture.GetSpritePositions());
-			newPos.mX += offset.mX; newPos.mY += offset.mY;
-			this.mSetTexture.SetSpritePositions(newPos);
-		}
+		this.mSetTexture.Process(point);
 	}
 	
 	{
@@ -400,6 +384,26 @@ GFGUICreationTileControl.prototype.UpdateTileSprite = function() {
 	}
 	
 	this.mCurrTile.mSprite.SetCurrentFrame(this.mCurrTile.mTileFrame);
+}
+
+GFGUICreationTileControl.prototype.UpdatePosition = function(offset) {
+	this.mCurrTile.mSprite.mPos.mX += offset.mX; this.mCurrTile.mSprite.mPos.mY += offset.mY;
+	
+	for (var i = 0; i < this.mCurrTileText.length; ++i) {
+		this.mCurrTileText[i].mPos.mX += offset.mX; this.mCurrTileText[i].mPos.mY += offset.mY;
+	}
+	
+	for (var i = 0; i < this.mOptionsArrows.length; ++i) {
+		var newPos = new IVec2(0, 0); newPos.Copy(this.mOptionsArrows[i].GetSpritePositions());
+		newPos.mX += offset.mX; newPos.mY += offset.mY;
+		this.mOptionsArrows[i].SetSpritePositions(newPos);
+	}
+	
+	{
+		var newPos = new IVec2(0, 0); newPos.Copy(this.mSetTexture.GetSpritePositions());
+		newPos.mX += offset.mX; newPos.mY += offset.mY;
+		this.mSetTexture.SetSpritePositions(newPos);
+	}
 }
 // ...End
 
