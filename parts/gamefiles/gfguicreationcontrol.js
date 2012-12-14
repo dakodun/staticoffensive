@@ -3,7 +3,8 @@
 function GFGUICreationControl() {
 	this.mTranslate = new IVec2(0, 0);
 	
-	this.mTopBar = new Sprite();
+	// this.mTopBar = new Sprite();
+	this.mTopBar = new GFGUICreationBar();
 	
 	this.mCurrTile = new GFMapTile();
 	
@@ -62,8 +63,8 @@ function GFGUICreationControl() {
 		this.mTypes[3] = "Entrance\n& Exit";
 	}
 	
-	this.mBarMenus = new Array();
-	this.mBarMenus[0] = new GUIDropDown();
+	// this.mBarMenus = new Array();
+	// this.mBarMenus[0] = new GUIDropDown();
 }
 
 GFGUICreationControl.prototype.SetUp = function(initTex) {
@@ -73,13 +74,14 @@ GFGUICreationControl.prototype.SetUp = function(initTex) {
 	var initOffset = new IVec2();
 	initOffset.Copy(currScene.mCam.mTranslate);
 	
-	{
+	this.mTopBar.SetUp(initOffset);
+	/* {
 		var tex = nmgrs.resMan.mTexStore.GetResource("gui_creation_topbar");
 		
 		this.mTopBar.mPos.Set(8 + initOffset.mX, 10 + initOffset.mY);
 		this.mTopBar.mDepth = -5000;
 		this.mTopBar.SetTexture(tex);
-	}
+	} */
 	
 	{
 		var tex = nmgrs.resMan.mTexStore.GetResource(this.mCurrentTexture);
@@ -278,7 +280,7 @@ GFGUICreationControl.prototype.SetUp = function(initTex) {
 		this.mSetTexture.mSpriteInactive.SetCurrentFrame(0);
 	}
 	
-	{
+	/* {
 		{
 			var tex = nmgrs.resMan.mTexStore.GetResource("gui_creation_topmenunew");
 			var baseBut = new GUIButton();
@@ -389,7 +391,7 @@ GFGUICreationControl.prototype.SetUp = function(initTex) {
 				this.mBarMenus[0].AddItem(itemBut, itemTxt);
 			}
 		}
-	}
+	} */
 	
 	this.mTranslate.Copy(currScene.mCam.mTranslate);
 };
@@ -401,7 +403,8 @@ GFGUICreationControl.prototype.Input = function() {
 	
 	this.mSetTexture.Input();
 	
-	this.mBarMenus[0].Input();
+	this.mTopBar.Input();
+	// this.mBarMenus[0].Input();
 }
 
 GFGUICreationControl.prototype.Process = function() {
@@ -415,7 +418,7 @@ GFGUICreationControl.prototype.Process = function() {
 		pt.Copy(nmgrs.inputMan.GetLocalMouseCoords());
 		
 		this.mCurrTile.mSprite.mPos.mX += offset.mX; this.mCurrTile.mSprite.mPos.mY += offset.mY;
-		this.mTopBar.mPos.mX += offset.mX; this.mTopBar.mPos.mY += offset.mY;
+		// this.mTopBar.mPos.mX += offset.mX; this.mTopBar.mPos.mY += offset.mY;
 		
 		for (var i = 0; i < this.mCurrTileText.length; ++i) {
 			this.mCurrTileText[i].mPos.mX += offset.mX; this.mCurrTileText[i].mPos.mY += offset.mY;
@@ -437,13 +440,14 @@ GFGUICreationControl.prototype.Process = function() {
 			this.mSetTexture.SetSpritePositions(newPos);
 		}
 		
-		{
+		this.mTopBar.Process(pt, offset);
+		/* {
 			this.mBarMenus[0].Process(pt);
 			
 			var newPos = new IVec2(0, 0); newPos.Copy(this.mBarMenus[0].GetSpritePositions());
 			newPos.mX += offset.mX; newPos.mY += offset.mY;
 			this.mBarMenus[0].SetSpritePositions(newPos);
-		}
+		} */
 	}
 	
 	{
@@ -501,7 +505,7 @@ GFGUICreationControl.prototype.Process = function() {
 			// this.UpdateTileSprite();
 		}
 		
-		if (this.mBarMenus[0].OnClick(0) == true) {
+		/* if (this.mBarMenus[0].OnClick(0) == true) {
 			alert("create new");
 		}
 		else if (this.mBarMenus[0].OnClick(1) == true) {
@@ -509,7 +513,7 @@ GFGUICreationControl.prototype.Process = function() {
 		}
 		else if (this.mBarMenus[0].OnClick(2) == true) {
 			alert("obliterate");
-		}
+		} */
 	}
 	
 	this.mTranslate.Copy(currScene.mCam.mTranslate);
@@ -518,7 +522,7 @@ GFGUICreationControl.prototype.Process = function() {
 GFGUICreationControl.prototype.GetRenderData = function() {
 	var arr = new Array();
 	
-	arr.push(this.mTopBar);
+	// arr.push(this.mTopBar);
 	
 	for (var i = 0; i < this.mCurrTileText.length; ++i) {
 		arr.push(this.mCurrTileText[i]);
@@ -532,7 +536,8 @@ GFGUICreationControl.prototype.GetRenderData = function() {
 	
 	arr = arr.concat(this.mSetTexture.GetRenderData());
 	
-	arr = arr.concat(this.mBarMenus[0].GetRenderData());
+	// arr = arr.concat(this.mBarMenus[0].GetRenderData());
+	arr = arr.concat(this.mTopBar.GetRenderData());
 	
 	return arr;
 }
