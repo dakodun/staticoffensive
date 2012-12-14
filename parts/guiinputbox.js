@@ -161,9 +161,36 @@ function GUIInputBox() {
 	this.mInputString = "";
 	
 	this.mActive = true;
+	
+	this.mValidInput = new Array();
+	
+	{
+		this.mAlphaUpper = new Array("A", "B", "C", "D", "E", "F", "G", "H", "I", "J", "K", "L", "M", "N",
+				"O", "P", "Q", "R", "S", "T", "U", "V", "W", "X", "Y", "Z", " ");
+				
+		this.mAlphaLower = new Array("a", "b", "c", "d", "e", "f", "g", "h", "i", "j", "k", "l", "m", "n",
+				"o", "p", "q", "r", "s", "t", "u", "v", "w", "x", "y", "z", " ");
+				
+		this.mNumbers = new Array("0", "1", "2", "3", "4", "5", "6", "7", "8", "9");
+		
+		this.mAlphaNumeric = new Array();
+		this.mAlphaNumeric = this.mAlphaNumeric.concat(this.mAlphaUpper);
+		this.mAlphaNumeric = this.mAlphaNumeric.concat(this.mAlphaLower);
+		this.mAlphaNumeric = this.mAlphaNumeric.concat(this.mNumbers);
+		
+		{
+			var arr = new Array("¬", "!", '"', "£", "$", "%", "^", "&", "*", "(", ")", "_", "+",
+					"`", "¦", "-", "=", "[", "{", "]", "}", ";", ":", "'", "@", "#", "~", "\\", "|",
+					",", "<", ".", ">", "/", "?");
+			
+			this.mAlphaNumericPunctuation = new Array();
+			this.mAlphaNumericPunctuation = this.mAlphaNumeric.concat(this.mAlphaNumeric);
+			this.mAlphaNumericPunctuation = this.mAlphaNumeric.concat(arr);
+		}
+	}
 };
 
-GUIInputBox.prototype.SetUp = function(pos, size, depth) {
+GUIInputBox.prototype.SetUp = function(pos, size, depth, inputArr) {
 	this.mPos.Copy(pos);
 	this.mSize.Copy(size);
 	this.mDepth = depth;
@@ -200,11 +227,29 @@ GUIInputBox.prototype.SetUp = function(pos, size, depth) {
 		this.mCaret.SetSize(new IVec2(1, size.mY - 10));
 		this.mCaret.mShape.mColour = "#4A4A4A";
 	}
+	
+	if (inputArr == null) {
+		this.mValidInput = this.mValidInput.concat(this.mAlphaNumericPunctuation);
+	}
+	else {
+		this.mValidInput = this.mValidInput.concat(inputArr);
+	}
 }
 
 GUIInputBox.prototype.Input = function() {
 	if (this.mHasFocus == true) {
-		this.mInputString += nmgrs.inputMan.mTextInput;
+		var inString = "";
+		for (var i = 0; i < nmgrs.inputMan.mTextInput.length; ++i) {
+			var charCheck = nmgrs.inputMan.mTextInput.charAt(i);
+			for (var j = 0; j < this.mValidInput.length; ++j) {
+				if (charCheck == this.mValidInput[j]) {
+					inString += charCheck;
+					break;
+				}
+			}
+		}
+		
+		this.mInputString += inString;
 		
 		if (nmgrs.inputMan.GetKeyboardPressed(nkeyboard.key.code.backspace)) {
 			this.mBackspace = true;
