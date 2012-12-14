@@ -33,7 +33,7 @@ InitScene.prototype.SetUp = function() {
 		nmgrs.resLoad.QueueTexture("gui_creation_topbar", "./res/vis/gui/gui_creation_topbar.png");
 		nmgrs.resLoad.QueueTexture("gui_creation_topmenunew", "./res/vis/gui/gui_creation_topmenunew.png");
 		nmgrs.resLoad.QueueTexture("gui_creation_dropback", "./res/vis/gui/gui_creation_dropback.png");
-		nmgrs.resLoad.QueueTexture("gui_creation_inputbox", "./res/vis/gui/gui_creation_inputbox.png");
+		// nmgrs.resLoad.QueueTexture("gui_creation_inputbox", "./res/vis/gui/gui_creation_inputbox.png");
 		nmgrs.resLoad.QueueTexture("gui_creation_arrows", "./res/vis/gui/gui_creation_arrows.png");
 		nmgrs.resLoad.QueueTexture("gui_creation_texset", "./res/vis/gui/gui_creation_texset.png");
 		nmgrs.resLoad.QueueTexture("gui_texselect", "./res/vis/gui/gui_texselect.png");
