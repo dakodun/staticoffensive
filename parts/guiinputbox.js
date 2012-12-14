@@ -4,6 +4,7 @@ function GUIInputBoxCaret() {
 	
 	this.mFlash = 0;
 	this.mPlace = 0;
+	this.mOldPlace = 0;
 	
 	this.mScroll = 0;
 	this.mScrollTimer = 0;
@@ -84,7 +85,7 @@ GUIInputBoxCaret.prototype.Process = function(inputText, renderCanvas) {
 	}
 	
 	// if caret's position in text has been moved
-	if (true) {
+	if (this.mPlace != this.mOldPlace) {
 		// create a new text object, copy our input text and then create a substring
 		var txt = new Text();
 		txt.Copy(inputText);
@@ -113,6 +114,8 @@ GUIInputBoxCaret.prototype.Process = function(inputText, renderCanvas) {
 			renderCanvas.Clear();
 			renderCanvas.RenderTo(inputText);
 		}
+		
+		this.mOldPlace = this.mPlace;
 	}
 }
 
@@ -162,6 +165,7 @@ function GUIInputBox() {
 	
 	this.mActive = true;
 	
+	this.mMaxChars = -1;
 	this.mValidInput = new Array();
 	
 	{
@@ -249,7 +253,9 @@ GUIInputBox.prototype.Input = function() {
 			}
 		}
 		
-		this.mInputString += inString;
+		if (this.mMaxChars == -1 || (this.mInputText.mString.length + inString.length) <= this.mMaxChars) {
+			this.mInputString += inString;
+		}
 		
 		if (nmgrs.inputMan.GetKeyboardPressed(nkeyboard.key.code.backspace)) {
 			this.mBackspace = true;
