@@ -36,13 +36,19 @@ GFCreationScene.prototype.TearDown = function() {
 
 // handles user input
 GFCreationScene.prototype.Input = function() {
-	this.mMapControl.Input();
+	if (this.mCreationControl.mDialogueOpen == false) {
+		this.mMapControl.Input();
+	}
+	
 	this.mCreationControl.Input();
 }
 
 // handles game logic
 GFCreationScene.prototype.Process = function() {
-	this.mMapControl.Process();
+	if (this.mCreationControl.mDialogueOpen == false) {
+		this.mMapControl.Process();
+	}
+	
 	this.mCreationControl.Process();
 	
 	this.mCam.Process();
