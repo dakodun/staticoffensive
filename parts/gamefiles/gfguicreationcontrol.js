@@ -3,7 +3,6 @@
 function GFGUICreationControl() {
 	this.mTranslate = new IVec2(0, 0);
 	
-	// this.mTopBar = new Sprite();
 	this.mTopBar = new GFGUICreationBar();
 	
 	this.mCurrTile = new GFMapTile();
@@ -62,9 +61,6 @@ function GFGUICreationControl() {
 		this.mTypes[2] = "Exit\nOnly";
 		this.mTypes[3] = "Entrance\n& Exit";
 	}
-	
-	// this.mBarMenus = new Array();
-	// this.mBarMenus[0] = new GUIDropDown();
 }
 
 GFGUICreationControl.prototype.SetUp = function(initTex) {
@@ -75,13 +71,6 @@ GFGUICreationControl.prototype.SetUp = function(initTex) {
 	initOffset.Copy(currScene.mCam.mTranslate);
 	
 	this.mTopBar.SetUp(initOffset);
-	/* {
-		var tex = nmgrs.resMan.mTexStore.GetResource("gui_creation_topbar");
-		
-		this.mTopBar.mPos.Set(8 + initOffset.mX, 10 + initOffset.mY);
-		this.mTopBar.mDepth = -5000;
-		this.mTopBar.SetTexture(tex);
-	} */
 	
 	{
 		var tex = nmgrs.resMan.mTexStore.GetResource(this.mCurrentTexture);
@@ -280,119 +269,6 @@ GFGUICreationControl.prototype.SetUp = function(initTex) {
 		this.mSetTexture.mSpriteInactive.SetCurrentFrame(0);
 	}
 	
-	/* {
-		{
-			var tex = nmgrs.resMan.mTexStore.GetResource("gui_creation_topmenunew");
-			var baseBut = new GUIButton();
-			
-			baseBut.SetUp(new IVec2(8 + initOffset.mX, 10 + initOffset.mY), new IVec2(54, 24), -5000);
-			baseBut.mPos.Set(8, 10);
-			
-			baseBut.mSpriteIdle.SetAnimatedTexture(tex, 3, 1, -1, -1);
-			baseBut.mSpriteIdle.SetCurrentFrame(0);
-			
-			baseBut.mSpriteHover.SetAnimatedTexture(tex, 3, 1, -1, -1);
-			baseBut.mSpriteHover.SetCurrentFrame(1);
-			
-			baseBut.mSpriteDown.SetAnimatedTexture(tex, 3, 1, -1, -1);
-			baseBut.mSpriteDown.SetCurrentFrame(2);
-			
-			baseBut.mSpriteInactive.SetAnimatedTexture(tex, 3, 1, -1, -1);
-			baseBut.mSpriteInactive.SetCurrentFrame(0);
-			
-			this.mBarMenus[0].SetUp(baseBut);
-		}
-		
-		{
-			var tex = nmgrs.resMan.mTexStore.GetResource("gui_creation_dropback");
-			var font = nmgrs.resMan.mFontStore.GetResource("pixantiqua");
-			
-			{
-				var itemBut = new GUIButton();
-				itemBut.SetUp(new IVec2(0, 0), new IVec2(176, 16), -5000);
-				
-				itemBut.mSpriteIdle.SetAnimatedTexture(tex, 6, 1, -1, -1);
-				itemBut.mSpriteIdle.SetCurrentFrame(3);
-				
-				itemBut.mSpriteHover.SetAnimatedTexture(tex, 6, 1, -1, -1);
-				itemBut.mSpriteHover.SetCurrentFrame(4);
-				
-				itemBut.mSpriteDown.SetAnimatedTexture(tex, 6, 1, -1, -1);
-				itemBut.mSpriteDown.SetCurrentFrame(5);
-				
-				itemBut.mSpriteInactive.SetAnimatedTexture(tex, 6, 1, -1, -1);
-				itemBut.mSpriteInactive.SetCurrentFrame(3);
-				
-				var itemTxt = new Text();
-				itemTxt.mDepth = -5001;
-				itemTxt.SetFont(font);
-				itemTxt.SetFontSize(12);
-				itemTxt.mString = "create new";
-				itemTxt.mAlign = "left";
-				itemTxt.mPos.Set(26, 0);
-				itemTxt.mColour = "#4A4A66";
-					
-				this.mBarMenus[0].AddItem(itemBut, itemTxt);
-			}
-			
-			{
-				var itemBut = new GUIButton();
-				itemBut.SetUp(new IVec2(0, 0), new IVec2(176, 16), -5000);
-				
-				itemBut.mSpriteIdle.SetAnimatedTexture(tex, 6, 1, -1, -1);
-				itemBut.mSpriteIdle.SetCurrentFrame(0);
-				
-				itemBut.mSpriteHover.SetAnimatedTexture(tex, 6, 1, -1, -1);
-				itemBut.mSpriteHover.SetCurrentFrame(1);
-				
-				itemBut.mSpriteDown.SetAnimatedTexture(tex, 6, 1, -1, -1);
-				itemBut.mSpriteDown.SetCurrentFrame(2);
-				
-				itemBut.mSpriteInactive.SetAnimatedTexture(tex, 6, 1, -1, -1);
-				itemBut.mSpriteInactive.SetCurrentFrame(0);
-				
-				var itemTxt = new Text();
-				itemTxt.mDepth = -5001;
-				itemTxt.SetFont(font);
-				itemTxt.SetFontSize(12);
-				itemTxt.mString = "restore old";
-				itemTxt.mAlign = "left";
-				itemTxt.mPos.Set(26, 0);
-				itemTxt.mColour = "#4A4A66";
-					
-				this.mBarMenus[0].AddItem(itemBut, itemTxt);
-			}
-			
-			{
-				var itemBut = new GUIButton();
-				itemBut.SetUp(new IVec2(0, 0), new IVec2(176, 16), -5000);
-				
-				itemBut.mSpriteIdle.SetAnimatedTexture(tex, 6, 1, -1, -1);
-				itemBut.mSpriteIdle.SetCurrentFrame(3);
-				
-				itemBut.mSpriteHover.SetAnimatedTexture(tex, 6, 1, -1, -1);
-				itemBut.mSpriteHover.SetCurrentFrame(4);
-				
-				itemBut.mSpriteDown.SetAnimatedTexture(tex, 6, 1, -1, -1);
-				itemBut.mSpriteDown.SetCurrentFrame(5);
-				
-				itemBut.mSpriteInactive.SetAnimatedTexture(tex, 6, 1, -1, -1);
-				itemBut.mSpriteInactive.SetCurrentFrame(3);
-				
-				var itemTxt = new Text();
-				itemTxt.mDepth = -5001;
-				itemTxt.SetFont(font);
-				itemTxt.SetFontSize(12);
-				itemTxt.mString = "obliterate";
-				itemTxt.mAlign = "left";
-				itemTxt.mPos.Set(26, 0);
-				itemTxt.mColour = "#4A4A66";
-					
-				this.mBarMenus[0].AddItem(itemBut, itemTxt);
-			}
-		}
-	} */
-	
 	this.mTranslate.Copy(currScene.mCam.mTranslate);
 };
 
@@ -404,7 +280,6 @@ GFGUICreationControl.prototype.Input = function() {
 	this.mSetTexture.Input();
 	
 	this.mTopBar.Input();
-	// this.mBarMenus[0].Input();
 }
 
 GFGUICreationControl.prototype.Process = function() {
@@ -418,7 +293,6 @@ GFGUICreationControl.prototype.Process = function() {
 		pt.Copy(nmgrs.inputMan.GetLocalMouseCoords());
 		
 		this.mCurrTile.mSprite.mPos.mX += offset.mX; this.mCurrTile.mSprite.mPos.mY += offset.mY;
-		// this.mTopBar.mPos.mX += offset.mX; this.mTopBar.mPos.mY += offset.mY;
 		
 		for (var i = 0; i < this.mCurrTileText.length; ++i) {
 			this.mCurrTileText[i].mPos.mX += offset.mX; this.mCurrTileText[i].mPos.mY += offset.mY;
@@ -441,13 +315,6 @@ GFGUICreationControl.prototype.Process = function() {
 		}
 		
 		this.mTopBar.Process(pt, offset);
-		/* {
-			this.mBarMenus[0].Process(pt);
-			
-			var newPos = new IVec2(0, 0); newPos.Copy(this.mBarMenus[0].GetSpritePositions());
-			newPos.mX += offset.mX; newPos.mY += offset.mY;
-			this.mBarMenus[0].SetSpritePositions(newPos);
-		} */
 	}
 	
 	{
@@ -500,20 +367,7 @@ GFGUICreationControl.prototype.Process = function() {
 			currScene.mPersist = true;
 			nmgrs.sceneMan.ReadyScene(new GFTexSelScene());
 			nmgrs.sceneMan.SwitchScene();
-			
-			// this.mCurrentTexture = "tileset_test_2";
-			// this.UpdateTileSprite();
 		}
-		
-		/* if (this.mBarMenus[0].OnClick(0) == true) {
-			alert("create new");
-		}
-		else if (this.mBarMenus[0].OnClick(1) == true) {
-			alert("restore old");
-		}
-		else if (this.mBarMenus[0].OnClick(2) == true) {
-			alert("obliterate");
-		} */
 	}
 	
 	this.mTranslate.Copy(currScene.mCam.mTranslate);
@@ -521,8 +375,6 @@ GFGUICreationControl.prototype.Process = function() {
 
 GFGUICreationControl.prototype.GetRenderData = function() {
 	var arr = new Array();
-	
-	// arr.push(this.mTopBar);
 	
 	for (var i = 0; i < this.mCurrTileText.length; ++i) {
 		arr.push(this.mCurrTileText[i]);
@@ -535,8 +387,6 @@ GFGUICreationControl.prototype.GetRenderData = function() {
 	}
 	
 	arr = arr.concat(this.mSetTexture.GetRenderData());
-	
-	// arr = arr.concat(this.mBarMenus[0].GetRenderData());
 	arr = arr.concat(this.mTopBar.GetRenderData());
 	
 	return arr;
