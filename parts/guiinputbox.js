@@ -220,20 +220,18 @@ GUIInputBox.prototype.Input = function() {
 					this.mCaret.mPlace = 0;
 				}
 				
-				// if text is wider and is able to fill the render canvas
-				/* if (this.mInputText.GetWidth() >= this.mRenderCanvas.mSize.mX) {
-					// if text is not currently filling the render canvas
-					if (this.mInputText.mPos.mX + this.mInputText.GetWidth() <
-							this.mRenderCanvas.mPos.mX + this.mRenderCanvas.mSize.mX) {
-						
-						// move the tet to ensure render canvas is filled
+				// if text is not currently filling the render canvas
+				if ((this.mInputText.mPos.mX + this.mRenderCanvas.mPos.mX) + this.mInputText.GetWidth() <
+						this.mRenderCanvas.mPos.mX + this.mRenderCanvas.mSize.mX) {
+					
+					// if text is wider and is able to fill the render canvas
+					if (this.mInputText.GetWidth() >= this.mRenderCanvas.mSize.mX) {
+						// move the text to ensure render canvas is filled
 						var shift = (this.mRenderCanvas.mPos.mX + this.mRenderCanvas.mSize.mX) -
-								(this.mInputText.mPos.mX + this.mInputText.GetWidth());
+								((this.mInputText.mPos.mX + this.mRenderCanvas.mPos.mX) + this.mInputText.GetWidth());
 						this.mInputText.mPos.mX += shift;
-						
-						
 					}
-				} */
+				}
 				
 				this.mRenderCanvas.Clear();
 				this.mRenderCanvas.RenderTo(this.mInputText);
