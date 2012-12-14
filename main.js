@@ -2881,6 +2881,39 @@ GUIInputBox.prototype.GetRenderData = function() {
 	
 	return arr;
 }
+
+GUIInputBox.prototype.GetSpritePositions = function() {
+	return this.mSpriteIdle.mPos;
+}
+
+GUIInputBox.prototype.SetSpritePositions = function(pos) {
+	var offset = new IVec2(0, 0);
+	offset.mX = pos.mX - this.mSpriteIdle.mPos.mX;
+	offset.mY = pos.mY - this.mSpriteIdle.mPos.mY;
+	
+	this.mSpriteIdle.mPos.Copy(pos);
+	this.mSpriteHover.mPos.Copy(pos);
+	this.mSpriteFocus.mPos.Copy(pos);
+	this.mSpriteInactive.mPos.Copy(pos);
+	
+	this.mCaret.mShape.mPos.mX += offset.mX;
+	this.mCaret.mShape.mPos.mY += offset.mY;
+	this.mCaret.mLeftBound += offset.mX;
+	this.mCaret.mRightBound += offset.mX;
+	
+	this.mRenderCanvas.mPos.mX += offset.mX;
+	this.mRenderCanvas.mPos.mY += offset.mY;
+}
+
+GUIInputBox.prototype.SetSpriteDepths = function(depth) {
+	this.mSpriteIdle.mDepth = depth;
+	this.mSpriteHover.mDepth = depth;
+	this.mSpriteFocus.mDepth = depth;
+	this.mSpriteInactive.mDepth = depth;
+	
+	this.mCaret.mShape.mDepth = depth - 2;
+	this.mRenderCanvas.mDepth = depth - 1;
+}
 // ...End
 
 
@@ -3015,7 +3048,7 @@ InitScene.prototype.SetUp = function() {
 		nmgrs.resLoad.QueueTexture("gui_creation_topbar", "./res/vis/gui/gui_creation_topbar.png");
 		nmgrs.resLoad.QueueTexture("gui_creation_topmenunew", "./res/vis/gui/gui_creation_topmenunew.png");
 		nmgrs.resLoad.QueueTexture("gui_creation_dropback", "./res/vis/gui/gui_creation_dropback.png");
-		nmgrs.resLoad.QueueTexture("gui_creation_inputbox", "./res/vis/gui/gui_creation_inputbox.png");
+		// nmgrs.resLoad.QueueTexture("gui_creation_inputbox", "./res/vis/gui/gui_creation_inputbox.png");
 		nmgrs.resLoad.QueueTexture("gui_creation_arrows", "./res/vis/gui/gui_creation_arrows.png");
 		nmgrs.resLoad.QueueTexture("gui_creation_texset", "./res/vis/gui/gui_creation_texset.png");
 		nmgrs.resLoad.QueueTexture("gui_texselect", "./res/vis/gui/gui_texselect.png");
@@ -3064,6 +3097,13 @@ InitScene.prototype.Render = function() {
 // ...End
 
 
+// window callbacks...
+// register our call back to handle window resize
+window.onresize = function(e) {
+	nmain.game.HandleResize(e);
+}
+// ...End
+
 // Game Class...
 // a game object contains all the logic and data of our game
 function Game() {
@@ -3102,18 +3142,7 @@ Game.prototype.SetUp = function() {
 	this.mCanvas.push(document.getElementById("backbuffer"));
 	this.mContext.push(this.mCanvas[1].getContext("2d"));
 	
-	{ // http://www.quirksmode.org/js/findpos.html
-		var currObj = this.mCanvas[0];
-		var currX = 0, currY = 0;
-		if (currObj.offsetParent) {
-			do {
-				currX += currObj.offsetLeft;
-				currY += currObj.offsetTop;
-			} while (currObj = currObj.offsetParent);
-			
-			this.mCanvasPos.Set(currX, currY);
-		}
-	}
+	this.FindCanvasPosition();
 	
 	this.mCanvasSize.Set(this.mCanvas[0].width, this.mCanvas[0].height); // set dimensions of the canvas
 	this.mCurrContext = this.mContext[this.mBufferIter]; // set reference to current buffer
@@ -3147,8 +3176,6 @@ Game.prototype.Run = function() {
 		// interpolate for smoother running, baby
 		
 		updateDisplay = true; // we need to redisplay
-		
-		
 	}
 	
 	this.mFPSIter++;
@@ -3218,6 +3245,25 @@ Game.prototype.SwapBuffers = function() {
 // set the current transform to the identity matrix
 Game.prototype.SetIdentity = function() {
 	this.mCurrContext.setTransform(1, 0, 0, 1, 0, 0); // identity matrix
+}
+
+Game.prototype.FindCanvasPosition = function() {
+	{ // http://www.quirksmode.org/js/findpos.html
+		var currObj = this.mCanvas[0];
+		var currX = 0, currY = 0;
+		if (currObj.offsetParent) {
+			do {
+				currX += currObj.offsetLeft;
+				currY += currObj.offsetTop;
+			} while (currObj = currObj.offsetParent);
+			
+			this.mCanvasPos.Set(currX, currY);
+		}
+	}
+}
+
+Game.prototype.HandleResize = function(e) {
+	this.FindCanvasPosition();
 }
 // ...End
 
@@ -3569,8 +3615,6 @@ function GFMenuScene() {
 	this.mButtonsText = new Array();
 	this.mButtonsText[0] = new Text();
 	this.mButtonsText[1] = new Text();
-	
-	// this.mInput = new GUIInputBox();
 }
 
 // returns the type of this object for validity checking
@@ -3643,34 +3687,6 @@ GFMenuScene.prototype.SetUp = function() {
 		this.mButtonsText[1].mShadow = true;
 		this.mButtonsText[1].mDepth = -5000;
 	}
-	
-	/* {
-		var tex = nmgrs.resMan.mTexStore.GetResource("gui_creation_inputbox");
-		var font = nmgrs.resMan.mFontStore.GetResource("pixantiqua");
-		
-		this.mInput.mInputText.SetFont(font);
-		this.mInput.mInputText.SetFontSize(12);
-		this.mInput.mInputText.mColour = "#000000";
-		
-		this.mInput.mRenderCanvas.mPos.Set(16, 5);
-		this.mInput.mRenderCanvas.mSize.Set(-16, -5);
-		
-		this.mInput.SetUp(new IVec2(20, 100), new IVec2(126, 26), -5000);//, this.mInput.mNumbers);
-		
-		this.mInput.mSpriteIdle.SetAnimatedTexture(tex, 3, 1, -1, -1);
-		this.mInput.mSpriteIdle.SetCurrentFrame(0);
-		
-		this.mInput.mSpriteHover.SetAnimatedTexture(tex, 3, 1, -1, -1);
-		this.mInput.mSpriteHover.SetCurrentFrame(1);
-		
-		this.mInput.mSpriteFocus.SetAnimatedTexture(tex, 3, 1, -1, -1);
-		this.mInput.mSpriteFocus.SetCurrentFrame(2);
-		
-		this.mInput.mSpriteInactive.SetAnimatedTexture(tex, 3, 1, -1, -1);
-		this.mInput.mSpriteInactive.SetCurrentFrame(0);
-		
-		// this.mInput.mMaxChars = 5;
-	} */
 }
 
 // cleans up the scene object
@@ -3683,8 +3699,6 @@ GFMenuScene.prototype.Input = function() {
 	for (var i = 0; i < this.mButtons.length; ++i) {
 		this.mButtons[i].Input();
 	}
-	
-	// this.mInput.Input();
 }
 
 // handles game logic
@@ -3696,8 +3710,6 @@ GFMenuScene.prototype.Process = function() {
 		for (var i = 0; i < this.mButtons.length; ++i) {
 			this.mButtons[i].Process(pt);
 		}
-		
-		// this.mInput.Process(pt);
 	}
 	
 	{
@@ -3723,8 +3735,6 @@ GFMenuScene.prototype.Render = function() {
 	for (var i = 0; i < this.mButtonsText.length; ++i) {
 		arr.push(this.mButtonsText[i]);
 	}
-	
-	// arr = arr.concat(this.mInput.GetRenderData());
 	
 	for (var i = 0; i < arr.length; ++i) {
 		this.mBatch.Add(arr[i]);
@@ -3890,13 +3900,19 @@ GFCreationScene.prototype.TearDown = function() {
 
 // handles user input
 GFCreationScene.prototype.Input = function() {
-	this.mMapControl.Input();
+	if (this.mCreationControl.mDialogueOpen == false) {
+		this.mMapControl.Input();
+	}
+	
 	this.mCreationControl.Input();
 }
 
 // handles game logic
 GFCreationScene.prototype.Process = function() {
-	this.mMapControl.Process();
+	if (this.mCreationControl.mDialogueOpen == false) {
+		this.mMapControl.Process();
+	}
+	
 	this.mCreationControl.Process();
 	
 	this.mCam.Process();
@@ -3972,25 +3988,23 @@ GFGUICreationBar.prototype.Input = function() {
 	}
 }
 
-GFGUICreationBar.prototype.Process = function(point, offset) {
-	this.mSprite.mPos.mX += offset.mX; this.mSprite.mPos.mY += offset.mY;
+GFGUICreationBar.prototype.Process = function(point) {
+	var currScene = nmgrs.sceneMan.mCurrScene;
 	
 	for (var i = 0; i < this.mMenus.length; ++i) {
 		this.mMenus[i].Process(point);
-		
-		var newPos = new IVec2(0, 0); newPos.Copy(this.mMenus[i].GetSpritePositions());
-		newPos.mX += offset.mX; newPos.mY += offset.mY;
-		this.mMenus[i].SetSpritePositions(newPos);
 	}
 	
-	if (this.mMenus[0].OnClick(0) == true) {
-		alert("new");
-	}
-	else if (this.mMenus[0].OnClick(1) == true) {
-		alert("old");
-	}
-	else if (this.mMenus[0].OnClick(2) == true) {
-		alert("burps");
+	{
+		if (this.mMenus[0].OnClick(0) == true) {
+			currScene.mCreationControl.mDialogueOpen = true;
+		}
+		else if (this.mMenus[0].OnClick(1) == true) {
+			alert("old");
+		}
+		else if (this.mMenus[0].OnClick(2) == true) {
+			alert("burps");
+		}
 	}
 }
 
@@ -4043,6 +4057,18 @@ GFGUICreationBar.prototype.AddItem = function(menu, text, alt) {
 		menu.AddItem(itemBut, itemTxt);
 	}
 }
+
+GFGUICreationBar.prototype.UpdatePosition = function(offset) {
+	var currScene = nmgrs.sceneMan.mCurrScene;
+	
+	this.mSprite.mPos.mX += offset.mX; this.mSprite.mPos.mY += offset.mY;
+	
+	for (var i = 0; i < this.mMenus.length; ++i) {
+		var newPos = new IVec2(0, 0); newPos.Copy(this.mMenus[i].GetSpritePositions());
+		newPos.mX += offset.mX; newPos.mY += offset.mY;
+		this.mMenus[i].SetSpritePositions(newPos);
+	}
+}
 // ...End
 
 
@@ -4052,39 +4078,326 @@ function GFGUICreationControl() {
 	this.mTranslate = new IVec2(0, 0);
 	
 	this.mTopBar = new GFGUICreationBar();
+	this.mTileControl = new GFGUICreationTileControl();
+	this.mNewDialogue = new GFGUICreationNewDialogue();
 	
+	this.mDialogueOpen = false;
+	this.mBlackout = new Shape();
+}
+
+GFGUICreationControl.prototype.SetUp = function(initTex) {
+	var currScene = nmgrs.sceneMan.mCurrScene;
+	
+	var initOffset = new IVec2();
+	initOffset.Copy(currScene.mCam.mTranslate);
+	
+	this.mTopBar.SetUp(initOffset);
+	this.mTileControl.SetUp(initTex, initOffset);
+	this.mNewDialogue.SetUp(initOffset);
+	
+	{
+		this.mBlackout.mPos.Copy(initOffset);
+		this.mBlackout.mDepth = -5005;
+		this.mBlackout.mColour = "#000000";
+		this.mBlackout.mAlpha = 0.75;
+		
+		this.mBlackout.AddPoint(new IVec2(nmain.game.mCanvasSize.mX, 0));
+		this.mBlackout.AddPoint(new IVec2(nmain.game.mCanvasSize.mX, nmain.game.mCanvasSize.mY));
+		this.mBlackout.AddPoint(new IVec2(0, nmain.game.mCanvasSize.mY));
+	}
+	
+	this.mTranslate.Copy(currScene.mCam.mTranslate);
+};
+
+GFGUICreationControl.prototype.Input = function() {
+	if (this.mDialogueOpen == false) {
+		this.mTopBar.Input();
+		this.mTileControl.Input();
+	}
+	else {
+		this.mNewDialogue.Input();
+	}
+}
+
+GFGUICreationControl.prototype.Process = function() {
+	var currScene = nmgrs.sceneMan.mCurrScene;
+	var offset = new IVec2(0, 0);
+	offset.mX = currScene.mCam.mTranslate.mX - this.mTranslate.mX;
+	offset.mY = currScene.mCam.mTranslate.mY - this.mTranslate.mY;
+	
+	{
+		var pt = new IVec2(0, 0);
+		pt.Copy(nmgrs.inputMan.GetLocalMouseCoords());
+		
+		if (this.mDialogueOpen == false) {
+			this.mTopBar.Process(pt);
+			this.mTileControl.Process(pt);
+		}
+		else {
+			this.mNewDialogue.Process(pt);
+		}
+	}
+	
+	{
+		this.mTopBar.UpdatePosition(offset);
+		this.mTileControl.UpdatePosition(offset);
+		this.mNewDialogue.UpdatePosition(offset);
+		
+		this.mBlackout.mPos.mX += offset.mX;
+		this.mBlackout.mPos.mY += offset.mY;
+	}
+	
+	this.mTranslate.Copy(currScene.mCam.mTranslate);
+}
+
+GFGUICreationControl.prototype.GetRenderData = function() {
+	var arr = new Array();
+	
+	arr = arr.concat(this.mTopBar.GetRenderData());
+	arr = arr.concat(this.mTileControl.GetRenderData());
+	
+	if (this.mDialogueOpen == true) {
+		arr.push(this.mBlackout);
+		arr = arr.concat(this.mNewDialogue.GetRenderData());
+	}
+	
+	return arr;
+}
+// ...End
+
+
+// GFGUICreationNewDialogue Class...
+// game file:
+function GFGUICreationNewDialogue() {
+	this.mSprite = new Sprite();
+	
+	this.mInputBoxes = new Array();
+	this.mInputBoxes[0] = new GUIInputBox();
+	this.mInputBoxes[1] = new GUIInputBox();
+	
+	this.mButtons = new Array();
+	this.mButtons[0] = new GUIButton();
+	this.mButtons[1] = new GUIButton();
+}
+
+GFGUICreationNewDialogue.prototype.SetUp = function(initOffset) {
+	var pos = new IVec2(8, 38);
+	pos.mX += initOffset.mX; pos.mX += initOffset.mY;
+	
+	{
+		var tex = nmgrs.resMan.mTexStore.GetResource("gui_creation_newdialogue_back");
+		
+		this.mSprite.mPos.Set(pos.mX, pos.mY);
+		this.mSprite.mDepth = -5100;
+		this.mSprite.SetTexture(tex);
+	}
+	
+	{
+		var tex = nmgrs.resMan.mTexStore.GetResource("gui_creation_newdialogue_textinput");
+		var font = nmgrs.resMan.mFontStore.GetResource("pixantiqua");
+		
+		{
+			this.mInputBoxes[0].mInputText.SetFont(font);
+			this.mInputBoxes[0].mInputText.SetFontSize(12);
+			this.mInputBoxes[0].mInputText.mColour = "#000000";
+			
+			this.mInputBoxes[0].mRenderCanvas.mPos.Set(4, 2);
+			this.mInputBoxes[0].mRenderCanvas.mSize.Set(-4, -2);
+			
+			this.mInputBoxes[0].SetUp(new IVec2(pos.mX + 18, pos.mY + 28), new IVec2(30, 22), -5101, this.mInputBoxes[0].mNumbers);
+			this.mInputBoxes[0].mMaxChars = 2;
+			this.mInputBoxes[0].mCaret.mShape.mPos.mY += 2;
+			
+			{
+				this.mInputBoxes[0].mSpriteIdle.SetAnimatedTexture(tex, 3, 1, -1, -1);
+				this.mInputBoxes[0].mSpriteIdle.SetCurrentFrame(0);
+				
+				this.mInputBoxes[0].mSpriteHover.SetAnimatedTexture(tex, 3, 1, -1, -1);
+				this.mInputBoxes[0].mSpriteHover.SetCurrentFrame(1);
+				
+				this.mInputBoxes[0].mSpriteFocus.SetAnimatedTexture(tex, 3, 1, -1, -1);
+				this.mInputBoxes[0].mSpriteFocus.SetCurrentFrame(2);
+				
+				this.mInputBoxes[0].mSpriteInactive.SetAnimatedTexture(tex, 3, 1, -1, -1);
+				this.mInputBoxes[0].mSpriteInactive.SetCurrentFrame(0);
+			}
+		}
+		
+		{
+			this.mInputBoxes[1].mInputText.SetFont(font);
+			this.mInputBoxes[1].mInputText.SetFontSize(12);
+			this.mInputBoxes[1].mInputText.mColour = "#000000";
+			
+			this.mInputBoxes[1].mRenderCanvas.mPos.Set(4, 2);
+			this.mInputBoxes[1].mRenderCanvas.mSize.Set(-4, -2);
+			
+			this.mInputBoxes[1].SetUp(new IVec2(pos.mX + 82, pos.mY + 28), new IVec2(30, 22), -5101, this.mInputBoxes[1].mNumbers);
+			this.mInputBoxes[1].mMaxChars = 2;
+			this.mInputBoxes[1].mCaret.mShape.mPos.mY += 2;
+			
+			{
+				this.mInputBoxes[1].mSpriteIdle.SetAnimatedTexture(tex, 3, 1, -1, -1);
+				this.mInputBoxes[1].mSpriteIdle.SetCurrentFrame(0);
+				
+				this.mInputBoxes[1].mSpriteHover.SetAnimatedTexture(tex, 3, 1, -1, -1);
+				this.mInputBoxes[1].mSpriteHover.SetCurrentFrame(1);
+				
+				this.mInputBoxes[1].mSpriteFocus.SetAnimatedTexture(tex, 3, 1, -1, -1);
+				this.mInputBoxes[1].mSpriteFocus.SetCurrentFrame(2);
+				
+				this.mInputBoxes[1].mSpriteInactive.SetAnimatedTexture(tex, 3, 1, -1, -1);
+				this.mInputBoxes[1].mSpriteInactive.SetCurrentFrame(0);
+			}
+		}
+	}
+	
+	{
+		var tex = nmgrs.resMan.mTexStore.GetResource("gui_creation_newdialogue_confirmbutton");
+		
+		this.mButtons[0].SetUp(new IVec2(pos.mX + 36, pos.mY + 64), new IVec2(60, 26), -5101);
+		// this.mButtons[0].mPos.Set(pos.mX + 36, pos.mY + 64);
+		
+		this.mButtons[0].mSpriteIdle.SetAnimatedTexture(tex, 3, 1, -1, -1);
+		this.mButtons[0].mSpriteIdle.SetCurrentFrame(0);
+		
+		this.mButtons[0].mSpriteHover.SetAnimatedTexture(tex, 3, 1, -1, -1);
+		this.mButtons[0].mSpriteHover.SetCurrentFrame(1);
+		
+		this.mButtons[0].mSpriteDown.SetAnimatedTexture(tex, 3, 1, -1, -1);
+		this.mButtons[0].mSpriteDown.SetCurrentFrame(2);
+		
+		this.mButtons[0].mSpriteInactive.SetAnimatedTexture(tex, 3, 1, -1, -1);
+		this.mButtons[0].mSpriteInactive.SetCurrentFrame(0);
+	}
+	
+	{
+		var tex = nmgrs.resMan.mTexStore.GetResource("gui_creation_newdialogue_cancelbutton");
+		
+		this.mButtons[1].SetUp(new IVec2(pos.mX + 112, pos.mY + 72), new IVec2(18, 18), -5101);
+		// this.mButtons[1].mPos.Set(pos.mX + 112, pos.mY + 72);
+		
+		this.mButtons[1].mSpriteIdle.SetAnimatedTexture(tex, 3, 1, -1, -1);
+		this.mButtons[1].mSpriteIdle.SetCurrentFrame(0);
+		
+		this.mButtons[1].mSpriteHover.SetAnimatedTexture(tex, 3, 1, -1, -1);
+		this.mButtons[1].mSpriteHover.SetCurrentFrame(1);
+		
+		this.mButtons[1].mSpriteDown.SetAnimatedTexture(tex, 3, 1, -1, -1);
+		this.mButtons[1].mSpriteDown.SetCurrentFrame(2);
+		
+		this.mButtons[1].mSpriteInactive.SetAnimatedTexture(tex, 3, 1, -1, -1);
+		this.mButtons[1].mSpriteInactive.SetCurrentFrame(0);
+	}
+	
+	// x input (18, 28)
+	// y input (82, 28)
+	
+	// confirm (36, 64)
+	// cancel (112, 72)
+}
+
+GFGUICreationNewDialogue.prototype.Input = function() {
+	for (var i = 0; i < this.mInputBoxes.length; ++i) {
+		this.mInputBoxes[i].Input();
+	}
+	
+	for (var i = 0; i < this.mButtons.length; ++i) {
+		this.mButtons[i].Input();
+	}
+}
+
+GFGUICreationNewDialogue.prototype.Process = function(point) {
+	var currScene = nmgrs.sceneMan.mCurrScene;
+	
+	{
+		for (var i = 0; i < this.mInputBoxes.length; ++i) {
+			this.mInputBoxes[i].Process(point);
+		}
+		
+		for (var i = 0; i < this.mButtons.length; ++i) {
+			this.mButtons[i].Process(point);
+		}
+	}
+	
+	{
+		if (this.mButtons[0].OnClick() == true) {
+			
+		}
+		else if (this.mButtons[1].OnClick() == true) {
+			currScene.mCreationControl.mDialogueOpen = false;
+		}
+	}
+}
+
+GFGUICreationNewDialogue.prototype.GetRenderData = function() {
+	var arr = new Array();
+	
+	arr.push(this.mSprite);
+	
+	for (var i = 0; i < this.mInputBoxes.length; ++i) {
+		arr = arr.concat(this.mInputBoxes[i].GetRenderData());
+	}
+	
+	for (var i = 0; i < this.mButtons.length; ++i) {
+		arr = arr.concat(this.mButtons[i].GetRenderData());
+	}
+	
+	return arr;
+}
+
+GFGUICreationNewDialogue.prototype.UpdatePosition = function(offset) {
+	this.mSprite.mPos.mX += offset.mX; this.mSprite.mPos.mY += offset.mY;
+	
+	for (var i = 0; i < this.mInputBoxes.length; ++i) {
+		var newPos = new IVec2(0, 0); newPos.Copy(this.mInputBoxes[i].GetSpritePositions());
+		newPos.mX += offset.mX; newPos.mY += offset.mY;
+		this.mInputBoxes[i].SetSpritePositions(newPos);
+	}
+	
+	for (var i = 0; i < this.mButtons.length; ++i) {
+		var newPos = new IVec2(0, 0); newPos.Copy(this.mButtons[i].GetSpritePositions());
+		newPos.mX += offset.mX; newPos.mY += offset.mY;
+		this.mButtons[i].SetSpritePositions(newPos);
+	}
+}
+// ...End
+
+
+// GFGUICreationTileControl Class...
+// game file:
+function GFGUICreationTileControl() {
 	this.mCurrTile = new GFMapTile();
 	
-	this.mCurrTileText = new Array();
-	this.mCurrTileText[0] = new Text();
-	this.mCurrTileText[1] = new Text();
-	this.mCurrTileText[2] = new Text();
-	this.mCurrTileText[3] = new Text();
-	this.mCurrTileText[4] = new Text();
-	this.mCurrTileText[5] = new Text();
+	{
+		this.mCurrTileText = new Array();
+		this.mCurrTileText[0] = new Text();
+		this.mCurrTileText[1] = new Text();
+		this.mCurrTileText[2] = new Text();
+		this.mCurrTileText[3] = new Text();
+		this.mCurrTileText[4] = new Text();
+		this.mCurrTileText[5] = new Text();
+		
+		this.mCurrTileText[6] = new Text();
+		this.mCurrTileText[7] = new Text();
+	}
 	
-	this.mCurrTileText[6] = new Text();
-	this.mCurrTileText[7] = new Text();
+	{
+		this.mOptionsArrows = new Array();
+		this.mOptionsArrows[0] = new GUIButton();
+		this.mOptionsArrows[1] = new GUIButton();
+		this.mOptionsArrows[2] = new GUIButton();
+		this.mOptionsArrows[3] = new GUIButton();
+		this.mOptionsArrows[4] = new GUIButton();
+		this.mOptionsArrows[5] = new GUIButton();
+		
+		this.mSetTexture = new GUIButton();
+	}
 	
-	this.mOptionsArrows = new Array();
-	this.mOptionsArrows[0] = new GUIButton();
-	this.mOptionsArrows[1] = new GUIButton();
-	this.mOptionsArrows[2] = new GUIButton();
-	this.mOptionsArrows[3] = new GUIButton();
-	this.mOptionsArrows[4] = new GUIButton();
-	this.mOptionsArrows[5] = new GUIButton();
-	
-	this.mSetTexture = new GUIButton();
-	
-	this.mZLevels = new Array();
-	this.mSlopeDirections = new Array();
-	this.mTypesTile = new Array();
-	this.mTypes = new Array();
 	this.mCurrentType = 0;
 	this.mCurrentTexture = "";
 	
 	{
-		
+		this.mZLevels = new Array();
 		this.mZLevels[0] = "1";
 		this.mZLevels[1] = "1.5";
 		this.mZLevels[2] = "2";
@@ -4094,16 +4407,19 @@ function GFGUICreationControl() {
 		this.mZLevels[6] = "4";
 		this.mZLevels[7] = "-";
 		
+		this.mSlopeDirections = new Array();
 		this.mSlopeDirections[0] = "North";
 		this.mSlopeDirections[1] = "East";
 		this.mSlopeDirections[2] = "South";
 		this.mSlopeDirections[3] = "West";
 		
+		this.mTypesTile = new Array();
 		this.mTypesTile[0] = "o";
 		this.mTypesTile[1] = "e";
 		this.mTypesTile[2] = "x";
 		this.mTypesTile[3] = "b";
 		
+		this.mTypes = new Array();
 		this.mTypes[0] = "None";
 		this.mTypes[1] = "Entrance\nOnly";
 		this.mTypes[2] = "Exit\nOnly";
@@ -4111,87 +4427,183 @@ function GFGUICreationControl() {
 	}
 }
 
-GFGUICreationControl.prototype.SetUp = function(initTex) {
+GFGUICreationTileControl.prototype.SetUp = function(initTex, initOffset) {
+	var currScene = nmgrs.sceneMan.mCurrScene;
 	this.mCurrentTexture = initTex;
 	
-	var currScene = nmgrs.sceneMan.mCurrScene;
-	var initOffset = new IVec2();
-	initOffset.Copy(currScene.mCam.mTranslate);
-	
-	this.mTopBar.SetUp(initOffset);
-	
-	{
+	{ // set up the example tile
 		var tex = nmgrs.resMan.mTexStore.GetResource(this.mCurrentTexture);
+		
 		var tile = new GFMapTile();
 		tile.mZ = 0;
 		tile.mSlopeDirection = 0;
 		tile.mSpecial = "o";
-		
 		tile.SetUp(tex);
-		
 		this.mCurrTile = tile;
+		
 		this.mCurrTile.mSprite.mPos.Set(540 - 30, 80);
 	}
 	
+	this.SetUpText(initOffset); // set up the gui text
+	this.SetUpButtons(initOffset); // set up the gui buttons
+};
+
+GFGUICreationTileControl.prototype.Input = function() {
+	for (var i = 0; i < this.mOptionsArrows.length; ++i) {
+		this.mOptionsArrows[i].Input();
+	}
+	
+	this.mSetTexture.Input();
+}
+
+GFGUICreationTileControl.prototype.Process = function(point) {
+	var currScene = nmgrs.sceneMan.mCurrScene;
+	
 	{
-		var font = nmgrs.resMan.mFontStore.GetResource("pixantiqua");
+		for (var i = 0; i < this.mOptionsArrows.length; ++i) {
+			this.mOptionsArrows[i].Process(point);
+		}
+		
+		this.mSetTexture.Process(point);
+	}
+	
+	{
+		if (this.mOptionsArrows[0].OnClick() == true) {
+			this.mCurrTile.mZ--;
+			if (this.mCurrTile.mZ < 0) {
+				this.mCurrTile.mZ = 7;
+			}
+			
+			this.UpdateTileSprite();
+			this.mCurrTileText[3].mString = this.mZLevels[this.mCurrTile.mZ];
+		}
+		else if (this.mOptionsArrows[1].OnClick() == true) {
+			this.mCurrTile.mZ = (this.mCurrTile.mZ + 1) % 8;
+			
+			this.UpdateTileSprite();
+			this.mCurrTileText[3].mString = this.mZLevels[this.mCurrTile.mZ];
+		}
+		else if (this.mOptionsArrows[2].OnClick() == true) {
+			this.mCurrTile.mSlopeDirection--;
+			if (this.mCurrTile.mSlopeDirection < 0) {
+				this.mCurrTile.mSlopeDirection = 3;
+			}
+			
+			this.UpdateTileSprite();
+			this.mCurrTileText[4].mString = this.mSlopeDirections[this.mCurrTile.mSlopeDirection];
+		}
+		else if (this.mOptionsArrows[3].OnClick() == true) {
+			this.mCurrTile.mSlopeDirection = (this.mCurrTile.mSlopeDirection + 1) % 4;
+			
+			this.UpdateTileSprite();
+			this.mCurrTileText[4].mString = this.mSlopeDirections[this.mCurrTile.mSlopeDirection];
+		}
+		else if (this.mOptionsArrows[4].OnClick() == true) {
+			this.mCurrentType--;
+			if (this.mCurrentType < 0) {
+				this.mCurrentType = 3;
+			}
+			
+			this.mCurrTile.mSpecial = this.mTypesTile[this.mCurrentType];
+			this.mCurrTileText[5].mString = this.mTypes[this.mCurrentType];
+		}
+		else if (this.mOptionsArrows[5].OnClick() == true) {
+			this.mCurrentType = (this.mCurrentType + 1) % 4;
+			
+			this.mCurrTile.mSpecial = this.mTypesTile[this.mCurrentType];
+			this.mCurrTileText[5].mString = this.mTypes[this.mCurrentType];
+		}
+		else if (this.mSetTexture.OnClick() == true) {
+			currScene.mPersist = true;
+			nmgrs.sceneMan.ReadyScene(new GFTexSelScene());
+			nmgrs.sceneMan.SwitchScene();
+		}
+	}
+}
+
+GFGUICreationTileControl.prototype.GetRenderData = function() {
+	var arr = new Array();
+	
+	for (var i = 0; i < this.mCurrTileText.length; ++i) {
+		arr.push(this.mCurrTileText[i]);
+	}
+	
+	arr = arr.concat(this.mCurrTile.GetRenderData());
+	
+	for (var i = 0; i < this.mOptionsArrows.length; ++i) {
+		arr = arr.concat(this.mOptionsArrows[i].GetRenderData());
+	}
+	
+	arr = arr.concat(this.mSetTexture.GetRenderData());
+	
+	return arr;
+}
+
+GFGUICreationTileControl.prototype.SetUpText = function(initOffset) {
+	var font = nmgrs.resMan.mFontStore.GetResource("pixantiqua");
+	
+	{	
 		this.mCurrTileText[0].SetFont(font);
 		this.mCurrTileText[0].SetFontSize(12);
 		this.mCurrTileText[0].mString = "Z - Level";
 		this.mCurrTileText[0].mAlign = "centre";
-		this.mCurrTileText[0].mPos.Set(540, 150);
+		this.mCurrTileText[0].mPos.Set(540 + initOffset.mX, 150 + initOffset.mY);
 		this.mCurrTileText[0].mColour = "#000000";
 		
 		this.mCurrTileText[1].SetFont(font);
 		this.mCurrTileText[1].SetFontSize(12);
 		this.mCurrTileText[1].mString = "Slope Direction";
 		this.mCurrTileText[1].mAlign = "centre";
-		this.mCurrTileText[1].mPos.Set(540, 200);
+		this.mCurrTileText[1].mPos.Set(540 + initOffset.mX, 200 + initOffset.mY);
 		this.mCurrTileText[1].mColour = "#000000";
 		
 		this.mCurrTileText[2].SetFont(font);
 		this.mCurrTileText[2].SetFontSize(12);
 		this.mCurrTileText[2].mString = "Type";
 		this.mCurrTileText[2].mAlign = "centre";
-		this.mCurrTileText[2].mPos.Set(540, 250);
+		this.mCurrTileText[2].mPos.Set(540 + initOffset.mX, 250 + initOffset.mY);
 		this.mCurrTileText[2].mColour = "#000000";
 		
+		this.mCurrTileText[6].SetFont(font);
+		this.mCurrTileText[6].SetFontSize(24);
+		this.mCurrTileText[6].mString = "Set Texture";
+		this.mCurrTileText[6].mAlign = "centre";
+		this.mCurrTileText[6].mPos.Set(540 + initOffset.mX, 323 + initOffset.mY);
+		this.mCurrTileText[6].mShadow = true;
+	}
+	
+	{
 		this.mCurrTileText[3].SetFont(font);
 		this.mCurrTileText[3].SetFontSize(24);
 		this.mCurrTileText[3].mString = "1";
 		this.mCurrTileText[3].mAlign = "centre";
-		this.mCurrTileText[3].mPos.Set(540, 160);
+		this.mCurrTileText[3].mPos.Set(540 + initOffset.mX, 160 + initOffset.mY);
 		this.mCurrTileText[3].mShadow = true;
 		
 		this.mCurrTileText[4].SetFont(font);
 		this.mCurrTileText[4].SetFontSize(24);
 		this.mCurrTileText[4].mString = "North";
 		this.mCurrTileText[4].mAlign = "centre";
-		this.mCurrTileText[4].mPos.Set(540, 210);
+		this.mCurrTileText[4].mPos.Set(540 + initOffset.mX, 210 + initOffset.mY);
 		this.mCurrTileText[4].mShadow = true;
 		
 		this.mCurrTileText[5].SetFont(font);
 		this.mCurrTileText[5].SetFontSize(24);
 		this.mCurrTileText[5].mString = "None";
 		this.mCurrTileText[5].mAlign = "centre";
-		this.mCurrTileText[5].mPos.Set(540, 260);
+		this.mCurrTileText[5].mPos.Set(540 + initOffset.mX, 260 + initOffset.mY);
 		this.mCurrTileText[5].mShadow = true;
-		
-		this.mCurrTileText[6].SetFont(font);
-		this.mCurrTileText[6].SetFontSize(24);
-		this.mCurrTileText[6].mString = "Set Texture";
-		this.mCurrTileText[6].mAlign = "centre";
-		this.mCurrTileText[6].mPos.Set(540, 323);
-		this.mCurrTileText[6].mShadow = true;
 		
 		this.mCurrTileText[7].SetFont(font);
 		this.mCurrTileText[7].SetFontSize(12);
 		this.mCurrTileText[7].mString = this.mCurrentTexture;
 		this.mCurrTileText[7].mAlign = "centre";
-		this.mCurrTileText[7].mPos.Set(540, 360);
+		this.mCurrTileText[7].mPos.Set(540 + initOffset.mX, 360 + initOffset.mY);
 		this.mCurrTileText[7].mColour = "#000000";
 	}
-	
+}
+
+GFGUICreationTileControl.prototype.SetUpButtons = function(initOffset) {
 	{
 		var tex = nmgrs.resMan.mTexStore.GetResource("gui_creation_arrows");
 		
@@ -4316,131 +4728,9 @@ GFGUICreationControl.prototype.SetUp = function(initTex) {
 		this.mSetTexture.mSpriteInactive.SetAnimatedTexture(tex, 3, 1, -1, -1);
 		this.mSetTexture.mSpriteInactive.SetCurrentFrame(0);
 	}
-	
-	this.mTranslate.Copy(currScene.mCam.mTranslate);
-};
-
-GFGUICreationControl.prototype.Input = function() {
-	for (var i = 0; i < this.mOptionsArrows.length; ++i) {
-		this.mOptionsArrows[i].Input();
-	}
-	
-	this.mSetTexture.Input();
-	
-	this.mTopBar.Input();
 }
 
-GFGUICreationControl.prototype.Process = function() {
-	var currScene = nmgrs.sceneMan.mCurrScene;
-	var offset = new IVec2(0, 0);
-	offset.mX = currScene.mCam.mTranslate.mX - this.mTranslate.mX;
-	offset.mY = currScene.mCam.mTranslate.mY - this.mTranslate.mY;
-	
-	{
-		var pt = new IVec2(0, 0);
-		pt.Copy(nmgrs.inputMan.GetLocalMouseCoords());
-		
-		this.mCurrTile.mSprite.mPos.mX += offset.mX; this.mCurrTile.mSprite.mPos.mY += offset.mY;
-		
-		for (var i = 0; i < this.mCurrTileText.length; ++i) {
-			this.mCurrTileText[i].mPos.mX += offset.mX; this.mCurrTileText[i].mPos.mY += offset.mY;
-		}
-		
-		for (var i = 0; i < this.mOptionsArrows.length; ++i) {
-			this.mOptionsArrows[i].Process(pt);
-			
-			var newPos = new IVec2(0, 0); newPos.Copy(this.mOptionsArrows[i].GetSpritePositions());
-			newPos.mX += offset.mX; newPos.mY += offset.mY;
-			this.mOptionsArrows[i].SetSpritePositions(newPos);
-		}
-		
-		{
-			this.mSetTexture.Process(pt);
-			
-			var newPos = new IVec2(0, 0); newPos.Copy(this.mSetTexture.GetSpritePositions());
-			newPos.mX += offset.mX; newPos.mY += offset.mY;
-			this.mSetTexture.SetSpritePositions(newPos);
-		}
-		
-		this.mTopBar.Process(pt, offset);
-	}
-	
-	{
-		if (this.mOptionsArrows[0].OnClick() == true) {
-			this.mCurrTile.mZ--;
-			if (this.mCurrTile.mZ < 0) {
-				this.mCurrTile.mZ = 7;
-			}
-			
-			this.UpdateTileSprite();
-			this.mCurrTileText[3].mString = this.mZLevels[this.mCurrTile.mZ];
-		}
-		else if (this.mOptionsArrows[1].OnClick() == true) {
-			this.mCurrTile.mZ = (this.mCurrTile.mZ + 1) % 8;
-			
-			this.UpdateTileSprite();
-			this.mCurrTileText[3].mString = this.mZLevels[this.mCurrTile.mZ];
-		}
-		else if (this.mOptionsArrows[2].OnClick() == true) {
-			this.mCurrTile.mSlopeDirection--;
-			if (this.mCurrTile.mSlopeDirection < 0) {
-				this.mCurrTile.mSlopeDirection = 3;
-			}
-			
-			this.UpdateTileSprite();
-			this.mCurrTileText[4].mString = this.mSlopeDirections[this.mCurrTile.mSlopeDirection];
-		}
-		else if (this.mOptionsArrows[3].OnClick() == true) {
-			this.mCurrTile.mSlopeDirection = (this.mCurrTile.mSlopeDirection + 1) % 4;
-			
-			this.UpdateTileSprite();
-			this.mCurrTileText[4].mString = this.mSlopeDirections[this.mCurrTile.mSlopeDirection];
-		}
-		else if (this.mOptionsArrows[4].OnClick() == true) {
-			this.mCurrentType--;
-			if (this.mCurrentType < 0) {
-				this.mCurrentType = 3;
-			}
-			
-			this.mCurrTile.mSpecial = this.mTypesTile[this.mCurrentType];
-			this.mCurrTileText[5].mString = this.mTypes[this.mCurrentType];
-		}
-		else if (this.mOptionsArrows[5].OnClick() == true) {
-			this.mCurrentType = (this.mCurrentType + 1) % 4;
-			
-			this.mCurrTile.mSpecial = this.mTypesTile[this.mCurrentType];
-			this.mCurrTileText[5].mString = this.mTypes[this.mCurrentType];
-		}
-		else if (this.mSetTexture.OnClick() == true) {
-			currScene.mPersist = true;
-			nmgrs.sceneMan.ReadyScene(new GFTexSelScene());
-			nmgrs.sceneMan.SwitchScene();
-		}
-	}
-	
-	this.mTranslate.Copy(currScene.mCam.mTranslate);
-}
-
-GFGUICreationControl.prototype.GetRenderData = function() {
-	var arr = new Array();
-	
-	for (var i = 0; i < this.mCurrTileText.length; ++i) {
-		arr.push(this.mCurrTileText[i]);
-	}
-	
-	arr = arr.concat(this.mCurrTile.GetRenderData());
-	
-	for (var i = 0; i < this.mOptionsArrows.length; ++i) {
-		arr = arr.concat(this.mOptionsArrows[i].GetRenderData());
-	}
-	
-	arr = arr.concat(this.mSetTexture.GetRenderData());
-	arr = arr.concat(this.mTopBar.GetRenderData());
-	
-	return arr;
-}
-
-GFGUICreationControl.prototype.UpdateTileSprite = function() {
+GFGUICreationTileControl.prototype.UpdateTileSprite = function() {
 	this.mCurrTileText[7].mString = this.mCurrentTexture;
 	
 	var tex = nmgrs.resMan.mTexStore.GetResource(this.mCurrentTexture);
@@ -4459,52 +4749,28 @@ GFGUICreationControl.prototype.UpdateTileSprite = function() {
 	}
 	
 	this.mCurrTile.mSprite.SetCurrentFrame(this.mCurrTile.mTileFrame);
-
-}
-// ...End
-
-
-// GFGUICreationNewDialogue Class...
-// game file:
-function GFGUICreationNewDialogue() {
-	this.mSprite = new Sprite();
-	
-	this.mInputBoxes = new Array();
-	this.mInputBoxes[0] = new GUIInputBox();
-	this.mInputBoxes[1] = new GUIInputBox();
-	
-	this.mButtons = new Array();
-	this.mButtons[0] = new GUIButton();
-	this.mButtons[1] = new GUIButton();
 }
 
-GFGUICreationNewDialogue.prototype.SetUp = function(initOffset) {
-	var pos = new IVec2(10, 100);
-	pos.mX += initOffset.mX; pos.mX += initOffset.mY;
+GFGUICreationTileControl.prototype.UpdatePosition = function(offset) {
+	this.mCurrTile.mSprite.mPos.mX += offset.mX; this.mCurrTile.mSprite.mPos.mY += offset.mY;
+	
+	for (var i = 0; i < this.mCurrTileText.length; ++i) {
+		this.mCurrTileText[i].mPos.mX += offset.mX; this.mCurrTileText[i].mPos.mY += offset.mY;
+	}
+	
+	for (var i = 0; i < this.mOptionsArrows.length; ++i) {
+		var newPos = new IVec2(0, 0); newPos.Copy(this.mOptionsArrows[i].GetSpritePositions());
+		newPos.mX += offset.mX; newPos.mY += offset.mY;
+		this.mOptionsArrows[i].SetSpritePositions(newPos);
+	}
 	
 	{
-		var tex = nmgrs.resMan.mTexStore.GetResource("gui_creation_newdialogue_back");
-		
-		this.mSprite.mPos.Set(pos.mX, pos.mY);
-		this.mSprite.mDepth = -5100;
-		this.mSprite.SetTexture(tex);
+		var newPos = new IVec2(0, 0); newPos.Copy(this.mSetTexture.GetSpritePositions());
+		newPos.mX += offset.mX; newPos.mY += offset.mY;
+		this.mSetTexture.SetSpritePositions(newPos);
 	}
-	// x input (18, 28)
-	// y input (82, 28)
-	
-	// confirm (36, 64)
-	// cancel (112, 72)
-}
-
-GFGUICreationNewDialogue.prototype.GetRenderData = function() {
-	var arr = new Array();
-	
-	arr.push(this.mSprite);
-	
-	return arr;
 }
 // ...End
-
 
 
 // GFTexSelection Class...
@@ -4774,8 +5040,8 @@ GFTexSelScene.prototype.Process = function() {
 				if (this.mTexSelections[i].OnClick() == true) {
 					this.mPersist = true;
 					nmgrs.sceneMan.ReadyScene(new GFCreationScene());
-					nmgrs.sceneMan.mReadyScene.mCreationControl.mCurrentTexture = this.mTexSelections[i].mTextureStr;
-					nmgrs.sceneMan.mReadyScene.mCreationControl.UpdateTileSprite();
+					nmgrs.sceneMan.mReadyScene.mCreationControl.mTileControl.mCurrentTexture = this.mTexSelections[i].mTextureStr;
+					nmgrs.sceneMan.mReadyScene.mCreationControl.mTileControl.UpdateTileSprite();
 					nmgrs.sceneMan.SwitchScene();
 					break;
 				}
