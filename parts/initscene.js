@@ -17,30 +17,39 @@ InitScene.prototype.Persistent = function() {
 // initialises the scene object
 InitScene.prototype.SetUp = function() {
 	try {
-		nmgrs.resLoad.QueueTexture("tileset_test", "./res/vis/tileset_test.png");
-		nmgrs.resLoad.QueueTexture("tileset_test2", "./res/vis/tileset_test2.png");
-		nmgrs.resLoad.QueueTexture("tileset_dirtwhole", "./res/vis/tileset_dirtwhole.png");
-		nmgrs.resLoad.QueueTexture("tileset_grasstop", "./res/vis/tileset_grasstop.png");
-		nmgrs.resLoad.QueueTexture("tileset_grasswhole", "./res/vis/tileset_grasswhole.png");
-		nmgrs.resLoad.QueueTexture("tileset_blue", "./res/vis/tileset_blue.png");
-		nmgrs.resLoad.QueueTexture("tileset_red", "./res/vis/tileset_red.png");
+		nmgrs.resLoad.QueueTexture("tileset_test", "./res/vis/tilesets/tileset_test.png");
+		nmgrs.resLoad.QueueTexture("tileset_test2", "./res/vis/tilesets/tileset_test2.png");
+		nmgrs.resLoad.QueueTexture("tileset_dirtwhole", "./res/vis/tilesets/tileset_dirtwhole.png");
+		nmgrs.resLoad.QueueTexture("tileset_grasstop", "./res/vis/tilesets/tileset_grasstop.png");
+		nmgrs.resLoad.QueueTexture("tileset_grasswhole", "./res/vis/tilesets/tileset_grasswhole.png");
+		nmgrs.resLoad.QueueTexture("tileset_blue", "./res/vis/tilesets/tileset_blue.png");
+		nmgrs.resLoad.QueueTexture("tileset_red", "./res/vis/tilesets/tileset_red.png");
 		
-		nmgrs.resLoad.QueueTexture("gui_map_compassmain", "./res/vis/gui_map_compassmain.png");
-		nmgrs.resLoad.QueueTexture("gui_map_compassextra", "./res/vis/gui_map_compassextra.png");
-		nmgrs.resLoad.QueueTexture("gui_map_zlevelmain", "./res/vis/gui_map_zlevelmain.png");
-		nmgrs.resLoad.QueueTexture("gui_map_zlevelextra", "./res/vis/gui_map_zlevelextra.png");
+		nmgrs.resLoad.QueueTexture("gui_map_compassmain", "./res/vis/gui/gui_map_compassmain.png");
+		nmgrs.resLoad.QueueTexture("gui_map_compassextra", "./res/vis/gui/gui_map_compassextra.png");
+		nmgrs.resLoad.QueueTexture("gui_map_zlevelmain", "./res/vis/gui/gui_map_zlevelmain.png");
+		nmgrs.resLoad.QueueTexture("gui_map_zlevelextra", "./res/vis/gui/gui_map_zlevelextra.png");
 		
-		nmgrs.resLoad.QueueTexture("gui_creation_topbar", "./res/vis/gui_creation_topbar.png");
-		nmgrs.resLoad.QueueTexture("gui_creation_topmenunew", "./res/vis/gui_creation_topmenunew.png");
-		nmgrs.resLoad.QueueTexture("gui_creation_dropback", "./res/vis/gui_creation_dropback.png");
-		nmgrs.resLoad.QueueTexture("gui_creation_inputbox", "./res/vis/gui_creation_inputbox.png");
-		nmgrs.resLoad.QueueTexture("gui_creation_arrows", "./res/vis/gui_creation_arrows.png");
-		nmgrs.resLoad.QueueTexture("gui_creation_texset", "./res/vis/gui_creation_texset.png");
-		nmgrs.resLoad.QueueTexture("gui_texselect", "./res/vis/gui_texselect.png");
+		nmgrs.resLoad.QueueTexture("gui_creation_topbar", "./res/vis/gui/gui_creation_topbar.png");
+		nmgrs.resLoad.QueueTexture("gui_creation_topmenunew", "./res/vis/gui/gui_creation_topmenunew.png");
+		nmgrs.resLoad.QueueTexture("gui_creation_dropback", "./res/vis/gui/gui_creation_dropback.png");
+		nmgrs.resLoad.QueueTexture("gui_creation_inputbox", "./res/vis/gui/gui_creation_inputbox.png");
+		nmgrs.resLoad.QueueTexture("gui_creation_arrows", "./res/vis/gui/gui_creation_arrows.png");
+		nmgrs.resLoad.QueueTexture("gui_creation_texset", "./res/vis/gui/gui_creation_texset.png");
+		nmgrs.resLoad.QueueTexture("gui_texselect", "./res/vis/gui/gui_texselect.png");
 		
-		nmgrs.resLoad.QueueTexture("menu_button", "./res/vis/menu_button.png");
+		{ // textures for creation "create new" dialogue box
+			nmgrs.resLoad.QueueTexture("gui_creation_newdialogue_back", "./res/vis/gui/gui_creation_newdialogue_back.png");
+			nmgrs.resLoad.QueueTexture("gui_creation_newdialogue_textinput", "./res/vis/gui/gui_creation_newdialogue_textinput.png");
+			nmgrs.resLoad.QueueTexture("gui_creation_newdialogue_cancelbutton", "./res/vis/gui/gui_creation_newdialogue_cancelbutton.png");
+			nmgrs.resLoad.QueueTexture("gui_creation_newdialogue_confirmbutton", "./res/vis/gui/gui_creation_newdialogue_confirmbutton.png");
+		}
 		
-		nmgrs.resLoad.QueueFont("pixantiqua", "./res/sys/PixAntiqua");
+		nmgrs.resLoad.QueueTexture("menu_button", "./res/vis/gui/menu_button.png");
+		
+		{ // main game font
+			nmgrs.resLoad.QueueFont("pixantiqua", "./res/sys/PixAntiqua");
+		}
 		
 		nmgrs.resLoad.AcquireResources();
 		nmgrs.resLoad.mIntervalID = setInterval(function() {nmgrs.resLoad.ProgressCheck();}, 0);
