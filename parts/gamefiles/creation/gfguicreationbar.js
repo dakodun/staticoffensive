@@ -48,25 +48,23 @@ GFGUICreationBar.prototype.Input = function() {
 	}
 }
 
-GFGUICreationBar.prototype.Process = function(point, offset) {
-	this.mSprite.mPos.mX += offset.mX; this.mSprite.mPos.mY += offset.mY;
+GFGUICreationBar.prototype.Process = function(point) {
+	var currScene = nmgrs.sceneMan.mCurrScene;
 	
 	for (var i = 0; i < this.mMenus.length; ++i) {
 		this.mMenus[i].Process(point);
-		
-		var newPos = new IVec2(0, 0); newPos.Copy(this.mMenus[i].GetSpritePositions());
-		newPos.mX += offset.mX; newPos.mY += offset.mY;
-		this.mMenus[i].SetSpritePositions(newPos);
 	}
 	
-	if (this.mMenus[0].OnClick(0) == true) {
-		alert("new");
-	}
-	else if (this.mMenus[0].OnClick(1) == true) {
-		alert("old");
-	}
-	else if (this.mMenus[0].OnClick(2) == true) {
-		alert("burps");
+	{
+		if (this.mMenus[0].OnClick(0) == true) {
+			currScene.mCreationControl.mDialogueOpen = true;
+		}
+		else if (this.mMenus[0].OnClick(1) == true) {
+			alert("old");
+		}
+		else if (this.mMenus[0].OnClick(2) == true) {
+			alert("burps");
+		}
 	}
 }
 
@@ -117,6 +115,18 @@ GFGUICreationBar.prototype.AddItem = function(menu, text, alt) {
 		itemTxt.mColour = "#4A4A66";
 			
 		menu.AddItem(itemBut, itemTxt);
+	}
+}
+
+GFGUICreationBar.prototype.UpdatePosition = function(offset) {
+	var currScene = nmgrs.sceneMan.mCurrScene;
+	
+	this.mSprite.mPos.mX += offset.mX; this.mSprite.mPos.mY += offset.mY;
+	
+	for (var i = 0; i < this.mMenus.length; ++i) {
+		var newPos = new IVec2(0, 0); newPos.Copy(this.mMenus[i].GetSpritePositions());
+		newPos.mX += offset.mX; newPos.mY += offset.mY;
+		this.mMenus[i].SetSpritePositions(newPos);
 	}
 }
 // ...End
