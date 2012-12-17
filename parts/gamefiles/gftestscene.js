@@ -91,6 +91,7 @@ GFTestScene.prototype.Input = function() {
 // handles game logic
 GFTestScene.prototype.Process = function() {
 	this.mMapControl.Process();
+	this.mMap.Process();
 	
 	this.mCam.Process();
 }
