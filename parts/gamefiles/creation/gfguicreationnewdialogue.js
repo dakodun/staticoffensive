@@ -120,12 +120,6 @@ GFGUICreationNewDialogue.prototype.SetUp = function(initOffset) {
 		this.mButtons[1].mSpriteInactive.SetAnimatedTexture(tex, 3, 1, -1, -1);
 		this.mButtons[1].mSpriteInactive.SetCurrentFrame(0);
 	}
-	
-	// x input (18, 28)
-	// y input (82, 28)
-	
-	// confirm (36, 64)
-	// cancel (112, 72)
 }
 
 GFGUICreationNewDialogue.prototype.Input = function() {
@@ -144,6 +138,21 @@ GFGUICreationNewDialogue.prototype.Process = function(point) {
 	{
 		for (var i = 0; i < this.mInputBoxes.length; ++i) {
 			this.mInputBoxes[i].Process(point);
+			
+			{
+				if (this.mInputBoxes[0].mInputText.mString.length > 0) {
+					var x = Number(this.mInputBoxes[i].mInputText.mString);
+					if (x == 0) {
+						this.mInputBoxes[i].SetText("");
+					}
+					else if (this.mInputBoxes[i].mInputText.mString.charAt(0) == "0") {
+						this.mInputBoxes[i].SetText(this.mInputBoxes[i].mInputText.mString.charAt(1));
+					}
+					else if (x > 20) {
+						this.mInputBoxes[i].SetText("20");
+					}
+				}
+			}
 		}
 		
 		for (var i = 0; i < this.mButtons.length; ++i) {
@@ -153,10 +162,23 @@ GFGUICreationNewDialogue.prototype.Process = function(point) {
 	
 	{
 		if (this.mButtons[0].OnClick() == true) {
+			var x = Number(this.mInputBoxes[0].mInputText.mString);
+			var y = Number(this.mInputBoxes[1].mInputText.mString);
 			
+			if ((x >= 1 && x <= 20) && (y >= 1 && y <= 20)) {
+				alert("x: " + x + "; y: " + y);
+				
+				for (var i = 0; i < this.mInputBoxes.length; ++i) {
+					this.mInputBoxes[i].SetText("");
+				}
+			}
 		}
 		else if (this.mButtons[1].OnClick() == true) {
 			currScene.mCreationControl.mDialogueOpen = false;
+			
+			for (var i = 0; i < this.mInputBoxes.length; ++i) {
+				this.mInputBoxes[i].SetText("");
+			}
 		}
 	}
 }
