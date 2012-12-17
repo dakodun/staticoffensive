@@ -97,6 +97,12 @@ function GFMapSegment() {
 	
 	this.mExits = new Array();
 	this.mEntrances = new Array();
+	
+	this.mTileBounds = new GFMapTileBounds();
+	
+	this.mShowBounds = false;
+	this.mBounds = new Shape();
+	this.mBoundsPoly = new Array();
 };
 
 GFMapSegment.prototype.Copy = function(other) {
@@ -113,10 +119,35 @@ GFMapSegment.prototype.Copy = function(other) {
 	
 	this.mEntrances.splice(0, this.mEntrances.length);
 	this.mEntrances = this.mEntrances.concat(other.mEntrances);
+	
+	this.mShowBounds = other.mShowBounds;
+	this.mBounds.Copy(other.mBounds);
+	
+	this.mBoundsPoly.slice(0, this.mBoundsPoly.length);
+	this.mBoundsPoly = this.mBoundsPoly.concat(other.mBoundsPoly);
 }
 
 GFMapSegment.prototype.SetUp = function(blueprint) {
 	this.mSize.Copy(blueprint.mSize);
+	
+	{
+		var x = (this.mPos.mX * 28) + (this.mPos.mY * 28);
+		var y = (this.mPos.mX * -14) + (this.mPos.mY * 14);
+		this.mBounds.mPos.Set(x, y + 14);
+		
+		this.mBounds.mOutline = true;
+		this.mBounds.mDepth = 0;
+		
+		this.mBounds.AddPoint(new IVec2(28 * this.mSize.mX, -14 * this.mSize.mX));
+		this.mBounds.AddPoint(new IVec2(28 * this.mSize.mX + 3, -14 * this.mSize.mX));
+		this.mBounds.AddPoint(new IVec2((28 * this.mSize.mX) + (28 * this.mSize.mY) + 3, (-14 * this.mSize.mX) + (14 * this.mSize.mY)));
+		this.mBounds.AddPoint(new IVec2((28 * this.mSize.mX) + (28 * this.mSize.mY) + 3, (-14 * this.mSize.mX) + (14 * this.mSize.mY) + 31));
+		this.mBounds.AddPoint(new IVec2((28 * this.mSize.mY) + 3, (14 * this.mSize.mY) + 31));
+		this.mBounds.AddPoint(new IVec2(28 * this.mSize.mY, (14 * this.mSize.mY) + 31));
+		this.mBounds.AddPoint(new IVec2(0, 31));
+		
+		this.mBoundsPoly = this.mBoundsPoly.concat(this.mBounds.GetPolygon());
+	}
 	
 	for (var i = 0; i < blueprint.mTiles.length; ++i) {
 		var tex = nmgrs.resMan.mTexStore.GetResource(blueprint.mTiles[i].mTex);
@@ -129,6 +160,13 @@ GFMapSegment.prototype.SetUp = function(blueprint) {
 		tile.mSpecial = blueprint.mTiles[i].mSpecial;
 		
 		tile.SetUp(tex);
+		
+		if (typeof(this.mTileBounds.mBounds[tile.mSprite.mCurrFrame]) != "undefined") { 
+			tile.SetBounds(this.mTileBounds.mBounds[tile.mSprite.mCurrFrame]);
+		}
+		else {
+			tile.SetBounds(this.mTileBounds.mBounds[7]);
+		}
 		
 		this.mTiles.push(tile);
 		
@@ -174,6 +212,10 @@ GFMapSegment.prototype.GetRenderData = function() {
 		arr = arr.concat(this.mTiles[i].GetRenderData()); // get and add the render data returned by the tile
 	}
 	
+	if (this.mShowBounds == true) {
+		arr.push(this.mBounds);
+	}
+	
 	return arr; // return the retrieved render data
 }
 
@@ -184,6 +226,7 @@ GFMapSegment.prototype.ChangeZLevel = function(newLevel) {
 		// for our entire map segment array
 		for (var i = 0; i < this.mTiles.length; ++i) {
 			this.mTiles[i].ChangeZLevel(this.mCurrZLevel);
+			this.mTiles[i].SetBounds(this.mTileBounds.mBounds[this.mTiles[i].mSprite.mCurrFrame]);
 		}
 	}
 }
