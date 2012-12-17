@@ -54,6 +54,13 @@ Shape.prototype.AddPoint = function(point) {
 	pt.Copy(point);
 	this.mPoints.push(pt);
 	
+	if (this.mPoints.length == 1) {
+		this.mBounds[0] = pt.mX;
+		this.mBounds[1] = pt.mY;
+		this.mBounds[2] = pt.mX;
+		this.mBounds[3] = pt.mY;
+	}
+	
 	// check left bound
 	if (pt.mX < this.mBounds[0]) {
 		this.mBounds[0] = pt.mX;
@@ -88,6 +95,19 @@ Shape.prototype.GetWidth = function() {
 //
 Shape.prototype.GetHeight = function() {
 	return this.mSize.mY;
+}
+
+Shape.prototype.GetPolygon = function() {
+	var poly = new Array();
+	poly.push(this.mPos);
+	
+	for (var i = 0; i < this.mPoints.length; ++i) {
+		var x = this.mPoints[i].mX + this.mPos.mX;
+		var y = this.mPoints[i].mY + this.mPos.mY;
+		poly.push(new IVec2(x, y));
+	}
+	
+	return poly;
 }
 // ...End
 
