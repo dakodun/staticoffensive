@@ -442,5 +442,33 @@ GUIInputBox.prototype.SetSpriteDepths = function(depth) {
 	this.mCaret.mShape.mDepth = depth - 2;
 	this.mRenderCanvas.mDepth = depth - 1;
 }
+
+GUIInputBox.prototype.SetText = function(string) {
+	if (this.mInputText.mString.length > 0) {
+		var len = string.length - this.mInputText.mString.length;
+		
+		this.mInputText.mString = string;
+		this.mCaret.mPlace += len;
+		if (this.mCaret.mPlace < 0) {
+			this.mCaret.mPlace = 0;
+		}
+		
+		// if text is not currently filling the render canvas
+		if ((this.mInputText.mPos.mX + this.mRenderCanvas.mPos.mX) + this.mInputText.GetWidth() <
+				this.mRenderCanvas.mPos.mX + this.mRenderCanvas.mSize.mX) {
+			
+			// if text is wider and is able to fill the render canvas
+			if (this.mInputText.GetWidth() >= this.mRenderCanvas.mSize.mX) {
+				// move the text to ensure render canvas is filled
+				var shift = (this.mRenderCanvas.mPos.mX + this.mRenderCanvas.mSize.mX) -
+						((this.mInputText.mPos.mX + this.mRenderCanvas.mPos.mX) + this.mInputText.GetWidth());
+				this.mInputText.mPos.mX += shift;
+			}
+		}
+		
+		this.mRenderCanvas.Clear();
+		this.mRenderCanvas.RenderTo(this.mInputText);
+	}
+}
 // ...End
 
