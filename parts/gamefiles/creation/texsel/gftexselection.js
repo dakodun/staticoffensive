@@ -33,11 +33,21 @@ GFTexSelection.prototype.SetUp = function(pos, texStr) {
 		
 		this.mSegment.Copy(seg);
 		
+		
 		this.mSegment.mTiles[3].ChangeZLevel(0);
+		this.mSegment.mTiles[3].SetBounds(this.mSegment.mTileBounds.mBounds[this.mSegment.mTiles[3].mSprite.mCurrFrame]);
 		for (var i = 0; i < this.mSegment.mTiles.length; ++i) {
 			this.mSegment.mTiles[i].mSprite.mPos.mX += this.mPos.mX;
 			this.mSegment.mTiles[i].mSprite.mPos.mY += this.mPos.mY + 20;
+			
+			this.mSegment.mTiles[i].mBounds.mPos.mX += this.mPos.mX;
+			this.mSegment.mTiles[i].mBounds.mPos.mY += this.mPos.mY + 20;
 		}
+		
+		this.mSegment.mBounds.mPos.mX += this.mPos.mX;
+		this.mSegment.mBounds.mPos.mY += this.mPos.mY + 20;
+		this.mSegment.mBoundsPoly.splice(0, this.mSegment.mBoundsPoly.length);
+		this.mSegment.mBoundsPoly = this.mSegment.mBoundsPoly.concat(this.mSegment.mBounds.GetPolygon());
 	}
 	
 	{
