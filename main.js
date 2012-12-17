@@ -114,6 +114,33 @@ var util = new function() {
 		return false;
 	};
 	
+	this.PointInConvex = function(point, polygon) {
+		if (polygon.length > 2) {
+			var pt = new IVec2(0, 0); pt.Copy(point);
+			pt.mX -= 3; pt.mY -= 3;
+			
+			var poly = new Array();
+			poly = poly.concat(polygon);
+			poly.push(polygon[0]);
+			
+			for (var i = 0; i < poly.length - 1; ++i) {
+				var x1 = pt.mX - poly[i].mX;
+				var y1 = pt.mY - poly[i].mY;
+				var x2 = poly[i + 1].mX - poly[i].mX;
+				var y2 = poly[i + 1].mY - poly[i].mY;
+				
+				if ((x1 * y2) - (y1 * x2) > 0) {
+					
+					return false;
+				}
+			}
+			
+			return true;
+		}
+		
+		return false;
+	}
+	
 	this.RectangleCollision = function(rectAPos, rectASize, rectBPos, rectBSize, touchingCounts) {
 		var intersect = false;
 		
@@ -1382,6 +1409,13 @@ Shape.prototype.AddPoint = function(point) {
 	pt.Copy(point);
 	this.mPoints.push(pt);
 	
+	if (this.mPoints.length == 1) {
+		this.mBounds[0] = pt.mX;
+		this.mBounds[1] = pt.mY;
+		this.mBounds[2] = pt.mX;
+		this.mBounds[3] = pt.mY;
+	}
+	
 	// check left bound
 	if (pt.mX < this.mBounds[0]) {
 		this.mBounds[0] = pt.mX;
@@ -1416,6 +1450,19 @@ Shape.prototype.GetWidth = function() {
 //
 Shape.prototype.GetHeight = function() {
 	return this.mSize.mY;
+}
+
+Shape.prototype.GetPolygon = function() {
+	var poly = new Array();
+	poly.push(this.mPos);
+	
+	for (var i = 0; i < this.mPoints.length; ++i) {
+		var x = this.mPoints[i].mX + this.mPos.mX;
+		var y = this.mPoints[i].mY + this.mPos.mY;
+		poly.push(new IVec2(x, y));
+	}
+	
+	return poly;
 }
 // ...End
 
@@ -2024,8 +2071,8 @@ RenderBatch.prototype.Render = function(camera, target) {
 			var shp = this.mRenderData[i];
 			var pos = shp.GetPosition();
 			
-			var shpTL = new IVec2(shp.mPos.mX, shp.mPos.mY);
-			var shpBR = new IVec2(shp.mPos.mX + shp.GetWidth(), shp.mPos.mY + shp.GetHeight());
+			var shpTL = new IVec2(shp.mPos.mX + shp.mBounds[0], shp.mPos.mY + shp.mBounds[1]);
+			var shpBR = new IVec2(shp.mPos.mX + shp.mBounds[2], shp.mPos.mY + shp.mBounds[3]);
 			
 			var intersect = false;
 			var left = shpTL.mX;
@@ -2913,6 +2960,34 @@ GUIInputBox.prototype.SetSpriteDepths = function(depth) {
 	
 	this.mCaret.mShape.mDepth = depth - 2;
 	this.mRenderCanvas.mDepth = depth - 1;
+}
+
+GUIInputBox.prototype.SetText = function(string) {
+	if (this.mInputText.mString.length > 0) {
+		var len = string.length - this.mInputText.mString.length;
+		
+		this.mInputText.mString = string;
+		this.mCaret.mPlace += len;
+		if (this.mCaret.mPlace < 0) {
+			this.mCaret.mPlace = 0;
+		}
+		
+		// if text is not currently filling the render canvas
+		if ((this.mInputText.mPos.mX + this.mRenderCanvas.mPos.mX) + this.mInputText.GetWidth() <
+				this.mRenderCanvas.mPos.mX + this.mRenderCanvas.mSize.mX) {
+			
+			// if text is wider and is able to fill the render canvas
+			if (this.mInputText.GetWidth() >= this.mRenderCanvas.mSize.mX) {
+				// move the text to ensure render canvas is filled
+				var shift = (this.mRenderCanvas.mPos.mX + this.mRenderCanvas.mSize.mX) -
+						((this.mInputText.mPos.mX + this.mRenderCanvas.mPos.mX) + this.mInputText.GetWidth());
+				this.mInputText.mPos.mX += shift;
+			}
+		}
+		
+		this.mRenderCanvas.Clear();
+		this.mRenderCanvas.RenderTo(this.mInputText);
+	}
 }
 // ...End
 
@@ -3838,6 +3913,7 @@ GFTestScene.prototype.Input = function() {
 // handles game logic
 GFTestScene.prototype.Process = function() {
 	this.mMapControl.Process();
+	this.mMap.Process();
 	
 	this.mCam.Process();
 }
@@ -4288,12 +4364,6 @@ GFGUICreationNewDialogue.prototype.SetUp = function(initOffset) {
 		this.mButtons[1].mSpriteInactive.SetAnimatedTexture(tex, 3, 1, -1, -1);
 		this.mButtons[1].mSpriteInactive.SetCurrentFrame(0);
 	}
-	
-	// x input (18, 28)
-	// y input (82, 28)
-	
-	// confirm (36, 64)
-	// cancel (112, 72)
 }
 
 GFGUICreationNewDialogue.prototype.Input = function() {
@@ -4312,6 +4382,21 @@ GFGUICreationNewDialogue.prototype.Process = function(point) {
 	{
 		for (var i = 0; i < this.mInputBoxes.length; ++i) {
 			this.mInputBoxes[i].Process(point);
+			
+			{
+				if (this.mInputBoxes[0].mInputText.mString.length > 0) {
+					var x = Number(this.mInputBoxes[i].mInputText.mString);
+					if (x == 0) {
+						this.mInputBoxes[i].SetText("");
+					}
+					else if (this.mInputBoxes[i].mInputText.mString.charAt(0) == "0") {
+						this.mInputBoxes[i].SetText(this.mInputBoxes[i].mInputText.mString.charAt(1));
+					}
+					else if (x > 20) {
+						this.mInputBoxes[i].SetText("20");
+					}
+				}
+			}
 		}
 		
 		for (var i = 0; i < this.mButtons.length; ++i) {
@@ -4321,10 +4406,23 @@ GFGUICreationNewDialogue.prototype.Process = function(point) {
 	
 	{
 		if (this.mButtons[0].OnClick() == true) {
+			var x = Number(this.mInputBoxes[0].mInputText.mString);
+			var y = Number(this.mInputBoxes[1].mInputText.mString);
 			
+			if ((x >= 1 && x <= 20) && (y >= 1 && y <= 20)) {
+				alert("x: " + x + "; y: " + y);
+				
+				for (var i = 0; i < this.mInputBoxes.length; ++i) {
+					this.mInputBoxes[i].SetText("");
+				}
+			}
 		}
 		else if (this.mButtons[1].OnClick() == true) {
 			currScene.mCreationControl.mDialogueOpen = false;
+			
+			for (var i = 0; i < this.mInputBoxes.length; ++i) {
+				this.mInputBoxes[i].SetText("");
+			}
 		}
 	}
 }
@@ -4808,11 +4906,21 @@ GFTexSelection.prototype.SetUp = function(pos, texStr) {
 		
 		this.mSegment.Copy(seg);
 		
+		
 		this.mSegment.mTiles[3].ChangeZLevel(0);
+		this.mSegment.mTiles[3].SetBounds(this.mSegment.mTileBounds.mBounds[this.mSegment.mTiles[3].mSprite.mCurrFrame]);
 		for (var i = 0; i < this.mSegment.mTiles.length; ++i) {
 			this.mSegment.mTiles[i].mSprite.mPos.mX += this.mPos.mX;
 			this.mSegment.mTiles[i].mSprite.mPos.mY += this.mPos.mY + 20;
+			
+			this.mSegment.mTiles[i].mBounds.mPos.mX += this.mPos.mX;
+			this.mSegment.mTiles[i].mBounds.mPos.mY += this.mPos.mY + 20;
 		}
+		
+		this.mSegment.mBounds.mPos.mX += this.mPos.mX;
+		this.mSegment.mBounds.mPos.mY += this.mPos.mY + 20;
+		this.mSegment.mBoundsPoly.splice(0, this.mSegment.mBoundsPoly.length);
+		this.mSegment.mBoundsPoly = this.mSegment.mBoundsPoly.concat(this.mSegment.mBounds.GetPolygon());
 	}
 	
 	{
@@ -5208,6 +5316,8 @@ function GFMap() {
 	
 	this.mSegments = new Array();
 	this.mCurrZLevel = 3;
+	
+	this.mCurrentTile = new IVec2(-1, -1);
 };
 
 GFMap.prototype.Copy = function(other) {
@@ -5229,6 +5339,63 @@ GFMap.prototype.AddSegment = function(segment) {
 	this.mSegments.push(segCont);
 }
 
+GFMap.prototype.Process = function() {
+	var currScene = nmgrs.sceneMan.mCurrScene;
+	
+	var pt = new IVec2(0, 0);
+	pt.Copy(nmgrs.inputMan.GetLocalMouseCoords());
+	pt.mX += currScene.mCam.mTranslate.mX; pt.mY += currScene.mCam.mTranslate.mY;
+	
+	var hoveringTile = false;
+	for (var i = 0; i < this.mSegments.length; ++i) {
+		if (util.PointInConvex(pt, this.mSegments[i].mMapSegment.mBoundsPoly) == true) {
+			for (var j = 0; j < this.mSegments[i].mMapSegment.mTiles.length; ++j) {
+				if (util.PointInConvex(pt, this.mSegments[i].mMapSegment.mTiles[j].mBoundsPoly) == true) {
+					if (this.mCurrentTile.mX != -1 && this.mCurrentTile.mY != -1) {
+						var tileCurr = new IVec2(0, 0);
+						tileCurr.Copy(this.mSegments[this.mCurrentTile.mX].mMapSegment.mTiles[this.mCurrentTile.mY].mGlobalPos);
+						
+						var tileCheck = new IVec2(0, 0);
+						tileCheck.Copy(this.mSegments[i].mMapSegment.mTiles[j].mGlobalPos);
+						
+						if (tileCurr.mY < tileCheck.mY) {
+							this.mSegments[this.mCurrentTile.mX].mMapSegment.mTiles[this.mCurrentTile.mY].mShowBounds = false;
+							
+							this.mSegments[i].mMapSegment.mTiles[j].mShowBounds = true;
+							this.mCurrentTile.mX = i; this.mCurrentTile.mY = j;
+							hoveringTile = true;
+						}
+						else if (tileCurr.mY == tileCheck.mY) {
+							if (tileCurr.mX > tileCheck.mX) {
+								this.mSegments[this.mCurrentTile.mX].mMapSegment.mTiles[this.mCurrentTile.mY].mShowBounds = false;
+								
+								this.mSegments[i].mMapSegment.mTiles[j].mShowBounds = true;
+								this.mCurrentTile.mX = i; this.mCurrentTile.mY = j;
+								hoveringTile = true;
+							}
+							else if (tileCurr.mX == tileCheck.mX) {
+								hoveringTile = true;
+							}
+						}
+					}
+					else {
+						this.mSegments[i].mMapSegment.mTiles[j].mShowBounds = true;
+						this.mCurrentTile.mX = i; this.mCurrentTile.mY = j;
+						hoveringTile = true;
+					}
+				}
+			}
+		}
+	}
+	
+	if (hoveringTile == false) {
+		if (this.mCurrentTile.mX != -1 && this.mCurrentTile.mY != -1) {
+			this.mSegments[this.mCurrentTile.mX].mMapSegment.mTiles[this.mCurrentTile.mY].mShowBounds = false;
+			this.mCurrentTile.mX = -1; this.mCurrentTile.mY = -1;
+		}
+	}
+}
+
 GFMap.prototype.GetRenderData = function() {
 	var arr = new Array();
 	
@@ -5244,11 +5411,7 @@ GFMap.prototype.ChangeZLevel = function(newLevel) {
 		this.mCurrZLevel += newLevel;
 		
 		for (var i = 0; i < this.mSegments.length; ++i) {
-			this.mSegments[i].mMapSegment.mCurrZLevel += newLevel;
-			// for our entire map segment array
-			for (var j = 0; j < this.mSegments[i].mMapSegment.mTiles.length; ++j) {
-				this.mSegments[i].mMapSegment.mTiles[j].ChangeZLevel(this.mSegments[i].mMapSegment.mCurrZLevel);
-			}
+			this.mSegments[i].mMapSegment.ChangeZLevel(newLevel);
 		}
 	}
 }
@@ -5506,6 +5669,12 @@ function GFMapSegment() {
 	
 	this.mExits = new Array();
 	this.mEntrances = new Array();
+	
+	this.mTileBounds = new GFMapTileBounds();
+	
+	this.mShowBounds = false;
+	this.mBounds = new Shape();
+	this.mBoundsPoly = new Array();
 };
 
 GFMapSegment.prototype.Copy = function(other) {
@@ -5522,10 +5691,35 @@ GFMapSegment.prototype.Copy = function(other) {
 	
 	this.mEntrances.splice(0, this.mEntrances.length);
 	this.mEntrances = this.mEntrances.concat(other.mEntrances);
+	
+	this.mShowBounds = other.mShowBounds;
+	this.mBounds.Copy(other.mBounds);
+	
+	this.mBoundsPoly.slice(0, this.mBoundsPoly.length);
+	this.mBoundsPoly = this.mBoundsPoly.concat(other.mBoundsPoly);
 }
 
 GFMapSegment.prototype.SetUp = function(blueprint) {
 	this.mSize.Copy(blueprint.mSize);
+	
+	{
+		var x = (this.mPos.mX * 28) + (this.mPos.mY * 28);
+		var y = (this.mPos.mX * -14) + (this.mPos.mY * 14);
+		this.mBounds.mPos.Set(x, y + 14);
+		
+		this.mBounds.mOutline = true;
+		this.mBounds.mDepth = 0;
+		
+		this.mBounds.AddPoint(new IVec2(28 * this.mSize.mX, -14 * this.mSize.mX));
+		this.mBounds.AddPoint(new IVec2(28 * this.mSize.mX + 3, -14 * this.mSize.mX));
+		this.mBounds.AddPoint(new IVec2((28 * this.mSize.mX) + (28 * this.mSize.mY) + 3, (-14 * this.mSize.mX) + (14 * this.mSize.mY)));
+		this.mBounds.AddPoint(new IVec2((28 * this.mSize.mX) + (28 * this.mSize.mY) + 3, (-14 * this.mSize.mX) + (14 * this.mSize.mY) + 31));
+		this.mBounds.AddPoint(new IVec2((28 * this.mSize.mY) + 3, (14 * this.mSize.mY) + 31));
+		this.mBounds.AddPoint(new IVec2(28 * this.mSize.mY, (14 * this.mSize.mY) + 31));
+		this.mBounds.AddPoint(new IVec2(0, 31));
+		
+		this.mBoundsPoly = this.mBoundsPoly.concat(this.mBounds.GetPolygon());
+	}
 	
 	for (var i = 0; i < blueprint.mTiles.length; ++i) {
 		var tex = nmgrs.resMan.mTexStore.GetResource(blueprint.mTiles[i].mTex);
@@ -5538,6 +5732,13 @@ GFMapSegment.prototype.SetUp = function(blueprint) {
 		tile.mSpecial = blueprint.mTiles[i].mSpecial;
 		
 		tile.SetUp(tex);
+		
+		if (typeof(this.mTileBounds.mBounds[tile.mSprite.mCurrFrame]) != "undefined") { 
+			tile.SetBounds(this.mTileBounds.mBounds[tile.mSprite.mCurrFrame]);
+		}
+		else {
+			tile.SetBounds(this.mTileBounds.mBounds[7]);
+		}
 		
 		this.mTiles.push(tile);
 		
@@ -5583,6 +5784,10 @@ GFMapSegment.prototype.GetRenderData = function() {
 		arr = arr.concat(this.mTiles[i].GetRenderData()); // get and add the render data returned by the tile
 	}
 	
+	if (this.mShowBounds == true) {
+		arr.push(this.mBounds);
+	}
+	
 	return arr; // return the retrieved render data
 }
 
@@ -5593,6 +5798,7 @@ GFMapSegment.prototype.ChangeZLevel = function(newLevel) {
 		// for our entire map segment array
 		for (var i = 0; i < this.mTiles.length; ++i) {
 			this.mTiles[i].ChangeZLevel(this.mCurrZLevel);
+			this.mTiles[i].SetBounds(this.mTileBounds.mBounds[this.mTiles[i].mSprite.mCurrFrame]);
 		}
 	}
 }
@@ -5612,6 +5818,10 @@ function GFMapTile() {
 	this.mSprite = new Sprite();
 	this.mTileFrame = 0;
 	this.mBlank = false;
+	
+	this.mShowBounds = false;
+	this.mBounds = new Shape();
+	this.mBoundsPoly = new Array();
 };
 
 GFMapTile.prototype.SetUp = function(tex) {
@@ -5621,6 +5831,7 @@ GFMapTile.prototype.SetUp = function(tex) {
 	this.mSprite.SetAnimatedTexture(tex, 35, 7, -1, -1);
 	this.mSprite.mPos.Set(x, y);
 	this.mSprite.mDepth = 2500 - (this.mGlobalPos.mY * 10) + (this.mGlobalPos.mX * 10);
+	
 	this.mTileFrame = this.mZ;
 	
 	if (this.mTileFrame != 7) {
@@ -5639,6 +5850,9 @@ GFMapTile.prototype.GetRenderData = function() {
 	var arr = new Array(); // an array to store our render data
 	
 	arr.push(this.mSprite);
+	if (this.mShowBounds == true) {
+		arr.push(this.mBounds);
+	}
 	
 	return arr;
 }
@@ -5658,5 +5872,287 @@ GFMapTile.prototype.ChangeZLevel = function(newLevel) {
 		}
 	}
 }
+
+GFMapTile.prototype.SetBounds = function(bounds) {
+	if (bounds != null) {
+		this.mBounds.Copy(bounds);
+	}
+	
+	this.mBounds.mOutline = true;
+	this.mBounds.mPos.mX += this.mSprite.mPos.mX; this.mBounds.mPos.mY += this.mSprite.mPos.mY;
+	this.mBounds.mDepth = 0;
+	
+	this.mBoundsPoly.splice(0, this.mBoundsPoly.length);
+	this.mBoundsPoly = this.mBoundsPoly.concat(this.mBounds.GetPolygon());
+}
 // ...End
+
+// GFMapTileBounds Class...
+// game file: 
+function GFMapTileBounds() {
+	this.mBounds = new Array();
+	
+	{
+		this.mBounds[0] = new Shape();
+		this.mBounds[0].mPos.Set(			0,  38);
+		this.mBounds[0].AddPoint(new IVec2(28, -14));
+		this.mBounds[0].AddPoint(new IVec2(31, -14));
+		this.mBounds[0].AddPoint(new IVec2(59,   0));
+		this.mBounds[0].AddPoint(new IVec2(59,   7));
+		this.mBounds[0].AddPoint(new IVec2(31,  21));
+		this.mBounds[0].AddPoint(new IVec2(28,  21));
+		this.mBounds[0].AddPoint(new IVec2( 0,  7));
+	}
+	
+	{
+		this.mBounds[1] = new Shape();
+		this.mBounds[1].mPos.Set(			0,  30);
+		this.mBounds[1].AddPoint(new IVec2(28, -14));
+		this.mBounds[1].AddPoint(new IVec2(31, -14));
+		this.mBounds[1].AddPoint(new IVec2(35, -12));
+		this.mBounds[1].AddPoint(new IVec2(53,   6));
+		this.mBounds[1].AddPoint(new IVec2(55,   6));
+		this.mBounds[1].AddPoint(new IVec2(59,   8));
+		this.mBounds[1].AddPoint(new IVec2(59,  15));
+		this.mBounds[1].AddPoint(new IVec2(31,  29));
+		this.mBounds[1].AddPoint(new IVec2(28,  29));
+		this.mBounds[1].AddPoint(new IVec2( 0,  15));
+	}
+	
+	{
+		this.mBounds[2] = new Shape();
+		this.mBounds[2].mPos.Set(			0,  30);
+		this.mBounds[2].AddPoint(new IVec2(28, -14));
+		this.mBounds[2].AddPoint(new IVec2(31, -14));
+		this.mBounds[2].AddPoint(new IVec2(59,   0));
+		this.mBounds[2].AddPoint(new IVec2(59,  15));
+		this.mBounds[2].AddPoint(new IVec2(31,  29));
+		this.mBounds[2].AddPoint(new IVec2(28,  29));
+		this.mBounds[2].AddPoint(new IVec2( 0,  15));
+	}
+	
+	{
+		this.mBounds[3] = new Shape();
+		this.mBounds[3].mPos.Set(			0,  22);
+		this.mBounds[3].AddPoint(new IVec2(28, -14));
+		this.mBounds[3].AddPoint(new IVec2(31, -14));
+		this.mBounds[3].AddPoint(new IVec2(35, -12));
+		this.mBounds[3].AddPoint(new IVec2(53,   6));
+		this.mBounds[3].AddPoint(new IVec2(55,   6));
+		this.mBounds[3].AddPoint(new IVec2(59,   8));
+		this.mBounds[3].AddPoint(new IVec2(59,  23));
+		this.mBounds[3].AddPoint(new IVec2(31,  37));
+		this.mBounds[3].AddPoint(new IVec2(28,  37));
+		this.mBounds[3].AddPoint(new IVec2( 0,  23));
+	}
+	
+	{
+		this.mBounds[4] = new Shape();
+		this.mBounds[4].mPos.Set(			0,  22);
+		this.mBounds[4].AddPoint(new IVec2(28, -14));
+		this.mBounds[4].AddPoint(new IVec2(31, -14));
+		this.mBounds[4].AddPoint(new IVec2(59,   0));
+		this.mBounds[4].AddPoint(new IVec2(59,  23));
+		this.mBounds[4].AddPoint(new IVec2(31,  37));
+		this.mBounds[4].AddPoint(new IVec2(28,  37));
+		this.mBounds[4].AddPoint(new IVec2( 0,  23));
+	}
+	
+	{
+		this.mBounds[5] = new Shape();
+		this.mBounds[5].mPos.Set(			0,  14);
+		this.mBounds[5].AddPoint(new IVec2(28, -14));
+		this.mBounds[5].AddPoint(new IVec2(31, -14));
+		this.mBounds[5].AddPoint(new IVec2(35, -12));
+		this.mBounds[5].AddPoint(new IVec2(53,   6));
+		this.mBounds[5].AddPoint(new IVec2(55,   6));
+		this.mBounds[5].AddPoint(new IVec2(59,   8));
+		this.mBounds[5].AddPoint(new IVec2(59,  31));
+		this.mBounds[5].AddPoint(new IVec2(31,  45));
+		this.mBounds[5].AddPoint(new IVec2(28,  45));
+		this.mBounds[5].AddPoint(new IVec2( 0,  31));
+	}
+	
+	{
+		this.mBounds[6] = new Shape();
+		this.mBounds[6].mPos.Set(			0,  14);
+		this.mBounds[6].AddPoint(new IVec2(28, -14));
+		this.mBounds[6].AddPoint(new IVec2(31, -14));
+		this.mBounds[6].AddPoint(new IVec2(59,   0));
+		this.mBounds[6].AddPoint(new IVec2(59,  31));
+		this.mBounds[6].AddPoint(new IVec2(31,  45));
+		this.mBounds[6].AddPoint(new IVec2(28,  45));
+		this.mBounds[6].AddPoint(new IVec2( 0,  31));
+	}
+	
+	{
+		this.mBounds[7] = new Shape();
+		this.mBounds[7].mPos.Set(0, 0);
+	}
+	
+	{
+		this.mBounds[8] = new Shape();
+		this.mBounds[8].mPos.Set(			0,  38);
+		this.mBounds[8].AddPoint(new IVec2( 6,  -2));
+		this.mBounds[8].AddPoint(new IVec2(24, -20));
+		this.mBounds[8].AddPoint(new IVec2(28, -22));
+		this.mBounds[8].AddPoint(new IVec2(31, -22));
+		this.mBounds[8].AddPoint(new IVec2(59,  -8));
+		this.mBounds[8].AddPoint(new IVec2(59,   7));
+		this.mBounds[8].AddPoint(new IVec2(31,  21));
+		this.mBounds[8].AddPoint(new IVec2(28,  21));
+		this.mBounds[8].AddPoint(new IVec2( 0,   7));
+	}
+	
+	{
+		this.mBounds[10] = new Shape();
+		this.mBounds[10].mPos.Set(			 0,  30);
+		this.mBounds[10].AddPoint(new IVec2( 6,  -2));
+		this.mBounds[10].AddPoint(new IVec2(24, -20));
+		this.mBounds[10].AddPoint(new IVec2(28, -22));
+		this.mBounds[10].AddPoint(new IVec2(31, -22));
+		this.mBounds[10].AddPoint(new IVec2(59,  -8));
+		this.mBounds[10].AddPoint(new IVec2(59,  15));
+		this.mBounds[10].AddPoint(new IVec2(31,  29));
+		this.mBounds[10].AddPoint(new IVec2(28,  29));
+		this.mBounds[10].AddPoint(new IVec2( 0,  15));
+	}
+	
+	{
+		this.mBounds[12] = new Shape();
+		this.mBounds[12].mPos.Set(			 0,  22);
+		this.mBounds[12].AddPoint(new IVec2( 6,  -2));
+		this.mBounds[12].AddPoint(new IVec2(24, -20));
+		this.mBounds[12].AddPoint(new IVec2(28, -22));
+		this.mBounds[12].AddPoint(new IVec2(31, -22));
+		this.mBounds[12].AddPoint(new IVec2(59,  -8));
+		this.mBounds[12].AddPoint(new IVec2(59,  23));
+		this.mBounds[12].AddPoint(new IVec2(31,  37));
+		this.mBounds[12].AddPoint(new IVec2(28,  37));
+		this.mBounds[12].AddPoint(new IVec2( 0,  23));
+	}
+	
+	{
+		this.mBounds[15] = new Shape();
+		this.mBounds[15].mPos.Set(			 0,  38);
+		this.mBounds[15].AddPoint(new IVec2(28, -14));
+		this.mBounds[15].AddPoint(new IVec2(31, -14));
+		this.mBounds[15].AddPoint(new IVec2(39, -10));
+		this.mBounds[15].AddPoint(new IVec2(55, -10));
+		this.mBounds[15].AddPoint(new IVec2(59,  -8));
+		this.mBounds[15].AddPoint(new IVec2(59,   7));
+		this.mBounds[15].AddPoint(new IVec2(31,  21));
+		this.mBounds[15].AddPoint(new IVec2(28,  21));
+		this.mBounds[15].AddPoint(new IVec2( 0,   7));
+	}
+	
+	{
+		this.mBounds[17] = new Shape();
+		this.mBounds[17].mPos.Set(			 0,  30);
+		this.mBounds[17].AddPoint(new IVec2(28, -14));
+		this.mBounds[17].AddPoint(new IVec2(31, -14));
+		this.mBounds[17].AddPoint(new IVec2(39, -10));
+		this.mBounds[17].AddPoint(new IVec2(55, -10));
+		this.mBounds[17].AddPoint(new IVec2(59,  -8));
+		this.mBounds[17].AddPoint(new IVec2(59,  15));
+		this.mBounds[17].AddPoint(new IVec2(31,  29));
+		this.mBounds[17].AddPoint(new IVec2(28,  29));
+		this.mBounds[17].AddPoint(new IVec2( 0,  15));
+	}
+	
+	{
+		this.mBounds[19] = new Shape();
+		this.mBounds[19].mPos.Set(			 0,  22);
+		this.mBounds[19].AddPoint(new IVec2(28, -14));
+		this.mBounds[19].AddPoint(new IVec2(31, -14));
+		this.mBounds[19].AddPoint(new IVec2(39, -10));
+		this.mBounds[19].AddPoint(new IVec2(55, -10));
+		this.mBounds[19].AddPoint(new IVec2(59,  -8));
+		this.mBounds[19].AddPoint(new IVec2(59,  23));
+		this.mBounds[19].AddPoint(new IVec2(31,  37));
+		this.mBounds[19].AddPoint(new IVec2(28,  37));
+		this.mBounds[19].AddPoint(new IVec2( 0,  23));
+	}
+	
+	{
+		this.mBounds[22] = new Shape();
+		this.mBounds[22].mPos.Set(			 0,  30);
+		this.mBounds[22].AddPoint(new IVec2( 4,  -2));
+		this.mBounds[22].AddPoint(new IVec2(20,  -2));
+		this.mBounds[22].AddPoint(new IVec2(28,  -6));
+		this.mBounds[22].AddPoint(new IVec2(31,  -6));
+		this.mBounds[22].AddPoint(new IVec2(59,   8));
+		this.mBounds[22].AddPoint(new IVec2(59,  15));
+		this.mBounds[22].AddPoint(new IVec2(31,  29));
+		this.mBounds[22].AddPoint(new IVec2(28,  29));
+		this.mBounds[22].AddPoint(new IVec2( 0,  15));
+	}
+	
+	{
+		this.mBounds[24] = new Shape();
+		this.mBounds[24].mPos.Set(			 0,  22);
+		this.mBounds[24].AddPoint(new IVec2( 4,  -2));
+		this.mBounds[24].AddPoint(new IVec2(20,  -2));
+		this.mBounds[24].AddPoint(new IVec2(28,  -6));
+		this.mBounds[24].AddPoint(new IVec2(31,  -6));
+		this.mBounds[24].AddPoint(new IVec2(59,   8));
+		this.mBounds[24].AddPoint(new IVec2(59,  23));
+		this.mBounds[24].AddPoint(new IVec2(31,  37));
+		this.mBounds[24].AddPoint(new IVec2(28,  37));
+		this.mBounds[24].AddPoint(new IVec2( 0,  23));
+	}
+	
+	{
+		this.mBounds[26] = new Shape();
+		this.mBounds[26] = new Shape();
+		this.mBounds[26].mPos.Set(			 0,  14);
+		this.mBounds[26].AddPoint(new IVec2( 4,  -2));
+		this.mBounds[26].AddPoint(new IVec2(20,  -2));
+		this.mBounds[26].AddPoint(new IVec2(28,  -6));
+		this.mBounds[26].AddPoint(new IVec2(31,  -6));
+		this.mBounds[26].AddPoint(new IVec2(59,   8));
+		this.mBounds[26].AddPoint(new IVec2(59,  31));
+		this.mBounds[26].AddPoint(new IVec2(31,  45));
+		this.mBounds[26].AddPoint(new IVec2(28,  45));
+		this.mBounds[26].AddPoint(new IVec2( 0,  31));
+	}
+	
+	{
+		this.mBounds[32] = new Shape();
+		this.mBounds[32].mPos.Set(			0,  22);
+		this.mBounds[32].AddPoint(new IVec2(28, -14));
+		this.mBounds[32].AddPoint(new IVec2(31, -14));
+		this.mBounds[32].AddPoint(new IVec2(59,   0));
+		this.mBounds[32].AddPoint(new IVec2(59,  23));
+		this.mBounds[32].AddPoint(new IVec2(31,  37));
+		this.mBounds[32].AddPoint(new IVec2(28,  37));
+		this.mBounds[32].AddPoint(new IVec2( 0,  23));
+	}
+	
+	{
+		this.mBounds[33] = new Shape();
+		this.mBounds[33].mPos.Set(			0,  30);
+		this.mBounds[33].AddPoint(new IVec2(28, -14));
+		this.mBounds[33].AddPoint(new IVec2(31, -14));
+		this.mBounds[33].AddPoint(new IVec2(59,   0));
+		this.mBounds[33].AddPoint(new IVec2(59,  15));
+		this.mBounds[33].AddPoint(new IVec2(31,  29));
+		this.mBounds[33].AddPoint(new IVec2(28,  29));
+		this.mBounds[33].AddPoint(new IVec2( 0,  15));
+	}
+	
+	{
+		this.mBounds[34] = new Shape();
+		this.mBounds[34].mPos.Set(			0,  38);
+		this.mBounds[34].AddPoint(new IVec2(28, -14));
+		this.mBounds[34].AddPoint(new IVec2(31, -14));
+		this.mBounds[34].AddPoint(new IVec2(59,   0));
+		this.mBounds[34].AddPoint(new IVec2(59,   7));
+		this.mBounds[34].AddPoint(new IVec2(31,  21));
+		this.mBounds[34].AddPoint(new IVec2(28,  21));
+		this.mBounds[34].AddPoint(new IVec2( 0,  7));
+	}
+};
+// ...End
+
 
