@@ -10,6 +10,33 @@ var util = new function() {
 		return false;
 	};
 	
+	this.PointInConvex = function(point, polygon) {
+		if (polygon.length > 2) {
+			var pt = new IVec2(0, 0); pt.Copy(point);
+			pt.mX -= 3; pt.mY -= 3;
+			
+			var poly = new Array();
+			poly = poly.concat(polygon);
+			poly.push(polygon[0]);
+			
+			for (var i = 0; i < poly.length - 1; ++i) {
+				var x1 = pt.mX - poly[i].mX;
+				var y1 = pt.mY - poly[i].mY;
+				var x2 = poly[i + 1].mX - poly[i].mX;
+				var y2 = poly[i + 1].mY - poly[i].mY;
+				
+				if ((x1 * y2) - (y1 * x2) > 0) {
+					
+					return false;
+				}
+			}
+			
+			return true;
+		}
+		
+		return false;
+	}
+	
 	this.RectangleCollision = function(rectAPos, rectASize, rectBPos, rectBSize, touchingCounts) {
 		var intersect = false;
 		
