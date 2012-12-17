@@ -15,6 +15,8 @@ function GFMap() {
 	
 	this.mSegments = new Array();
 	this.mCurrZLevel = 3;
+	
+	this.mCurrentTile = new IVec2(-1, -1);
 };
 
 GFMap.prototype.Copy = function(other) {
@@ -36,6 +38,63 @@ GFMap.prototype.AddSegment = function(segment) {
 	this.mSegments.push(segCont);
 }
 
+GFMap.prototype.Process = function() {
+	var currScene = nmgrs.sceneMan.mCurrScene;
+	
+	var pt = new IVec2(0, 0);
+	pt.Copy(nmgrs.inputMan.GetLocalMouseCoords());
+	pt.mX += currScene.mCam.mTranslate.mX; pt.mY += currScene.mCam.mTranslate.mY;
+	
+	var hoveringTile = false;
+	for (var i = 0; i < this.mSegments.length; ++i) {
+		if (util.PointInConvex(pt, this.mSegments[i].mMapSegment.mBoundsPoly) == true) {
+			for (var j = 0; j < this.mSegments[i].mMapSegment.mTiles.length; ++j) {
+				if (util.PointInConvex(pt, this.mSegments[i].mMapSegment.mTiles[j].mBoundsPoly) == true) {
+					if (this.mCurrentTile.mX != -1 && this.mCurrentTile.mY != -1) {
+						var tileCurr = new IVec2(0, 0);
+						tileCurr.Copy(this.mSegments[this.mCurrentTile.mX].mMapSegment.mTiles[this.mCurrentTile.mY].mGlobalPos);
+						
+						var tileCheck = new IVec2(0, 0);
+						tileCheck.Copy(this.mSegments[i].mMapSegment.mTiles[j].mGlobalPos);
+						
+						if (tileCurr.mY < tileCheck.mY) {
+							this.mSegments[this.mCurrentTile.mX].mMapSegment.mTiles[this.mCurrentTile.mY].mShowBounds = false;
+							
+							this.mSegments[i].mMapSegment.mTiles[j].mShowBounds = true;
+							this.mCurrentTile.mX = i; this.mCurrentTile.mY = j;
+							hoveringTile = true;
+						}
+						else if (tileCurr.mY == tileCheck.mY) {
+							if (tileCurr.mX > tileCheck.mX) {
+								this.mSegments[this.mCurrentTile.mX].mMapSegment.mTiles[this.mCurrentTile.mY].mShowBounds = false;
+								
+								this.mSegments[i].mMapSegment.mTiles[j].mShowBounds = true;
+								this.mCurrentTile.mX = i; this.mCurrentTile.mY = j;
+								hoveringTile = true;
+							}
+							else if (tileCurr.mX == tileCheck.mX) {
+								hoveringTile = true;
+							}
+						}
+					}
+					else {
+						this.mSegments[i].mMapSegment.mTiles[j].mShowBounds = true;
+						this.mCurrentTile.mX = i; this.mCurrentTile.mY = j;
+						hoveringTile = true;
+					}
+				}
+			}
+		}
+	}
+	
+	if (hoveringTile == false) {
+		if (this.mCurrentTile.mX != -1 && this.mCurrentTile.mY != -1) {
+			this.mSegments[this.mCurrentTile.mX].mMapSegment.mTiles[this.mCurrentTile.mY].mShowBounds = false;
+			this.mCurrentTile.mX = -1; this.mCurrentTile.mY = -1;
+		}
+	}
+}
+
 GFMap.prototype.GetRenderData = function() {
 	var arr = new Array();
 	
@@ -51,11 +110,7 @@ GFMap.prototype.ChangeZLevel = function(newLevel) {
 		this.mCurrZLevel += newLevel;
 		
 		for (var i = 0; i < this.mSegments.length; ++i) {
-			this.mSegments[i].mMapSegment.mCurrZLevel += newLevel;
-			// for our entire map segment array
-			for (var j = 0; j < this.mSegments[i].mMapSegment.mTiles.length; ++j) {
-				this.mSegments[i].mMapSegment.mTiles[j].ChangeZLevel(this.mSegments[i].mMapSegment.mCurrZLevel);
-			}
+			this.mSegments[i].mMapSegment.ChangeZLevel(newLevel);
 		}
 	}
 }
