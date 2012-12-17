@@ -11,6 +11,10 @@ function GFMapTile() {
 	this.mSprite = new Sprite();
 	this.mTileFrame = 0;
 	this.mBlank = false;
+	
+	this.mShowBounds = false;
+	this.mBounds = new Shape();
+	this.mBoundsPoly = new Array();
 };
 
 GFMapTile.prototype.SetUp = function(tex) {
@@ -20,6 +24,7 @@ GFMapTile.prototype.SetUp = function(tex) {
 	this.mSprite.SetAnimatedTexture(tex, 35, 7, -1, -1);
 	this.mSprite.mPos.Set(x, y);
 	this.mSprite.mDepth = 2500 - (this.mGlobalPos.mY * 10) + (this.mGlobalPos.mX * 10);
+	
 	this.mTileFrame = this.mZ;
 	
 	if (this.mTileFrame != 7) {
@@ -38,6 +43,9 @@ GFMapTile.prototype.GetRenderData = function() {
 	var arr = new Array(); // an array to store our render data
 	
 	arr.push(this.mSprite);
+	if (this.mShowBounds == true) {
+		arr.push(this.mBounds);
+	}
 	
 	return arr;
 }
@@ -56,5 +64,18 @@ GFMapTile.prototype.ChangeZLevel = function(newLevel) {
 			}
 		}
 	}
+}
+
+GFMapTile.prototype.SetBounds = function(bounds) {
+	if (bounds != null) {
+		this.mBounds.Copy(bounds);
+	}
+	
+	this.mBounds.mOutline = true;
+	this.mBounds.mPos.mX += this.mSprite.mPos.mX; this.mBounds.mPos.mY += this.mSprite.mPos.mY;
+	this.mBounds.mDepth = 0;
+	
+	this.mBoundsPoly.splice(0, this.mBoundsPoly.length);
+	this.mBoundsPoly = this.mBoundsPoly.concat(this.mBounds.GetPolygon());
 }
 // ...End
