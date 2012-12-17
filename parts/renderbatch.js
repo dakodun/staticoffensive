@@ -237,8 +237,8 @@ RenderBatch.prototype.Render = function(camera, target) {
 			var shp = this.mRenderData[i];
 			var pos = shp.GetPosition();
 			
-			var shpTL = new IVec2(shp.mPos.mX, shp.mPos.mY);
-			var shpBR = new IVec2(shp.mPos.mX + shp.GetWidth(), shp.mPos.mY + shp.GetHeight());
+			var shpTL = new IVec2(shp.mPos.mX + shp.mBounds[0], shp.mPos.mY + shp.mBounds[1]);
+			var shpBR = new IVec2(shp.mPos.mX + shp.mBounds[2], shp.mPos.mY + shp.mBounds[3]);
 			
 			var intersect = false;
 			var left = shpTL.mX;
