@@ -91,7 +91,12 @@ GFTestScene.prototype.Input = function() {
 // handles game logic
 GFTestScene.prototype.Process = function() {
 	this.mMapControl.Process();
-	this.mMap.Process();
+	if (this.mMapControl.Hovering() == false) {
+		this.mMap.Process();
+	}
+	else {
+		this.mMap.UnselectTile();
+	}
 	
 	this.mCam.Process();
 }
