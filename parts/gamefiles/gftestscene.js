@@ -32,7 +32,6 @@ GFTestScene.prototype.SetUp = function() {
 	}
 	
 	nmain.game.mClearColour = "#75632F";
-	this.mCam.Translate(new IVec2(60, 100));
 	
 	{
 		var bpc = new GFBluePrintCollection();
@@ -73,6 +72,18 @@ GFTestScene.prototype.SetUp = function() {
 		
 		var mapGen = new GFMapGen();
 		this.mMap.Copy(mapGen.GenerateMap(bpc, 16));
+		
+		// centres map
+		// var trans = new IVec2(this.mMap.mBounds[0], this.mMap.mBounds[1]);
+		// trans.mX += (this.mMap.mBounds[2] - this.mMap.mBounds[0]) / 2;
+		// trans.mY += (this.mMap.mBounds[3] - this.mMap.mBounds[1]) / 2;
+		// trans.mX = Math.round(trans.mX); trans.mY = Math.round(trans.mY);
+		
+		var trans = new IVec2(nmain.game.mCanvasSize.mX / 2, nmain.game.mCanvasSize.mY / 2);
+		trans.mX = -(Math.round(trans.mX)); trans.mY = -(Math.round(trans.mY));
+		
+		this.mCam.mTranslate.Copy(trans);
+		this.mCam.mViewUpdated = true;
 	}
 	
 	this.mMapControl.SetUp();
