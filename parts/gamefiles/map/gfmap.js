@@ -114,5 +114,12 @@ GFMap.prototype.ChangeZLevel = function(newLevel) {
 		}
 	}
 }
+
+GFMap.prototype.UnselectTile = function() {
+	if (this.mCurrentTile.mX != -1 && this.mCurrentTile.mY != -1) {
+		this.mSegments[this.mCurrentTile.mX].mMapSegment.mTiles[this.mCurrentTile.mY].mShowBounds = false;
+		this.mCurrentTile.mX = -1; this.mCurrentTile.mY = -1;
+	}
+}
 // ...End
 
