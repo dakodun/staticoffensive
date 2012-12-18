@@ -1397,7 +1397,10 @@ Shape.prototype.Copy = function(other) {
 	this.mOutline = other.mOutline;
 	this.mOrigin.Copy(other.mOrigin);
 	
-	this.mPoints = other.mPoints;
+	this.mPoints.splice(0, this.mPoints.length);
+	this.mPoints = this.mPoints.concat(other.mPoints);
+	this.mBounds.splice(0, this.mBounds.length);
+	this.mBounds = this.mBounds.concat(other.mBounds);
 	
 	this.mAbsolute = other.mAbsolute;
 }
@@ -3143,7 +3146,7 @@ Camera.prototype.Apply = function() {
 
 // apply a transformation to the camera
 Camera.prototype.Translate = function(trans) {
-	this.mTranslate.Set(this.mTranslate.mX - trans.mX, this.mTranslate.mY - trans.mY);
+	this.mTranslate.Set(this.mTranslate.mX + trans.mX, this.mTranslate.mY + trans.mY);
 	this.mViewUpdated = true;
 }
 // ...End
@@ -3585,23 +3588,65 @@ GFGUIMapControl.prototype.SetUp = function() {
 };
 
 GFGUIMapControl.prototype.Input = function() {
+	var currScene = nmgrs.sceneMan.mCurrScene;
+	
 	{ // map scrolling
 		{ // keyboard input
 			var trans = new IVec2(0, 0);
 			if (nmgrs.inputMan.GetKeyboardDown(nkeyboard.key.code.up)) {
-				trans.mX += 2; trans.mY += 1;
+				var x = 0;
+				if (currScene.mCam.mTranslate.mX + (nmain.game.mCanvasSize.mX / 2) - 2 > currScene.mMap.mBounds[0]) {
+					x = -2;
+				}
+				
+				var y = 0;
+				if (currScene.mCam.mTranslate.mY  + (nmain.game.mCanvasSize.mY / 2) - 1 > currScene.mMap.mBounds[1]) {
+					y = -1;
+				}
+				
+				trans.mX += x; trans.mY += y;
 			}
 			
 			if (nmgrs.inputMan.GetKeyboardDown(nkeyboard.key.code.right)) {
-				trans.mX += -2; trans.mY += 1;
+				var x = 0;
+				if (currScene.mCam.mTranslate.mX + (nmain.game.mCanvasSize.mX / 2) + 2 < currScene.mMap.mBounds[2]) {
+					x = 2;
+				}
+				
+				var y = 0;
+				if (currScene.mCam.mTranslate.mY  + (nmain.game.mCanvasSize.mY / 2) - 1 > currScene.mMap.mBounds[1]) {
+					y = -1;
+				}
+				
+				trans.mX += x; trans.mY += y;
 			}
 			
 			if (nmgrs.inputMan.GetKeyboardDown(nkeyboard.key.code.down)) {
-				trans.mX += -2; trans.mY += -1;
+				var x = 0;
+				if (currScene.mCam.mTranslate.mX + (nmain.game.mCanvasSize.mX / 2) + 2 < currScene.mMap.mBounds[2]) {
+					x = 2;
+				}
+				
+				var y = 0;
+				if (currScene.mCam.mTranslate.mY  + (nmain.game.mCanvasSize.mY / 2) + 1 < currScene.mMap.mBounds[3]) {
+					y = 1;
+				}
+				
+				trans.mX += x; trans.mY += y;
 			}
 			
 			if (nmgrs.inputMan.GetKeyboardDown(nkeyboard.key.code.left)) {
-				trans.mX += 2; trans.mY += -1;
+				var x = 0;
+				if (currScene.mCam.mTranslate.mX + (nmain.game.mCanvasSize.mX / 2) - 2 > currScene.mMap.mBounds[0]) {
+					x = -2;
+				}
+				
+				var y = 0;
+				if (currScene.mCam.mTranslate.mY  + (nmain.game.mCanvasSize.mY / 2) + 1 < currScene.mMap.mBounds[3]) {
+					y = 1;
+				}
+				
+				trans.mX += x; trans.mY += y;
 			}
 			
 			this.mTranslate.Copy(trans);
@@ -3614,7 +3659,6 @@ GFGUIMapControl.prototype.Input = function() {
 	}
 	
 	{ // map z-level control
-		var currScene = nmgrs.sceneMan.mCurrScene;
 		{ // keyboard input
 			if (nmgrs.inputMan.GetKeyboardPressed(nkeyboard.key.code.q)) {
 				currScene.mMap.ChangeZLevel(-1);
@@ -3641,6 +3685,7 @@ GFGUIMapControl.prototype.Process = function() {
 	// process any necessary keyboard translation
 	if (this.mTranslate.mX != 0 || this.mTranslate.mY != 0) {
 		currScene.mCam.Translate(this.mTranslate);
+		this.mTranslate.Set(0, 0);
 	}
 	
 	{ // process all gui button elements
@@ -3658,21 +3703,58 @@ GFGUIMapControl.prototype.Process = function() {
 	
 	{ // handle main compass gui elements being held down
 		if (this.mCompassMain[0].mDown == true) {
-			currScene.mCam.Translate(new IVec2(2, 1));
-			this.mTranslate.mX += 2; this.mTranslate.mY += 1;
+			var x = 0;
+			if (currScene.mCam.mTranslate.mX + (nmain.game.mCanvasSize.mX / 2) - 2 > currScene.mMap.mBounds[0]) {
+				x = -2;
+			}
+			
+			var y = 0;
+			if (currScene.mCam.mTranslate.mY  + (nmain.game.mCanvasSize.mY / 2) - 1 > currScene.mMap.mBounds[1]) {
+				y = -1;
+			}
+			
+			currScene.mCam.Translate(new IVec2(x, y));
 		}
 		else if (this.mCompassMain[1].mDown == true) {
-			currScene.mCam.Translate(new IVec2(-2, 1));
-			this.mTranslate.mX -= 2; this.mTranslate.mY += 1;
-		}
-		else if (this.mCompassMain[2].mDown == true) {
-			currScene.mCam.Translate(new IVec2(2, -1));
-			this.mTranslate.mX += 2; this.mTranslate.mY -= 1;
+			var x = 0;
+			if (currScene.mCam.mTranslate.mX + (nmain.game.mCanvasSize.mX / 2) + 2 < currScene.mMap.mBounds[2]) {
+				x = 2;
+			}
+			
+			var y = 0;
+			if (currScene.mCam.mTranslate.mY  + (nmain.game.mCanvasSize.mY / 2) - 1 > currScene.mMap.mBounds[1]) {
+				y = -1;
+			}
+			
+			currScene.mCam.Translate(new IVec2(x, y));
 		}
 		else if (this.mCompassMain[3].mDown == true) {
-			currScene.mCam.Translate(new IVec2(-2, -1));
-			this.mTranslate.mX -= 2; this.mTranslate.mY -= 1;
+			var x = 0;
+			if (currScene.mCam.mTranslate.mX + (nmain.game.mCanvasSize.mX / 2) + 2 < currScene.mMap.mBounds[2]) {
+				x = 2;
+			}
+			
+			var y = 0;
+			if (currScene.mCam.mTranslate.mY  + (nmain.game.mCanvasSize.mY / 2) + 1 < currScene.mMap.mBounds[3]) {
+				y = 1;
+			}
+			
+			currScene.mCam.Translate(new IVec2(x, y));
 		}
+		else if (this.mCompassMain[2].mDown == true) {
+			var x = 0;
+			if (currScene.mCam.mTranslate.mX + (nmain.game.mCanvasSize.mX / 2) - 2 > currScene.mMap.mBounds[0]) {
+				x = -2;
+			}
+			
+			var y = 0;
+			if (currScene.mCam.mTranslate.mY  + (nmain.game.mCanvasSize.mY / 2) + 1 < currScene.mMap.mBounds[3]) {
+				y = 1;
+			}
+			
+			currScene.mCam.Translate(new IVec2(x, y));
+		}
+		
 	}
 	
 	{ // handle main zlevel gui elements being pressed
@@ -3905,7 +3987,6 @@ GFTestScene.prototype.SetUp = function() {
 	}
 	
 	nmain.game.mClearColour = "#75632F";
-	this.mCam.Translate(new IVec2(60, 100));
 	
 	{
 		var bpc = new GFBluePrintCollection();
@@ -3946,6 +4027,18 @@ GFTestScene.prototype.SetUp = function() {
 		
 		var mapGen = new GFMapGen();
 		this.mMap.Copy(mapGen.GenerateMap(bpc, 16));
+		
+		// centres map
+		// var trans = new IVec2(this.mMap.mBounds[0], this.mMap.mBounds[1]);
+		// trans.mX += (this.mMap.mBounds[2] - this.mMap.mBounds[0]) / 2;
+		// trans.mY += (this.mMap.mBounds[3] - this.mMap.mBounds[1]) / 2;
+		// trans.mX = Math.round(trans.mX); trans.mY = Math.round(trans.mY);
+		
+		var trans = new IVec2(nmain.game.mCanvasSize.mX / 2, nmain.game.mCanvasSize.mY / 2);
+		trans.mX = -(Math.round(trans.mX)); trans.mY = -(Math.round(trans.mY));
+		
+		this.mCam.mTranslate.Copy(trans);
+		this.mCam.mViewUpdated = true;
 	}
 	
 	this.mMapControl.SetUp();
@@ -4002,6 +4095,12 @@ function GFCreationMap() {
 	this.mCurrZLevel = 3;
 	
 	this.mCurrentTile = -1;
+	
+	this.mBounds = new Array();
+	this.mBounds[0] = 0;
+	this.mBounds[1] = 0;
+	this.mBounds[2] = 0;
+	this.mBounds[3] = 0;
 };
 
 GFCreationMap.prototype.Copy = function(other) {
@@ -4011,6 +4110,9 @@ GFCreationMap.prototype.Copy = function(other) {
 	this.mCurrZLevel = other.mCurrZLevel;
 	
 	this.mCurrentTile = other.mCurrentTile;
+	
+	this.mBounds.splice(0, this.mBounds.length);
+	this.mBounds = this.mBounds.concat(other.mBounds);
 }
 
 
@@ -4107,7 +4209,7 @@ function GFCreationScene() {
 	this.mMapControl = new GFGUIMapControl();
 	this.mCreationControl = new GFGUICreationControl();
 	
-	this.mCreationMap = new GFCreationMap();
+	this.mMap = new GFCreationMap();
 	
 	this.mHoveringUI = false;
 }
@@ -4128,6 +4230,26 @@ GFCreationScene.prototype.SetUp = function() {
 	
 	this.mMapControl.SetUp();
 	this.mCreationControl.SetUp("tileset_test");
+	
+	{
+		var bp = new GFBluePrint();
+		bp.SetUp("a:tileset_test;{20oa?20oa?20oa?20oa?20oa!20oa?20oa?20oa?20oa?20oa!" +
+				"20oa?20oa?20oa?20oa?20oa!20oa?20oa?20oa?20oa?20oa!20oa?20oa?20oa?20oa?20oa}");
+		
+		var seg = new GFMapSegment();
+		seg.mPos.Set(0, 0); seg.SetUp(bp);
+		
+		this.mMap.mSegment.Copy(seg);
+		this.mMap.mBounds[0] = this.mMap.mSegment.mBounds.mBounds[0];
+		this.mMap.mBounds[1] = this.mMap.mSegment.mBounds.mBounds[1];
+		this.mMap.mBounds[2] = this.mMap.mSegment.mBounds.mBounds[2];
+		this.mMap.mBounds[3] = this.mMap.mSegment.mBounds.mBounds[3];
+	}
+	
+	var trans = new IVec2(nmain.game.mCanvasSize.mX / 2, nmain.game.mCanvasSize.mY / 2);
+	trans.mX -= this.mMap.mSegment.mBounds.GetWidth() / 2; trans.mY -= 30;
+	trans.mX = -(Math.round(trans.mX)); trans.mY = -(Math.round(trans.mY));
+	this.mCam.Translate(trans);
 }
 
 // cleans up the scene object
@@ -4151,14 +4273,14 @@ GFCreationScene.prototype.Process = function() {
 			this.mMapControl.Process();
 			
 			if (this.mHoveringUI == false) {
-				this.mCreationMap.Process();
+				this.mMap.Process();
 			}
 			else {
-				this.mCreationMap.UnselectTile();
+				this.mMap.UnselectTile();
 			}
 		}
 		else {
-			this.mCreationMap.UnselectTile();
+			this.mMap.UnselectTile();
 		}
 		
 		this.mCreationControl.Process();
@@ -4181,7 +4303,7 @@ GFCreationScene.prototype.Render = function() {
 	var arr = new Array();
 	arr = arr.concat(this.mMapControl.GetRenderData());
 	arr = arr.concat(this.mCreationControl.GetRenderData());
-	arr = arr.concat(this.mCreationMap.GetRenderData());
+	arr = arr.concat(this.mMap.GetRenderData());
 	
 	for (var i = 0; i < arr.length; ++i) {
 		this.mBatch.Add(arr[i]);
@@ -4593,7 +4715,7 @@ GFGUICreationNewDialogue.prototype.Process = function(point) {
 			
 			if ((x >= 1 && x <= 20) && (y >= 1 && y <= 20)) {
 				{
-					var str = "a:" + "tileset_test" + ";{";
+					var str = "a:tileset_test;{";
 					for (var i = 0; i < y; ++i) {
 						for (var j = 0; j < x; ++j) {
 							str += "20oa";
@@ -4616,12 +4738,19 @@ GFGUICreationNewDialogue.prototype.Process = function(point) {
 					var seg = new GFMapSegment();
 					seg.mPos.Set(0, 0); seg.SetUp(bp);
 					
-					currScene.mCreationMap.mSegment.Copy(seg);
+					currScene.mMap.mSegment.Copy(seg);
+					currScene.mMap.mBounds[0] = currScene.mMap.mSegment.mBounds.mBounds[0];
+					currScene.mMap.mBounds[1] = currScene.mMap.mSegment.mBounds.mBounds[1];
+					currScene.mMap.mBounds[2] = currScene.mMap.mSegment.mBounds.mBounds[2];
+					currScene.mMap.mBounds[3] = currScene.mMap.mSegment.mBounds.mBounds[3];
 				}
 				
 				{
-					var trans = new IVec2(0, 0); trans.Copy(currScene.mCam.mTranslate);
+					currScene.mCam.Translate(new IVec2(-currScene.mCam.mTranslate.mX, -currScene.mCam.mTranslate.mY));
 					
+					var trans = new IVec2(nmain.game.mCanvasSize.mX / 2, nmain.game.mCanvasSize.mY / 2);
+					trans.mX -= currScene.mMap.mSegment.mBounds.GetWidth() / 2; trans.mY -= 30;
+					trans.mX = -(Math.round(trans.mX)); trans.mY = -(Math.round(trans.mY));
 					currScene.mCam.Translate(trans);
 				}
 				
@@ -5516,6 +5645,12 @@ function GFMap() {
 	this.mCurrZLevel = 3;
 	
 	this.mCurrentTile = new IVec2(-1, -1);
+	
+	this.mBounds = new Array();
+	this.mBounds[0] = 0;
+	this.mBounds[1] = 0;
+	this.mBounds[2] = 0;
+	this.mBounds[3] = 0;
 };
 
 GFMap.prototype.Copy = function(other) {
@@ -5526,6 +5661,9 @@ GFMap.prototype.Copy = function(other) {
 	this.mCurrZLevel = other.mCurrZLevel;
 	
 	this.mCurrentTile.Copy(other.mCurrentTile);
+	
+	this.mBounds.splice(0, this.mBounds.length);
+	this.mBounds = this.mBounds.concat(other.mBounds);
 }
 
 GFMap.prototype.AddSegment = function(segment) {
@@ -5536,6 +5674,30 @@ GFMap.prototype.AddSegment = function(segment) {
 	segCont.mRangeEnd.mX += segment.mSize.mX; segCont.mRangeEnd.mY += segment.mSize.mY;
 	
 	this.mSegments.push(segCont);
+	
+	if (this.mSegments.length == 1) {
+		this.mBounds[0] = segment.mBounds.mBounds[0] + segment.mBounds.mPos.mX;
+		this.mBounds[1] = segment.mBounds.mBounds[1] + segment.mBounds.mPos.mY;
+		this.mBounds[2] = segment.mBounds.mBounds[2] + segment.mBounds.mPos.mX;
+		this.mBounds[3] = segment.mBounds.mBounds[3] + segment.mBounds.mPos.mY;
+	}
+	else {
+		if (segment.mBounds.mBounds[0] + segment.mBounds.mPos.mX < this.mBounds[0]) {
+			this.mBounds[0] = segment.mBounds.mBounds[0] + segment.mBounds.mPos.mX;
+		}
+		
+		if (segment.mBounds.mBounds[1] + segment.mBounds.mPos.mY < this.mBounds[1]) {
+			this.mBounds[1] = segment.mBounds.mBounds[1] + segment.mBounds.mPos.mY;
+		}
+		
+		if (segment.mBounds.mBounds[2] + segment.mBounds.mPos.mX > this.mBounds[2]) {
+			this.mBounds[2] = segment.mBounds.mBounds[2] + segment.mBounds.mPos.mX;
+		}
+		
+		if (segment.mBounds.mBounds[3] + segment.mBounds.mPos.mY > this.mBounds[3]) {
+			this.mBounds[3] = segment.mBounds.mBounds[3] + segment.mBounds.mPos.mY;
+		}
+	}
 }
 
 GFMap.prototype.Process = function() {
