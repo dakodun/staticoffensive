@@ -24,8 +24,9 @@ GFMap.prototype.Copy = function(other) {
 	
 	this.mSegments.splice(0, this.mSegments.length);
 	this.mSegments = this.mSegments.concat(other.mSegments);
-	
 	this.mCurrZLevel = other.mCurrZLevel;
+	
+	this.mCurrentTile.Copy(other.mCurrentTile);
 }
 
 GFMap.prototype.AddSegment = function(segment) {
