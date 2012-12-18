@@ -9,6 +9,10 @@ function GFCreationScene() {
 	
 	this.mMapControl = new GFGUIMapControl();
 	this.mCreationControl = new GFGUICreationControl();
+	
+	this.mCreationMap = new GFCreationMap();
+	
+	this.mHoveringUI = false;
 }
 
 // returns the type of this object for validity checking
@@ -45,11 +49,28 @@ GFCreationScene.prototype.Input = function() {
 
 // handles game logic
 GFCreationScene.prototype.Process = function() {
-	if (this.mCreationControl.mDialogueOpen == false) {
-		this.mMapControl.Process();
+	{
+		if (this.mCreationControl.mDialogueOpen == false) {
+			this.mMapControl.Process();
+			
+			if (this.mHoveringUI == false) {
+				this.mCreationMap.Process();
+			}
+			else {
+				this.mCreationMap.UnselectTile();
+			}
+		}
+		else {
+			this.mCreationMap.UnselectTile();
+		}
+		
+		this.mCreationControl.Process();
+		
+		this.mHoveringUI = this.mMapControl.Hovering();
+		if (this.mHoveringUI == false) {
+			this.mHoveringUI = this.mCreationControl.Hovering();
+		}
 	}
-	
-	this.mCreationControl.Process();
 	
 	this.mCam.Process();
 }
@@ -64,6 +85,7 @@ GFCreationScene.prototype.Render = function() {
 	var arr = new Array();
 	arr = arr.concat(this.mMapControl.GetRenderData());
 	arr = arr.concat(this.mCreationControl.GetRenderData());
+	arr = arr.concat(this.mCreationMap.GetRenderData());
 	
 	for (var i = 0; i < arr.length; ++i) {
 		this.mBatch.Add(arr[i]);
