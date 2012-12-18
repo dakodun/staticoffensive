@@ -26,7 +26,7 @@ Camera.prototype.Apply = function() {
 
 // apply a transformation to the camera
 Camera.prototype.Translate = function(trans) {
-	this.mTranslate.Set(this.mTranslate.mX - trans.mX, this.mTranslate.mY - trans.mY);
+	this.mTranslate.Set(this.mTranslate.mX + trans.mX, this.mTranslate.mY + trans.mY);
 	this.mViewUpdated = true;
 }
 // ...End
