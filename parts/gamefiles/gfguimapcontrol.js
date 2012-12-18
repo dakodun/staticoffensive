@@ -18,15 +18,11 @@ function GFGUIMapControl() {
 }
 
 GFGUIMapControl.prototype.SetUp = function() {
-	var currScene = nmgrs.sceneMan.mCurrScene;
-	var initOffset = new IVec2();
-	initOffset.Copy(currScene.mCam.mTranslate);
-	
 	{
 		var tex = nmgrs.resMan.mTexStore.GetResource("gui_map_compassmain");
 		
 		{
-			this.mCompassMain[0].SetUp(new IVec2(512 + initOffset.mX, 10 + initOffset.mY), new IVec2(40, 22), -5000);
+			this.mCompassMain[0].SetUp(new IVec2(512, 10), new IVec2(40, 22), -5000);
 			this.mCompassMain[0].mPos.Set(512, 10);
 			
 			this.mCompassMain[0].mSpriteIdle.SetAnimatedTexture(tex, 12, 3, -1, -1);
@@ -43,7 +39,7 @@ GFGUIMapControl.prototype.SetUp = function() {
 		}
 		
 		{
-			this.mCompassMain[1].SetUp(new IVec2(584 + initOffset.mX, 10 + initOffset.mY), new IVec2(40, 22), -5000);
+			this.mCompassMain[1].SetUp(new IVec2(584, 10), new IVec2(40, 22), -5000);
 			this.mCompassMain[1].mPos.Set(584, 10);
 			
 			this.mCompassMain[1].mSpriteIdle.SetAnimatedTexture(tex, 12, 3, -1, -1);
@@ -60,7 +56,7 @@ GFGUIMapControl.prototype.SetUp = function() {
 		}
 		
 		{
-			this.mCompassMain[2].SetUp(new IVec2(512 + initOffset.mX, 46 + initOffset.mY), new IVec2(40, 22), -5000);
+			this.mCompassMain[2].SetUp(new IVec2(512, 46), new IVec2(40, 22), -5000);
 			this.mCompassMain[2].mPos.Set(512, 46);
 			
 			this.mCompassMain[2].mSpriteIdle.SetAnimatedTexture(tex, 12, 3, -1, -1);
@@ -77,7 +73,7 @@ GFGUIMapControl.prototype.SetUp = function() {
 		}
 		
 		{
-			this.mCompassMain[3].SetUp(new IVec2(584 + initOffset.mX, 46 + initOffset.mY), new IVec2(40, 22), -5000);
+			this.mCompassMain[3].SetUp(new IVec2(584, 46), new IVec2(40, 22), -5000);
 			this.mCompassMain[3].mPos.Set(584, 46);
 			
 			this.mCompassMain[3].mSpriteIdle.SetAnimatedTexture(tex, 12, 3, -1, -1);
@@ -98,7 +94,7 @@ GFGUIMapControl.prototype.SetUp = function() {
 		var tex = nmgrs.resMan.mTexStore.GetResource("gui_map_zlevelmain");
 		
 		{
-			this.mZLevelMain[0].SetUp(new IVec2(422 + initOffset.mX, 10 + initOffset.mY), new IVec2(38, 22), -5000);
+			this.mZLevelMain[0].SetUp(new IVec2(422, 10), new IVec2(38, 22), -5000);
 			this.mZLevelMain[0].mPos.Set(422, 10);
 			
 			this.mZLevelMain[0].mSpriteIdle.SetAnimatedTexture(tex, 6, 3, -1, -1);
@@ -115,7 +111,7 @@ GFGUIMapControl.prototype.SetUp = function() {
 		}
 		
 		{
-			this.mZLevelMain[1].SetUp(new IVec2(422 + initOffset.mX, 46 + initOffset.mY), new IVec2(38, 22), -5000);
+			this.mZLevelMain[1].SetUp(new IVec2(422, 46), new IVec2(38, 22), -5000);
 			this.mZLevelMain[1].mPos.Set(422, 46);
 			
 			this.mZLevelMain[1].mSpriteIdle.SetAnimatedTexture(tex, 6, 3, -1, -1);
@@ -135,18 +131,20 @@ GFGUIMapControl.prototype.SetUp = function() {
 	{
 		var tex = nmgrs.resMan.mTexStore.GetResource("gui_map_compassextra");
 		
-		this.mCompassExtra.mPos.Set(554 + initOffset.mX, 32 + initOffset.mY);
+		this.mCompassExtra.mPos.Set(554, 32);
 		this.mCompassExtra.mDepth = -5000;
 		this.mCompassExtra.SetTexture(tex);
+		this.mCompassExtra.mAbsolute = true;
 	}
 	
 	{
 		var tex = nmgrs.resMan.mTexStore.GetResource("gui_map_zlevelextra");
 		
-		this.mZLevelExtra.mPos.Set(468 + initOffset.mX, 6 + initOffset.mY);
+		this.mZLevelExtra.mPos.Set(468, 6);
 		this.mZLevelExtra.mDepth = -5000;
 		this.mZLevelExtra.SetAnimatedTexture(tex, 4, 4, -1, -1);
 		this.mZLevelExtra.SetCurrentFrame(3);
+		this.mZLevelExtra.mAbsolute = true;
 	}
 };
 
@@ -249,30 +247,6 @@ GFGUIMapControl.prototype.Process = function() {
 		else if (this.mZLevelMain[1].OnClick() == true) {
 			currScene.mMap.ChangeZLevel(-1);
 			this.mZLevelExtra.SetCurrentFrame(currScene.mMap.mCurrZLevel);
-		}
-	}
-	
-	// if the camera view has changed
-	if (currScene.mCam.mViewUpdated == true) {
-		// for all main compass gui elements
-		for (var i = 0; i < this.mCompassMain.length; ++i) {
-			// find new position using translation offset and update gui to remain at same point on screen
-			var newPos = new IVec2(0, 0); newPos.Copy(this.mCompassMain[i].GetSpritePositions());
-			newPos.mX -= this.mTranslate.mX; newPos.mY -= this.mTranslate.mY;
-			this.mCompassMain[i].SetSpritePositions(newPos);
-		}
-		
-		// for all main zlevel gui elements
-		for (var i = 0; i < this.mZLevelMain.length; ++i) {
-			// find new position using translation offset and update gui to remain at same point on screen
-			var newPos = new IVec2(0, 0); newPos.Copy(this.mZLevelMain[i].GetSpritePositions());
-			newPos.mX -= this.mTranslate.mX; newPos.mY -= this.mTranslate.mY;
-			this.mZLevelMain[i].SetSpritePositions(newPos);
-		}
-		
-		{
-			this.mCompassExtra.mPos.Set(554 + currScene.mCam.mTranslate.mX, 32 + currScene.mCam.mTranslate.mY);
-			this.mZLevelExtra.mPos.Set(468 + currScene.mCam.mTranslate.mX, 6 + currScene.mCam.mTranslate.mY);
 		}
 	}
 }

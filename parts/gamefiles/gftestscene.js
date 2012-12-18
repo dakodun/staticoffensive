@@ -104,7 +104,6 @@ GFTestScene.prototype.Process = function() {
 // handles all drawing tasks
 GFTestScene.prototype.Render = function() {
 	nmain.game.SetIdentity();
-	this.mCam.Apply();
 	
 	this.mBatch.Clear();
 	

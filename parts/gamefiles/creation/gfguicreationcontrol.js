@@ -1,8 +1,6 @@
 // GFGUICreationControl Class...
 // game file:
 function GFGUICreationControl() {
-	this.mTranslate = new IVec2(0, 0);
-	
 	this.mTopBar = new GFGUICreationBar();
 	this.mTileControl = new GFGUICreationTileControl();
 	this.mNewDialogue = new GFGUICreationNewDialogue();
@@ -14,25 +12,21 @@ function GFGUICreationControl() {
 GFGUICreationControl.prototype.SetUp = function(initTex) {
 	var currScene = nmgrs.sceneMan.mCurrScene;
 	
-	var initOffset = new IVec2();
-	initOffset.Copy(currScene.mCam.mTranslate);
-	
-	this.mTopBar.SetUp(initOffset);
-	this.mTileControl.SetUp(initTex, initOffset);
-	this.mNewDialogue.SetUp(initOffset);
+	this.mTopBar.SetUp();
+	this.mTileControl.SetUp(initTex);
+	this.mNewDialogue.SetUp();
 	
 	{
-		this.mBlackout.mPos.Copy(initOffset);
+		this.mBlackout.mPos.Set(0, 0);
 		this.mBlackout.mDepth = -5005;
 		this.mBlackout.mColour = "#000000";
 		this.mBlackout.mAlpha = 0.75;
+		this.mBlackout.mAbsolute = true;
 		
 		this.mBlackout.AddPoint(new IVec2(nmain.game.mCanvasSize.mX, 0));
 		this.mBlackout.AddPoint(new IVec2(nmain.game.mCanvasSize.mX, nmain.game.mCanvasSize.mY));
 		this.mBlackout.AddPoint(new IVec2(0, nmain.game.mCanvasSize.mY));
 	}
-	
-	this.mTranslate.Copy(currScene.mCam.mTranslate);
 };
 
 GFGUICreationControl.prototype.Input = function() {
@@ -47,9 +41,6 @@ GFGUICreationControl.prototype.Input = function() {
 
 GFGUICreationControl.prototype.Process = function() {
 	var currScene = nmgrs.sceneMan.mCurrScene;
-	var offset = new IVec2(0, 0);
-	offset.mX = currScene.mCam.mTranslate.mX - this.mTranslate.mX;
-	offset.mY = currScene.mCam.mTranslate.mY - this.mTranslate.mY;
 	
 	{
 		var pt = new IVec2(0, 0);
@@ -63,17 +54,6 @@ GFGUICreationControl.prototype.Process = function() {
 			this.mNewDialogue.Process(pt);
 		}
 	}
-	
-	{
-		this.mTopBar.UpdatePosition(offset);
-		this.mTileControl.UpdatePosition(offset);
-		this.mNewDialogue.UpdatePosition(offset);
-		
-		this.mBlackout.mPos.mX += offset.mX;
-		this.mBlackout.mPos.mY += offset.mY;
-	}
-	
-	this.mTranslate.Copy(currScene.mCam.mTranslate);
 }
 
 GFGUICreationControl.prototype.GetRenderData = function() {

@@ -12,9 +12,8 @@ function GFGUICreationNewDialogue() {
 	this.mButtons[1] = new GUIButton();
 }
 
-GFGUICreationNewDialogue.prototype.SetUp = function(initOffset) {
+GFGUICreationNewDialogue.prototype.SetUp = function() {
 	var pos = new IVec2(8, 38);
-	pos.mX += initOffset.mX; pos.mX += initOffset.mY;
 	
 	{
 		var tex = nmgrs.resMan.mTexStore.GetResource("gui_creation_newdialogue_back");
@@ -22,6 +21,7 @@ GFGUICreationNewDialogue.prototype.SetUp = function(initOffset) {
 		this.mSprite.mPos.Set(pos.mX, pos.mY);
 		this.mSprite.mDepth = -5100;
 		this.mSprite.SetTexture(tex);
+		this.mSprite.mAbsolute = true;
 	}
 	
 	{
@@ -166,30 +166,38 @@ GFGUICreationNewDialogue.prototype.Process = function(point) {
 			var y = Number(this.mInputBoxes[1].mInputText.mString);
 			
 			if ((x >= 1 && x <= 20) && (y >= 1 && y <= 20)) {
-				var str = "a:" + "tileset_test" + ";{";
-				for (var i = 0; i < y; ++i) {
-					for (var j = 0; j < x; ++j) {
-						str += "20oa";
+				{
+					var str = "a:" + "tileset_test" + ";{";
+					for (var i = 0; i < y; ++i) {
+						for (var j = 0; j < x; ++j) {
+							str += "20oa";
+							
+							if (j < x - 1) {
+								str += "?";
+							}
+						}
 						
-						if (j < x - 1) {
-							str += "?";
+						if (i < y - 1) {
+							str += "!";
 						}
 					}
 					
-					if (i < y - 1) {
-						str += "!";
-					}
+					str += "}";
+					
+					var bp = new GFBluePrint();
+					bp.SetUp(str);
+					
+					var seg = new GFMapSegment();
+					seg.mPos.Set(0, 0); seg.SetUp(bp);
+					
+					currScene.mCreationMap.mSegment.Copy(seg);
 				}
 				
-				str += "}";
-				
-				var bp = new GFBluePrint();
-				bp.SetUp(str);
-				
-				var seg = new GFMapSegment();
-				seg.mPos.Set(0, 0); seg.SetUp(bp);
-				
-				currScene.mCreationMap.mSegment.Copy(seg);
+				{
+					var trans = new IVec2(0, 0); trans.Copy(currScene.mCam.mTranslate);
+					
+					currScene.mCam.Translate(trans);
+				}
 				
 				currScene.mCreationControl.mDialogueOpen = false;
 				
@@ -222,22 +230,6 @@ GFGUICreationNewDialogue.prototype.GetRenderData = function() {
 	}
 	
 	return arr;
-}
-
-GFGUICreationNewDialogue.prototype.UpdatePosition = function(offset) {
-	this.mSprite.mPos.mX += offset.mX; this.mSprite.mPos.mY += offset.mY;
-	
-	for (var i = 0; i < this.mInputBoxes.length; ++i) {
-		var newPos = new IVec2(0, 0); newPos.Copy(this.mInputBoxes[i].GetSpritePositions());
-		newPos.mX += offset.mX; newPos.mY += offset.mY;
-		this.mInputBoxes[i].SetSpritePositions(newPos);
-	}
-	
-	for (var i = 0; i < this.mButtons.length; ++i) {
-		var newPos = new IVec2(0, 0); newPos.Copy(this.mButtons[i].GetSpritePositions());
-		newPos.mX += offset.mX; newPos.mY += offset.mY;
-		this.mButtons[i].SetSpritePositions(newPos);
-	}
 }
 // ...End
 

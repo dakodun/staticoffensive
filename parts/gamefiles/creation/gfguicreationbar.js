@@ -7,20 +7,21 @@ function GFGUICreationBar() {
 	this.mMenus[0] = new GUIDropDown();
 }
 
-GFGUICreationBar.prototype.SetUp = function(initOffset) {
+GFGUICreationBar.prototype.SetUp = function() {
 	{
 		var tex = nmgrs.resMan.mTexStore.GetResource("gui_creation_topbar");
 		
-		this.mSprite.mPos.Set(8 + initOffset.mX, 10 + initOffset.mY);
+		this.mSprite.mPos.Set(8, 10);
 		this.mSprite.mDepth = -5000;
 		this.mSprite.SetTexture(tex);
+		this.mSprite.mAbsolute = true;
 	}
 	
 	{
 		var tex = nmgrs.resMan.mTexStore.GetResource("gui_creation_topmenunew");
 		var baseBut = new GUIButton();
 		
-		baseBut.SetUp(new IVec2(8 + initOffset.mX, 10 + initOffset.mY), new IVec2(54, 24), -5000);
+		baseBut.SetUp(new IVec2(8, 10), new IVec2(54, 24), -5000);
 		baseBut.mPos.Set(8, 10);
 		
 		baseBut.mSpriteIdle.SetAnimatedTexture(tex, 3, 1, -1, -1);
@@ -115,18 +116,6 @@ GFGUICreationBar.prototype.AddItem = function(menu, text, alt) {
 		itemTxt.mColour = "#4A4A66";
 			
 		menu.AddItem(itemBut, itemTxt);
-	}
-}
-
-GFGUICreationBar.prototype.UpdatePosition = function(offset) {
-	var currScene = nmgrs.sceneMan.mCurrScene;
-	
-	this.mSprite.mPos.mX += offset.mX; this.mSprite.mPos.mY += offset.mY;
-	
-	for (var i = 0; i < this.mMenus.length; ++i) {
-		var newPos = new IVec2(0, 0); newPos.Copy(this.mMenus[i].GetSpritePositions());
-		newPos.mX += offset.mX; newPos.mY += offset.mY;
-		this.mMenus[i].SetSpritePositions(newPos);
 	}
 }
 

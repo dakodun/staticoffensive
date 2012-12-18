@@ -62,8 +62,7 @@ function GFGUICreationTileControl() {
 	}
 }
 
-GFGUICreationTileControl.prototype.SetUp = function(initTex, initOffset) {
-	var currScene = nmgrs.sceneMan.mCurrScene;
+GFGUICreationTileControl.prototype.SetUp = function(initTex) {
 	this.mCurrentTexture = initTex;
 	
 	{ // set up the example tile
@@ -78,10 +77,11 @@ GFGUICreationTileControl.prototype.SetUp = function(initTex, initOffset) {
 		
 		this.mCurrTile.mSprite.mPos.Set(540 - 30, 80);
 		this.mCurrTile.mSprite.mDepth = -5000;
+		this.mCurrTile.mSprite.mAbsolute = true;
 	}
 	
-	this.SetUpText(initOffset); // set up the gui text
-	this.SetUpButtons(initOffset); // set up the gui buttons
+	this.SetUpText(); // set up the gui text
+	this.SetUpButtons(); // set up the gui buttons
 };
 
 GFGUICreationTileControl.prototype.Input = function() {
@@ -175,76 +175,63 @@ GFGUICreationTileControl.prototype.GetRenderData = function() {
 	return arr;
 }
 
-GFGUICreationTileControl.prototype.SetUpText = function(initOffset) {
+GFGUICreationTileControl.prototype.SetUpText = function() {
 	var font = nmgrs.resMan.mFontStore.GetResource("pixantiqua");
 	
 	{	
-		this.mCurrTileText[0].SetFont(font);
+		for (var i = 0; i < this.mCurrTileText.length; ++i) {
+			this.mCurrTileText[i].SetFont(font);
+			this.mCurrTileText[i].SetFontSize(24);
+			this.mCurrTileText[i].mAlign = "centre";
+			this.mCurrTileText[i].mAbsolute = true;
+		}
+		
 		this.mCurrTileText[0].SetFontSize(12);
 		this.mCurrTileText[0].mString = "Z - Level";
-		this.mCurrTileText[0].mAlign = "centre";
-		this.mCurrTileText[0].mPos.Set(540 + initOffset.mX, 150 + initOffset.mY);
+		this.mCurrTileText[0].mPos.Set(540, 150);
 		this.mCurrTileText[0].mColour = "#000000";
 		
-		this.mCurrTileText[1].SetFont(font);
 		this.mCurrTileText[1].SetFontSize(12);
 		this.mCurrTileText[1].mString = "Slope Direction";
-		this.mCurrTileText[1].mAlign = "centre";
-		this.mCurrTileText[1].mPos.Set(540 + initOffset.mX, 200 + initOffset.mY);
+		this.mCurrTileText[1].mPos.Set(540, 200);
 		this.mCurrTileText[1].mColour = "#000000";
 		
-		this.mCurrTileText[2].SetFont(font);
 		this.mCurrTileText[2].SetFontSize(12);
 		this.mCurrTileText[2].mString = "Type";
-		this.mCurrTileText[2].mAlign = "centre";
-		this.mCurrTileText[2].mPos.Set(540 + initOffset.mX, 250 + initOffset.mY);
+		this.mCurrTileText[2].mPos.Set(540, 250);
 		this.mCurrTileText[2].mColour = "#000000";
 		
-		this.mCurrTileText[6].SetFont(font);
-		this.mCurrTileText[6].SetFontSize(24);
 		this.mCurrTileText[6].mString = "Set Texture";
-		this.mCurrTileText[6].mAlign = "centre";
-		this.mCurrTileText[6].mPos.Set(540 + initOffset.mX, 323 + initOffset.mY);
+		this.mCurrTileText[6].mPos.Set(540, 323);
 		this.mCurrTileText[6].mShadow = true;
 	}
 	
 	{
-		this.mCurrTileText[3].SetFont(font);
-		this.mCurrTileText[3].SetFontSize(24);
 		this.mCurrTileText[3].mString = "1";
-		this.mCurrTileText[3].mAlign = "centre";
-		this.mCurrTileText[3].mPos.Set(540 + initOffset.mX, 160 + initOffset.mY);
+		this.mCurrTileText[3].mPos.Set(540, 160);
 		this.mCurrTileText[3].mShadow = true;
 		
-		this.mCurrTileText[4].SetFont(font);
-		this.mCurrTileText[4].SetFontSize(24);
 		this.mCurrTileText[4].mString = "North";
-		this.mCurrTileText[4].mAlign = "centre";
-		this.mCurrTileText[4].mPos.Set(540 + initOffset.mX, 210 + initOffset.mY);
+		this.mCurrTileText[4].mPos.Set(540, 210);
 		this.mCurrTileText[4].mShadow = true;
 		
-		this.mCurrTileText[5].SetFont(font);
-		this.mCurrTileText[5].SetFontSize(24);
 		this.mCurrTileText[5].mString = "None";
-		this.mCurrTileText[5].mAlign = "centre";
-		this.mCurrTileText[5].mPos.Set(540 + initOffset.mX, 260 + initOffset.mY);
+		this.mCurrTileText[5].mPos.Set(540, 260);
 		this.mCurrTileText[5].mShadow = true;
 		
-		this.mCurrTileText[7].SetFont(font);
 		this.mCurrTileText[7].SetFontSize(12);
 		this.mCurrTileText[7].mString = this.mCurrentTexture;
-		this.mCurrTileText[7].mAlign = "centre";
-		this.mCurrTileText[7].mPos.Set(540 + initOffset.mX, 360 + initOffset.mY);
+		this.mCurrTileText[7].mPos.Set(540, 360);
 		this.mCurrTileText[7].mColour = "#000000";
 	}
 }
 
-GFGUICreationTileControl.prototype.SetUpButtons = function(initOffset) {
+GFGUICreationTileControl.prototype.SetUpButtons = function() {
 	{
 		var tex = nmgrs.resMan.mTexStore.GetResource("gui_creation_arrows");
 		
 		{
-			this.mOptionsArrows[0].SetUp(new IVec2(460 + initOffset.mX, 150 + initOffset.mY), new IVec2(22, 38), -5000);
+			this.mOptionsArrows[0].SetUp(new IVec2(460, 150), new IVec2(22, 38), -5000);
 			this.mOptionsArrows[0].mPos.Set(460, 150);
 			
 			this.mOptionsArrows[0].mSpriteIdle.SetAnimatedTexture(tex, 6, 3, -1, -1);
@@ -261,7 +248,7 @@ GFGUICreationTileControl.prototype.SetUpButtons = function(initOffset) {
 		}
 		
 		{
-			this.mOptionsArrows[1].SetUp(new IVec2(600 + initOffset.mX, 150 + initOffset.mY), new IVec2(22, 38), -5000);
+			this.mOptionsArrows[1].SetUp(new IVec2(600, 150), new IVec2(22, 38), -5000);
 			this.mOptionsArrows[1].mPos.Set(600, 150);
 			
 			this.mOptionsArrows[1].mSpriteIdle.SetAnimatedTexture(tex, 6, 3, -1, -1);
@@ -278,7 +265,7 @@ GFGUICreationTileControl.prototype.SetUpButtons = function(initOffset) {
 		}
 		
 		{
-			this.mOptionsArrows[2].SetUp(new IVec2(460 + initOffset.mX, 200 + initOffset.mY), new IVec2(22, 38), -5000);
+			this.mOptionsArrows[2].SetUp(new IVec2(460, 200), new IVec2(22, 38), -5000);
 			this.mOptionsArrows[2].mPos.Set(460, 200);
 			
 			this.mOptionsArrows[2].mSpriteIdle.SetAnimatedTexture(tex, 6, 3, -1, -1);
@@ -295,7 +282,7 @@ GFGUICreationTileControl.prototype.SetUpButtons = function(initOffset) {
 		}
 		
 		{
-			this.mOptionsArrows[3].SetUp(new IVec2(600 + initOffset.mX, 200 + initOffset.mY), new IVec2(22, 38), -5000);
+			this.mOptionsArrows[3].SetUp(new IVec2(600, 200), new IVec2(22, 38), -5000);
 			this.mOptionsArrows[3].mPos.Set(600, 200);
 			
 			this.mOptionsArrows[3].mSpriteIdle.SetAnimatedTexture(tex, 6, 3, -1, -1);
@@ -312,7 +299,7 @@ GFGUICreationTileControl.prototype.SetUpButtons = function(initOffset) {
 		}
 		
 		{
-			this.mOptionsArrows[4].SetUp(new IVec2(460 + initOffset.mX, 250 + initOffset.mY), new IVec2(22, 38), -5000);
+			this.mOptionsArrows[4].SetUp(new IVec2(460, 250), new IVec2(22, 38), -5000);
 			this.mOptionsArrows[4].mPos.Set(460, 250);
 			
 			this.mOptionsArrows[4].mSpriteIdle.SetAnimatedTexture(tex, 6, 3, -1, -1);
@@ -329,7 +316,7 @@ GFGUICreationTileControl.prototype.SetUpButtons = function(initOffset) {
 		}
 		
 		{
-			this.mOptionsArrows[5].SetUp(new IVec2(600 + initOffset.mX, 250 + initOffset.mY), new IVec2(22, 38), -5000);
+			this.mOptionsArrows[5].SetUp(new IVec2(600, 250), new IVec2(22, 38), -5000);
 			this.mOptionsArrows[5].mPos.Set(600, 250);
 			
 			this.mOptionsArrows[5].mSpriteIdle.SetAnimatedTexture(tex, 6, 3, -1, -1);
@@ -349,7 +336,7 @@ GFGUICreationTileControl.prototype.SetUpButtons = function(initOffset) {
 	{
 		var tex = nmgrs.resMan.mTexStore.GetResource("gui_creation_texset");
 		
-		this.mSetTexture.SetUp(new IVec2(460 + initOffset.mX, 320 + initOffset.mY), new IVec2(162, 38), -5000);
+		this.mSetTexture.SetUp(new IVec2(460, 320), new IVec2(162, 38), -5000);
 		this.mSetTexture.mPos.Set(460, 320);
 		
 		this.mSetTexture.mSpriteIdle.SetAnimatedTexture(tex, 3, 1, -1, -1);
@@ -385,26 +372,6 @@ GFGUICreationTileControl.prototype.UpdateTileSprite = function() {
 	}
 	
 	this.mCurrTile.mSprite.SetCurrentFrame(this.mCurrTile.mTileFrame);
-}
-
-GFGUICreationTileControl.prototype.UpdatePosition = function(offset) {
-	this.mCurrTile.mSprite.mPos.mX += offset.mX; this.mCurrTile.mSprite.mPos.mY += offset.mY;
-	
-	for (var i = 0; i < this.mCurrTileText.length; ++i) {
-		this.mCurrTileText[i].mPos.mX += offset.mX; this.mCurrTileText[i].mPos.mY += offset.mY;
-	}
-	
-	for (var i = 0; i < this.mOptionsArrows.length; ++i) {
-		var newPos = new IVec2(0, 0); newPos.Copy(this.mOptionsArrows[i].GetSpritePositions());
-		newPos.mX += offset.mX; newPos.mY += offset.mY;
-		this.mOptionsArrows[i].SetSpritePositions(newPos);
-	}
-	
-	{
-		var newPos = new IVec2(0, 0); newPos.Copy(this.mSetTexture.GetSpritePositions());
-		newPos.mX += offset.mX; newPos.mY += offset.mY;
-		this.mSetTexture.SetSpritePositions(newPos);
-	}
 }
 
 GFGUICreationTileControl.prototype.Hovering = function() {

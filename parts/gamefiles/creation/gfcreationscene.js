@@ -78,7 +78,6 @@ GFCreationScene.prototype.Process = function() {
 // handles all drawing tasks
 GFCreationScene.prototype.Render = function() {
 	nmain.game.SetIdentity();
-	this.mCam.Apply();
 	
 	this.mBatch.Clear();
 	
