@@ -77,6 +77,7 @@ GFGUICreationTileControl.prototype.SetUp = function(initTex, initOffset) {
 		this.mCurrTile = tile;
 		
 		this.mCurrTile.mSprite.mPos.Set(540 - 30, 80);
+		this.mCurrTile.mSprite.mDepth = -5000;
 	}
 	
 	this.SetUpText(initOffset); // set up the gui text
