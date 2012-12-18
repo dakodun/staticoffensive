@@ -298,5 +298,21 @@ GFGUIMapControl.prototype.GetRenderData = function() {
 	
 	return arr;
 }
+
+GFGUIMapControl.prototype.Hovering = function() {
+	for (var i = 0; i < this.mCompassMain.length; ++i) {
+		if (this.mCompassMain[i].mHover == true) {
+			return true;
+		}
+	}
+	
+	for (var i = 0; i < this.mZLevelMain.length; ++i) {
+		if (this.mZLevelMain[i].mHover == true) {
+			return true;
+		}
+	}
+	
+	return false;
+}
 // ...End
 
