@@ -12,6 +12,8 @@ function RenderCanvas() {
 	this.mPos = new IVec2(0, 0);
 	this.mSize = new IVec2(0, 0);
 	this.mRotation = 0;
+	
+	this.mAbsolute = false;
 };
 
 // returns the type of this object for validity checking
@@ -32,6 +34,8 @@ RenderCanvas.prototype.Copy = function(other) {
 	this.mPos.Copy(other.mPos);
 	this.mSize.Copy(other.mSize);
 	this.mRotation = other.mRotation;
+	
+	this.mAbsolute = other.mAbsolute;
 }
 
 RenderCanvas.prototype.RenderTo = function(renderable) {

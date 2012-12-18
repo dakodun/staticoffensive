@@ -17,6 +17,8 @@ function Shape() {
 	this.mBounds[1] = 0;
 	this.mBounds[2] = 0;
 	this.mBounds[3] = 0;
+	
+	this.mAbsolute = false;
 };
 
 // returns the type of this object for validity checking
@@ -37,6 +39,8 @@ Shape.prototype.Copy = function(other) {
 	this.mOrigin.Copy(other.mOrigin);
 	
 	this.mPoints = other.mPoints;
+	
+	this.mAbsolute = other.mAbsolute;
 }
 
 // 

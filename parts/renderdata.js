@@ -8,6 +8,8 @@ function RenderData() {
 	this.mPos = new IVec2(0, 0);
 	this.mSize = new IVec2(0, 0);
 	this.mRotation = 0;
+	
+	this.mAbsolute = false;
 };
 
 // returns the type of this object for validity checking
@@ -23,6 +25,8 @@ RenderData.prototype.Copy = function(other) {
 	this.mPos.Copy(other.mPos);
 	this.mSize.Copy(other.mSize);
 	this.mRotation = other.mRotation;
+	
+	this.mAbsolute = other.mAbsolute;
 }
 
 // return the width of the render data

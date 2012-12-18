@@ -16,6 +16,8 @@ function Text() {
 	this.mRotation = 0;
 	
 	this.mAlign = "left";
+	
+	this.mAbsolute = false;
 }
 
 // returns the type of this object for validity checking
@@ -40,6 +42,8 @@ Text.prototype.Copy = function(other) {
 	this.mRotation = other.mRotation;
 	
 	this.mAlign = other.mAlign;
+	
+	this.mAbsolute = other.mAbsolute;
 }
 
 // return the width of the text

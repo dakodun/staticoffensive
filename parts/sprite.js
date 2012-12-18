@@ -26,6 +26,8 @@ function Sprite() {
 	// this.mAnimTimer.Reset();
 	
 	this.mAnimIter = 0;
+	
+	this.mAbsolute = false;
 };
 
 // returns the type of this object for validity checking
@@ -59,6 +61,8 @@ Sprite.prototype.Copy = function(other) {
 	// this.mAnimTimer.Copy(other.mAnimTimer);
 	
 	this.mAnimIter = other.mAnimIter;
+	
+	this.mAbsolute = other.mAbsolute;
 }
 
 // process the sprite (for animation)
