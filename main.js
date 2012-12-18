@@ -2369,6 +2369,8 @@ function GUIDropDown() {
 	this.mItemsText = new Array();
 	
 	this.mExpanded = false;
+	
+	this.mHover = false;
 };
 
 GUIDropDown.prototype.SetUp = function(baseButton) {
@@ -2415,6 +2417,24 @@ GUIDropDown.prototype.Process = function(point) {
 	if (this.mExpanded == true) {
 		for (var i = 0; i < this.mItems.length; ++i) {
 			this.mItems[i].Process(point);
+		}
+	}
+	
+	{
+		this.mHover = false;
+		
+		if (this.mBase.mHover == true) {
+			this.mHover = true;
+		}
+		else {
+			if (this.mExpanded == true) {
+				for (var i = 0; i < this.mItems.length; ++i) {
+					if (this.mItems[i].mHover == true) {
+						this.mHover = true;
+						break;
+					}
+				}
+			}
 		}
 	}
 }
@@ -2987,6 +3007,8 @@ GUIInputBox.prototype.SetText = function(string) {
 		
 		this.mRenderCanvas.Clear();
 		this.mRenderCanvas.RenderTo(this.mInputText);
+		
+		this.mCaret.mOldPlace = this.mCaret.mPlace - 1; // force the caret to update it's position on the canvas
 	}
 }
 // ...End
@@ -3673,6 +3695,22 @@ GFGUIMapControl.prototype.GetRenderData = function() {
 	
 	return arr;
 }
+
+GFGUIMapControl.prototype.Hovering = function() {
+	for (var i = 0; i < this.mCompassMain.length; ++i) {
+		if (this.mCompassMain[i].mHover == true) {
+			return true;
+		}
+	}
+	
+	for (var i = 0; i < this.mZLevelMain.length; ++i) {
+		if (this.mZLevelMain[i].mHover == true) {
+			return true;
+		}
+	}
+	
+	return false;
+}
 // ...End
 
 
@@ -3913,7 +3951,12 @@ GFTestScene.prototype.Input = function() {
 // handles game logic
 GFTestScene.prototype.Process = function() {
 	this.mMapControl.Process();
-	this.mMap.Process();
+	if (this.mMapControl.Hovering() == false) {
+		this.mMap.Process();
+	}
+	else {
+		this.mMap.UnselectTile();
+	}
 	
 	this.mCam.Process();
 }
@@ -3938,6 +3981,108 @@ GFTestScene.prototype.Render = function() {
 // ...End
 
 
+// GFCreationMap Class...
+// game file: 
+function GFCreationMap() {
+	this.mSize = new IVec2(0, 0);
+	
+	this.mSegment = new GFMapSegment();
+	this.mCurrZLevel = 3;
+	
+	this.mCurrentTile = -1;
+};
+
+GFCreationMap.prototype.Copy = function(other) {
+	this.mSize.Copy(other.mSize);
+	
+	this.mSegment.Copy(other.mSegment);
+	this.mCurrZLevel = other.mCurrZLevel;
+	
+	this.mCurrentTile = other.mCurrentTile;
+}
+
+
+GFCreationMap.prototype.Process = function() {
+	var currScene = nmgrs.sceneMan.mCurrScene;
+	
+	var pt = new IVec2(0, 0);
+	pt.Copy(nmgrs.inputMan.GetLocalMouseCoords());
+	pt.mX += currScene.mCam.mTranslate.mX; pt.mY += currScene.mCam.mTranslate.mY;
+	
+	var hoveringTile = false;
+	
+	if (util.PointInConvex(pt, this.mSegment.mBoundsPoly) == true) {
+		for (var i = 0; i < this.mSegment.mTiles.length; ++i) {
+			if (util.PointInConvex(pt, this.mSegment.mTiles[i].mBoundsPoly) == true) {
+				if (this.mCurrentTile != -1) {
+					var tileCurr = new IVec2(0, 0);
+					tileCurr.Copy(this.mSegment.mTiles[this.mCurrentTile].mGlobalPos);
+					
+					var tileCheck = new IVec2(0, 0);
+					tileCheck.Copy(this.mSegment.mTiles[i].mGlobalPos);
+					
+					if (tileCurr.mY < tileCheck.mY) {
+						this.mSegment.mTiles[this.mCurrentTile].mShowBounds = false;
+						
+						this.mSegment.mTiles[i].mShowBounds = true;
+						this.mCurrentTile = i;
+						hoveringTile = true;
+					}
+					else if (tileCurr.mY == tileCheck.mY) {
+						if (tileCurr.mX > tileCheck.mX) {
+							this.mSegment.mTiles[this.mCurrentTile].mShowBounds = false;
+							
+							this.mSegment.mTiles[i].mShowBounds = true;
+							this.mCurrentTile = i;
+							hoveringTile = true;
+						}
+						else if (tileCurr.mX == tileCheck.mX) {
+							hoveringTile = true;
+						}
+					}
+				}
+				else {
+					this.mSegment.mTiles[i].mShowBounds = true;
+					this.mCurrentTile = i;
+					hoveringTile = true;
+				}
+			}
+		}
+	}
+	
+	if (hoveringTile == false) {
+		if (this.mCurrentTile != -1) {
+			this.mSegment.mTiles[this.mCurrentTile].mShowBounds = false;
+			this.mCurrentTile = -1;
+		}
+	}
+}
+
+GFCreationMap.prototype.GetRenderData = function() {
+	var arr = new Array();
+	
+	arr = arr.concat(this.mSegment.GetRenderData());
+	
+	return arr;
+}
+
+GFCreationMap.prototype.ChangeZLevel = function(newLevel) {
+	if (this.mCurrZLevel + newLevel <= 3 && this.mCurrZLevel + newLevel >= 0) {
+		this.mCurrZLevel += newLevel;
+		
+		this.mSegment.ChangeZLevel(newLevel);
+	}
+}
+
+GFCreationMap.prototype.UnselectTile = function() {
+	if (this.mCurrentTile != -1) {
+		this.mSegment.mTiles[this.mCurrentTile].mShowBounds = false;
+		this.mCurrentTile = -1;
+	}
+}
+// ...End
+
+
 // GFCreationScene Class...
 // game file:
 function GFCreationScene() {
@@ -3949,6 +4094,10 @@ function GFCreationScene() {
 	
 	this.mMapControl = new GFGUIMapControl();
 	this.mCreationControl = new GFGUICreationControl();
+	
+	this.mCreationMap = new GFCreationMap();
+	
+	this.mHoveringUI = false;
 }
 
 // returns the type of this object for validity checking
@@ -3985,11 +4134,28 @@ GFCreationScene.prototype.Input = function() {
 
 // handles game logic
 GFCreationScene.prototype.Process = function() {
-	if (this.mCreationControl.mDialogueOpen == false) {
-		this.mMapControl.Process();
+	{
+		if (this.mCreationControl.mDialogueOpen == false) {
+			this.mMapControl.Process();
+			
+			if (this.mHoveringUI == false) {
+				this.mCreationMap.Process();
+			}
+			else {
+				this.mCreationMap.UnselectTile();
+			}
+		}
+		else {
+			this.mCreationMap.UnselectTile();
+		}
+		
+		this.mCreationControl.Process();
+		
+		this.mHoveringUI = this.mMapControl.Hovering();
+		if (this.mHoveringUI == false) {
+			this.mHoveringUI = this.mCreationControl.Hovering();
+		}
 	}
-	
-	this.mCreationControl.Process();
 	
 	this.mCam.Process();
 }
@@ -4004,6 +4170,7 @@ GFCreationScene.prototype.Render = function() {
 	var arr = new Array();
 	arr = arr.concat(this.mMapControl.GetRenderData());
 	arr = arr.concat(this.mCreationControl.GetRenderData());
+	arr = arr.concat(this.mCreationMap.GetRenderData());
 	
 	for (var i = 0; i < arr.length; ++i) {
 		this.mBatch.Add(arr[i]);
@@ -4145,6 +4312,29 @@ GFGUICreationBar.prototype.UpdatePosition = function(offset) {
 		this.mMenus[i].SetSpritePositions(newPos);
 	}
 }
+
+GFGUICreationBar.prototype.Hovering = function() {
+	{
+		var pt = new IVec2(0, 0);
+		pt.Copy(nmgrs.inputMan.GetLocalMouseCoords());
+		
+		var tl = new IVec2(10, 12);
+		var br = new IVec2(11, 13);
+		br.mX += this.mSprite.GetWidth(); br.mY += this.mSprite.GetHeight();
+		
+		if (util.PointInRectangle(pt, tl, br)) {
+			return true;
+		}
+	}
+	
+	for (var i = 0; i < this.mMenus.length; ++i) {
+		if (this.mMenus[i].mHover == true) {
+			return true;
+		}
+	}
+	
+	return false;
+}
 // ...End
 
 
@@ -4238,6 +4428,18 @@ GFGUICreationControl.prototype.GetRenderData = function() {
 	}
 	
 	return arr;
+}
+
+GFGUICreationControl.prototype.Hovering = function() {
+	if (this.mTopBar.Hovering() == true) {
+		return true;
+	}
+	
+	if (this.mTileControl.Hovering() == true) {
+		return true;
+	}
+	
+	return false;
 }
 // ...End
 
@@ -4410,7 +4612,32 @@ GFGUICreationNewDialogue.prototype.Process = function(point) {
 			var y = Number(this.mInputBoxes[1].mInputText.mString);
 			
 			if ((x >= 1 && x <= 20) && (y >= 1 && y <= 20)) {
-				alert("x: " + x + "; y: " + y);
+				var str = "a:" + "tileset_test" + ";{";
+				for (var i = 0; i < y; ++i) {
+					for (var j = 0; j < x; ++j) {
+						str += "20oa";
+						
+						if (j < x - 1) {
+							str += "?";
+						}
+					}
+					
+					if (i < y - 1) {
+						str += "!";
+					}
+				}
+				
+				str += "}";
+				
+				var bp = new GFBluePrint();
+				bp.SetUp(str);
+				
+				var seg = new GFMapSegment();
+				seg.mPos.Set(0, 0); seg.SetUp(bp);
+				
+				currScene.mCreationMap.mSegment.Copy(seg);
+				
+				currScene.mCreationControl.mDialogueOpen = false;
 				
 				for (var i = 0; i < this.mInputBoxes.length; ++i) {
 					this.mInputBoxes[i].SetText("");
@@ -4540,6 +4767,7 @@ GFGUICreationTileControl.prototype.SetUp = function(initTex, initOffset) {
 		this.mCurrTile = tile;
 		
 		this.mCurrTile.mSprite.mPos.Set(540 - 30, 80);
+		this.mCurrTile.mSprite.mDepth = -5000;
 	}
 	
 	this.SetUpText(initOffset); // set up the gui text
@@ -4867,6 +5095,37 @@ GFGUICreationTileControl.prototype.UpdatePosition = function(offset) {
 		newPos.mX += offset.mX; newPos.mY += offset.mY;
 		this.mSetTexture.SetSpritePositions(newPos);
 	}
+}
+
+GFGUICreationTileControl.prototype.Hovering = function() {
+	{
+		var currScene = nmgrs.sceneMan.mCurrScene;
+		
+		var pt = new IVec2(0, 0); pt.Copy(nmgrs.inputMan.GetLocalMouseCoords());
+		pt.mX += currScene.mCam.mTranslate.mX; pt.mY += currScene.mCam.mTranslate.mY;
+		
+		var tl = new IVec2(0, 0); tl.Copy(this.mCurrTile.mSprite.mPos);
+		tl.mX += 2; tl.mY += 2;
+		
+		var br = new IVec2(0, 0); br.Copy(this.mCurrTile.mSprite.mPos);
+		br.mX += this.mCurrTile.mSprite.GetWidth() + 3; br.mY += this.mCurrTile.mSprite.GetHeight() + 3;
+		
+		if (util.PointInRectangle(pt, tl, br)) {
+			return true;
+		}
+	}
+	
+	for (var i = 0; i < this.mOptionsArrows.length; ++i) {
+		if (this.mOptionsArrows[i].mHover == true) {
+			return true;
+		}
+	}
+	
+	if (this.mSetTexture.mHover == true) {
+		return true;
+	}
+	
+	return false;
 }
 // ...End
 
@@ -5325,8 +5584,9 @@ GFMap.prototype.Copy = function(other) {
 	
 	this.mSegments.splice(0, this.mSegments.length);
 	this.mSegments = this.mSegments.concat(other.mSegments);
-	
 	this.mCurrZLevel = other.mCurrZLevel;
+	
+	this.mCurrentTile.Copy(other.mCurrentTile);
 }
 
 GFMap.prototype.AddSegment = function(segment) {
@@ -5413,6 +5673,13 @@ GFMap.prototype.ChangeZLevel = function(newLevel) {
 		for (var i = 0; i < this.mSegments.length; ++i) {
 			this.mSegments[i].mMapSegment.ChangeZLevel(newLevel);
 		}
+	}
+}
+
+GFMap.prototype.UnselectTile = function() {
+	if (this.mCurrentTile.mX != -1 && this.mCurrentTile.mY != -1) {
+		this.mSegments[this.mCurrentTile.mX].mMapSegment.mTiles[this.mCurrentTile.mY].mShowBounds = false;
+		this.mCurrentTile.mX = -1; this.mCurrentTile.mY = -1;
 	}
 }
 // ...End
