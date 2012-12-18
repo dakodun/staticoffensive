@@ -468,6 +468,8 @@ GUIInputBox.prototype.SetText = function(string) {
 		
 		this.mRenderCanvas.Clear();
 		this.mRenderCanvas.RenderTo(this.mInputText);
+		
+		this.mCaret.mOldPlace = this.mCaret.mPlace - 1; // force the caret to update it's position on the canvas
 	}
 }
 // ...End
