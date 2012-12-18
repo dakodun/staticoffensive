@@ -7,6 +7,8 @@ function GUIDropDown() {
 	this.mItemsText = new Array();
 	
 	this.mExpanded = false;
+	
+	this.mHover = false;
 };
 
 GUIDropDown.prototype.SetUp = function(baseButton) {
@@ -53,6 +55,24 @@ GUIDropDown.prototype.Process = function(point) {
 	if (this.mExpanded == true) {
 		for (var i = 0; i < this.mItems.length; ++i) {
 			this.mItems[i].Process(point);
+		}
+	}
+	
+	{
+		this.mHover = false;
+		
+		if (this.mBase.mHover == true) {
+			this.mHover = true;
+		}
+		else {
+			if (this.mExpanded == true) {
+				for (var i = 0; i < this.mItems.length; ++i) {
+					if (this.mItems[i].mHover == true) {
+						this.mHover = true;
+						break;
+					}
+				}
+			}
 		}
 	}
 }
