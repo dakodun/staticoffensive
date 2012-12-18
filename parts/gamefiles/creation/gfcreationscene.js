@@ -10,7 +10,7 @@ function GFCreationScene() {
 	this.mMapControl = new GFGUIMapControl();
 	this.mCreationControl = new GFGUICreationControl();
 	
-	this.mCreationMap = new GFCreationMap();
+	this.mMap = new GFCreationMap();
 	
 	this.mHoveringUI = false;
 }
@@ -31,6 +31,26 @@ GFCreationScene.prototype.SetUp = function() {
 	
 	this.mMapControl.SetUp();
 	this.mCreationControl.SetUp("tileset_test");
+	
+	{
+		var bp = new GFBluePrint();
+		bp.SetUp("a:tileset_test;{20oa?20oa?20oa?20oa?20oa!20oa?20oa?20oa?20oa?20oa!" +
+				"20oa?20oa?20oa?20oa?20oa!20oa?20oa?20oa?20oa?20oa!20oa?20oa?20oa?20oa?20oa}");
+		
+		var seg = new GFMapSegment();
+		seg.mPos.Set(0, 0); seg.SetUp(bp);
+		
+		this.mMap.mSegment.Copy(seg);
+		this.mMap.mBounds[0] = this.mMap.mSegment.mBounds.mBounds[0];
+		this.mMap.mBounds[1] = this.mMap.mSegment.mBounds.mBounds[1];
+		this.mMap.mBounds[2] = this.mMap.mSegment.mBounds.mBounds[2];
+		this.mMap.mBounds[3] = this.mMap.mSegment.mBounds.mBounds[3];
+	}
+	
+	var trans = new IVec2(nmain.game.mCanvasSize.mX / 2, nmain.game.mCanvasSize.mY / 2);
+	trans.mX -= this.mMap.mSegment.mBounds.GetWidth() / 2; trans.mY -= 30;
+	trans.mX = -(Math.round(trans.mX)); trans.mY = -(Math.round(trans.mY));
+	this.mCam.Translate(trans);
 }
 
 // cleans up the scene object
@@ -54,14 +74,14 @@ GFCreationScene.prototype.Process = function() {
 			this.mMapControl.Process();
 			
 			if (this.mHoveringUI == false) {
-				this.mCreationMap.Process();
+				this.mMap.Process();
 			}
 			else {
-				this.mCreationMap.UnselectTile();
+				this.mMap.UnselectTile();
 			}
 		}
 		else {
-			this.mCreationMap.UnselectTile();
+			this.mMap.UnselectTile();
 		}
 		
 		this.mCreationControl.Process();
@@ -84,7 +104,7 @@ GFCreationScene.prototype.Render = function() {
 	var arr = new Array();
 	arr = arr.concat(this.mMapControl.GetRenderData());
 	arr = arr.concat(this.mCreationControl.GetRenderData());
-	arr = arr.concat(this.mCreationMap.GetRenderData());
+	arr = arr.concat(this.mMap.GetRenderData());
 	
 	for (var i = 0; i < arr.length; ++i) {
 		this.mBatch.Add(arr[i]);
