@@ -166,7 +166,32 @@ GFGUICreationNewDialogue.prototype.Process = function(point) {
 			var y = Number(this.mInputBoxes[1].mInputText.mString);
 			
 			if ((x >= 1 && x <= 20) && (y >= 1 && y <= 20)) {
-				alert("x: " + x + "; y: " + y);
+				var str = "a:" + "tileset_test" + ";{";
+				for (var i = 0; i < y; ++i) {
+					for (var j = 0; j < x; ++j) {
+						str += "20oa";
+						
+						if (j < x - 1) {
+							str += "?";
+						}
+					}
+					
+					if (i < y - 1) {
+						str += "!";
+					}
+				}
+				
+				str += "}";
+				
+				var bp = new GFBluePrint();
+				bp.SetUp(str);
+				
+				var seg = new GFMapSegment();
+				seg.mPos.Set(0, 0); seg.SetUp(bp);
+				
+				currScene.mSegment.Copy(seg);
+				
+				currScene.mCreationControl.mDialogueOpen = false;
 				
 				for (var i = 0; i < this.mInputBoxes.length; ++i) {
 					this.mInputBoxes[i].SetText("");
