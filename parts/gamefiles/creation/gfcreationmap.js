@@ -7,6 +7,12 @@ function GFCreationMap() {
 	this.mCurrZLevel = 3;
 	
 	this.mCurrentTile = -1;
+	
+	this.mBounds = new Array();
+	this.mBounds[0] = 0;
+	this.mBounds[1] = 0;
+	this.mBounds[2] = 0;
+	this.mBounds[3] = 0;
 };
 
 GFCreationMap.prototype.Copy = function(other) {
@@ -16,6 +22,9 @@ GFCreationMap.prototype.Copy = function(other) {
 	this.mCurrZLevel = other.mCurrZLevel;
 	
 	this.mCurrentTile = other.mCurrentTile;
+	
+	this.mBounds.splice(0, this.mBounds.length);
+	this.mBounds = this.mBounds.concat(other.mBounds);
 }
 
 
