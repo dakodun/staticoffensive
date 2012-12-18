@@ -17,6 +17,12 @@ function GFMap() {
 	this.mCurrZLevel = 3;
 	
 	this.mCurrentTile = new IVec2(-1, -1);
+	
+	this.mBounds = new Array();
+	this.mBounds[0] = 0;
+	this.mBounds[1] = 0;
+	this.mBounds[2] = 0;
+	this.mBounds[3] = 0;
 };
 
 GFMap.prototype.Copy = function(other) {
@@ -27,6 +33,9 @@ GFMap.prototype.Copy = function(other) {
 	this.mCurrZLevel = other.mCurrZLevel;
 	
 	this.mCurrentTile.Copy(other.mCurrentTile);
+	
+	this.mBounds.splice(0, this.mBounds.length);
+	this.mBounds = this.mBounds.concat(other.mBounds);
 }
 
 GFMap.prototype.AddSegment = function(segment) {
@@ -37,6 +46,30 @@ GFMap.prototype.AddSegment = function(segment) {
 	segCont.mRangeEnd.mX += segment.mSize.mX; segCont.mRangeEnd.mY += segment.mSize.mY;
 	
 	this.mSegments.push(segCont);
+	
+	if (this.mSegments.length == 1) {
+		this.mBounds[0] = segment.mBounds.mBounds[0] + segment.mBounds.mPos.mX;
+		this.mBounds[1] = segment.mBounds.mBounds[1] + segment.mBounds.mPos.mY;
+		this.mBounds[2] = segment.mBounds.mBounds[2] + segment.mBounds.mPos.mX;
+		this.mBounds[3] = segment.mBounds.mBounds[3] + segment.mBounds.mPos.mY;
+	}
+	else {
+		if (segment.mBounds.mBounds[0] + segment.mBounds.mPos.mX < this.mBounds[0]) {
+			this.mBounds[0] = segment.mBounds.mBounds[0] + segment.mBounds.mPos.mX;
+		}
+		
+		if (segment.mBounds.mBounds[1] + segment.mBounds.mPos.mY < this.mBounds[1]) {
+			this.mBounds[1] = segment.mBounds.mBounds[1] + segment.mBounds.mPos.mY;
+		}
+		
+		if (segment.mBounds.mBounds[2] + segment.mBounds.mPos.mX > this.mBounds[2]) {
+			this.mBounds[2] = segment.mBounds.mBounds[2] + segment.mBounds.mPos.mX;
+		}
+		
+		if (segment.mBounds.mBounds[3] + segment.mBounds.mPos.mY > this.mBounds[3]) {
+			this.mBounds[3] = segment.mBounds.mBounds[3] + segment.mBounds.mPos.mY;
+		}
+	}
 }
 
 GFMap.prototype.Process = function() {
