@@ -149,23 +149,65 @@ GFGUIMapControl.prototype.SetUp = function() {
 };
 
 GFGUIMapControl.prototype.Input = function() {
+	var currScene = nmgrs.sceneMan.mCurrScene;
+	
 	{ // map scrolling
 		{ // keyboard input
 			var trans = new IVec2(0, 0);
 			if (nmgrs.inputMan.GetKeyboardDown(nkeyboard.key.code.up)) {
-				trans.mX += 2; trans.mY += 1;
+				var x = 0;
+				if (currScene.mCam.mTranslate.mX + (nmain.game.mCanvasSize.mX / 2) - 2 > currScene.mMap.mBounds[0]) {
+					x = -2;
+				}
+				
+				var y = 0;
+				if (currScene.mCam.mTranslate.mY  + (nmain.game.mCanvasSize.mY / 2) - 1 > currScene.mMap.mBounds[1]) {
+					y = -1;
+				}
+				
+				trans.mX += x; trans.mY += y;
 			}
 			
 			if (nmgrs.inputMan.GetKeyboardDown(nkeyboard.key.code.right)) {
-				trans.mX += -2; trans.mY += 1;
+				var x = 0;
+				if (currScene.mCam.mTranslate.mX + (nmain.game.mCanvasSize.mX / 2) + 2 < currScene.mMap.mBounds[2]) {
+					x = 2;
+				}
+				
+				var y = 0;
+				if (currScene.mCam.mTranslate.mY  + (nmain.game.mCanvasSize.mY / 2) - 1 > currScene.mMap.mBounds[1]) {
+					y = -1;
+				}
+				
+				trans.mX += x; trans.mY += y;
 			}
 			
 			if (nmgrs.inputMan.GetKeyboardDown(nkeyboard.key.code.down)) {
-				trans.mX += -2; trans.mY += -1;
+				var x = 0;
+				if (currScene.mCam.mTranslate.mX + (nmain.game.mCanvasSize.mX / 2) + 2 < currScene.mMap.mBounds[2]) {
+					x = 2;
+				}
+				
+				var y = 0;
+				if (currScene.mCam.mTranslate.mY  + (nmain.game.mCanvasSize.mY / 2) + 1 < currScene.mMap.mBounds[3]) {
+					y = 1;
+				}
+				
+				trans.mX += x; trans.mY += y;
 			}
 			
 			if (nmgrs.inputMan.GetKeyboardDown(nkeyboard.key.code.left)) {
-				trans.mX += 2; trans.mY += -1;
+				var x = 0;
+				if (currScene.mCam.mTranslate.mX + (nmain.game.mCanvasSize.mX / 2) - 2 > currScene.mMap.mBounds[0]) {
+					x = -2;
+				}
+				
+				var y = 0;
+				if (currScene.mCam.mTranslate.mY  + (nmain.game.mCanvasSize.mY / 2) + 1 < currScene.mMap.mBounds[3]) {
+					y = 1;
+				}
+				
+				trans.mX += x; trans.mY += y;
 			}
 			
 			this.mTranslate.Copy(trans);
@@ -178,7 +220,6 @@ GFGUIMapControl.prototype.Input = function() {
 	}
 	
 	{ // map z-level control
-		var currScene = nmgrs.sceneMan.mCurrScene;
 		{ // keyboard input
 			if (nmgrs.inputMan.GetKeyboardPressed(nkeyboard.key.code.q)) {
 				currScene.mMap.ChangeZLevel(-1);
@@ -205,6 +246,7 @@ GFGUIMapControl.prototype.Process = function() {
 	// process any necessary keyboard translation
 	if (this.mTranslate.mX != 0 || this.mTranslate.mY != 0) {
 		currScene.mCam.Translate(this.mTranslate);
+		this.mTranslate.Set(0, 0);
 	}
 	
 	{ // process all gui button elements
@@ -222,21 +264,58 @@ GFGUIMapControl.prototype.Process = function() {
 	
 	{ // handle main compass gui elements being held down
 		if (this.mCompassMain[0].mDown == true) {
-			currScene.mCam.Translate(new IVec2(2, 1));
-			this.mTranslate.mX += 2; this.mTranslate.mY += 1;
+			var x = 0;
+			if (currScene.mCam.mTranslate.mX + (nmain.game.mCanvasSize.mX / 2) - 2 > currScene.mMap.mBounds[0]) {
+				x = -2;
+			}
+			
+			var y = 0;
+			if (currScene.mCam.mTranslate.mY  + (nmain.game.mCanvasSize.mY / 2) - 1 > currScene.mMap.mBounds[1]) {
+				y = -1;
+			}
+			
+			currScene.mCam.Translate(new IVec2(x, y));
 		}
 		else if (this.mCompassMain[1].mDown == true) {
-			currScene.mCam.Translate(new IVec2(-2, 1));
-			this.mTranslate.mX -= 2; this.mTranslate.mY += 1;
-		}
-		else if (this.mCompassMain[2].mDown == true) {
-			currScene.mCam.Translate(new IVec2(2, -1));
-			this.mTranslate.mX += 2; this.mTranslate.mY -= 1;
+			var x = 0;
+			if (currScene.mCam.mTranslate.mX + (nmain.game.mCanvasSize.mX / 2) + 2 < currScene.mMap.mBounds[2]) {
+				x = 2;
+			}
+			
+			var y = 0;
+			if (currScene.mCam.mTranslate.mY  + (nmain.game.mCanvasSize.mY / 2) - 1 > currScene.mMap.mBounds[1]) {
+				y = -1;
+			}
+			
+			currScene.mCam.Translate(new IVec2(x, y));
 		}
 		else if (this.mCompassMain[3].mDown == true) {
-			currScene.mCam.Translate(new IVec2(-2, -1));
-			this.mTranslate.mX -= 2; this.mTranslate.mY -= 1;
+			var x = 0;
+			if (currScene.mCam.mTranslate.mX + (nmain.game.mCanvasSize.mX / 2) + 2 < currScene.mMap.mBounds[2]) {
+				x = 2;
+			}
+			
+			var y = 0;
+			if (currScene.mCam.mTranslate.mY  + (nmain.game.mCanvasSize.mY / 2) + 1 < currScene.mMap.mBounds[3]) {
+				y = 1;
+			}
+			
+			currScene.mCam.Translate(new IVec2(x, y));
 		}
+		else if (this.mCompassMain[2].mDown == true) {
+			var x = 0;
+			if (currScene.mCam.mTranslate.mX + (nmain.game.mCanvasSize.mX / 2) - 2 > currScene.mMap.mBounds[0]) {
+				x = -2;
+			}
+			
+			var y = 0;
+			if (currScene.mCam.mTranslate.mY  + (nmain.game.mCanvasSize.mY / 2) + 1 < currScene.mMap.mBounds[3]) {
+				y = 1;
+			}
+			
+			currScene.mCam.Translate(new IVec2(x, y));
+		}
+		
 	}
 	
 	{ // handle main zlevel gui elements being pressed
