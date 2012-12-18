@@ -38,7 +38,10 @@ Shape.prototype.Copy = function(other) {
 	this.mOutline = other.mOutline;
 	this.mOrigin.Copy(other.mOrigin);
 	
-	this.mPoints = other.mPoints;
+	this.mPoints.splice(0, this.mPoints.length);
+	this.mPoints = this.mPoints.concat(other.mPoints);
+	this.mBounds.splice(0, this.mBounds.length);
+	this.mBounds = this.mBounds.concat(other.mBounds);
 	
 	this.mAbsolute = other.mAbsolute;
 }
