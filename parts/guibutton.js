@@ -37,15 +37,19 @@ GUIButton.prototype.SetUp = function(pos, size, depth) {
 	
 	this.mSpriteIdle.mPos.Copy(pos);
 	this.mSpriteIdle.mDepth = depth;
+	this.mSpriteIdle.mAbsolute = true;
 	
 	this.mSpriteHover.mPos.Copy(pos);
 	this.mSpriteHover.mDepth = depth;
+	this.mSpriteHover.mAbsolute = true;
 	
 	this.mSpriteDown.mPos.Copy(pos);
 	this.mSpriteDown.mDepth = depth;
+	this.mSpriteDown.mAbsolute = true;
 	
 	this.mSpriteInactive.mPos.Copy(pos);
 	this.mSpriteInactive.mDepth = depth;
+	this.mSpriteInactive.mAbsolute = true;
 }
 
 GUIButton.prototype.Input = function() {

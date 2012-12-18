@@ -151,6 +151,7 @@ GUIDropDown.prototype.AddItem = function(itemButton, text) {
 	
 	var txt = new Text();
 	txt.Copy(text);
+	txt.mAbsolute = true;
 	
 	var newPos = new IVec2(0, 0);
 	

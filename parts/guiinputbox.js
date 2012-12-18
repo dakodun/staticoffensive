@@ -17,6 +17,7 @@ GUIInputBoxCaret.prototype.SetUp = function(pos, depth, leftBound, rightBound) {
 	this.mShape.mPos.Copy(pos);
 	this.mShape.mDepth = depth;
 	this.mShape.mColour = "#000000";
+	this.mShape.mAbsolute = true;
 	
 	this.mLeftBound = leftBound;
 	this.mRightBound = rightBound;
@@ -210,19 +211,24 @@ GUIInputBox.prototype.SetUp = function(pos, size, depth, inputArr) {
 	this.mRenderCanvas.SetDimensions(dim);
 	
 	this.mRenderCanvas.mDepth = depth - 1;
+	this.mRenderCanvas.mAbsolute = true;
 	
 	{
 		this.mSpriteIdle.mPos.Copy(pos);
 		this.mSpriteIdle.mDepth = depth;
+		this.mSpriteIdle.mAbsolute = true;
 		
 		this.mSpriteHover.mPos.Copy(pos);
 		this.mSpriteHover.mDepth = depth;
+		this.mSpriteHover.mAbsolute = true;
 		
 		this.mSpriteFocus.mPos.Copy(pos);
 		this.mSpriteFocus.mDepth = depth;
+		this.mSpriteFocus.mAbsolute = true;
 		
 		this.mSpriteInactive.mPos.Copy(pos);
 		this.mSpriteInactive.mDepth = depth;
+		this.mSpriteInactive.mAbsolute = true;
 	}
 	
 	{
