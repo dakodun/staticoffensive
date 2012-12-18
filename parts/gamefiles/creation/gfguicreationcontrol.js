@@ -89,5 +89,17 @@ GFGUICreationControl.prototype.GetRenderData = function() {
 	
 	return arr;
 }
+
+GFGUICreationControl.prototype.Hovering = function() {
+	if (this.mTopBar.Hovering() == true) {
+		return true;
+	}
+	
+	if (this.mTileControl.Hovering() == true) {
+		return true;
+	}
+	
+	return false;
+}
 // ...End
 
