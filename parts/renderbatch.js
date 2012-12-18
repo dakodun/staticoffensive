@@ -123,6 +123,10 @@ RenderBatch.prototype.Render = function(camera, target) {
 	for (var i = 0; i < this.mRenderData.length; ++i) {
 		targ.save();
 		
+		if (this.mRenderData[i].mAbsolute == true) {
+			cam.Apply();
+		}
+		
 		if (this.mRenderData[i].Type() == "Sprite") {
 			var spr = this.mRenderData[i];
 			
