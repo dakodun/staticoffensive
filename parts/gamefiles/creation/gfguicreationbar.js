@@ -129,5 +129,28 @@ GFGUICreationBar.prototype.UpdatePosition = function(offset) {
 		this.mMenus[i].SetSpritePositions(newPos);
 	}
 }
+
+GFGUICreationBar.prototype.Hovering = function() {
+	{
+		var pt = new IVec2(0, 0);
+		pt.Copy(nmgrs.inputMan.GetLocalMouseCoords());
+		
+		var tl = new IVec2(10, 12);
+		var br = new IVec2(11, 13);
+		br.mX += this.mSprite.GetWidth(); br.mY += this.mSprite.GetHeight();
+		
+		if (util.PointInRectangle(pt, tl, br)) {
+			return true;
+		}
+	}
+	
+	for (var i = 0; i < this.mMenus.length; ++i) {
+		if (this.mMenus[i].mHover == true) {
+			return true;
+		}
+	}
+	
+	return false;
+}
 // ...End
 

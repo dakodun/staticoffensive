@@ -189,7 +189,7 @@ GFGUICreationNewDialogue.prototype.Process = function(point) {
 				var seg = new GFMapSegment();
 				seg.mPos.Set(0, 0); seg.SetUp(bp);
 				
-				currScene.mSegment.Copy(seg);
+				currScene.mCreationMap.mSegment.Copy(seg);
 				
 				currScene.mCreationControl.mDialogueOpen = false;
 				

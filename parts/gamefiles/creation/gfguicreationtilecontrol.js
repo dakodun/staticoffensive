@@ -406,5 +406,36 @@ GFGUICreationTileControl.prototype.UpdatePosition = function(offset) {
 		this.mSetTexture.SetSpritePositions(newPos);
 	}
 }
+
+GFGUICreationTileControl.prototype.Hovering = function() {
+	{
+		var currScene = nmgrs.sceneMan.mCurrScene;
+		
+		var pt = new IVec2(0, 0); pt.Copy(nmgrs.inputMan.GetLocalMouseCoords());
+		pt.mX += currScene.mCam.mTranslate.mX; pt.mY += currScene.mCam.mTranslate.mY;
+		
+		var tl = new IVec2(0, 0); tl.Copy(this.mCurrTile.mSprite.mPos);
+		tl.mX += 2; tl.mY += 2;
+		
+		var br = new IVec2(0, 0); br.Copy(this.mCurrTile.mSprite.mPos);
+		br.mX += this.mCurrTile.mSprite.GetWidth() + 3; br.mY += this.mCurrTile.mSprite.GetHeight() + 3;
+		
+		if (util.PointInRectangle(pt, tl, br)) {
+			return true;
+		}
+	}
+	
+	for (var i = 0; i < this.mOptionsArrows.length; ++i) {
+		if (this.mOptionsArrows[i].mHover == true) {
+			return true;
+		}
+	}
+	
+	if (this.mSetTexture.mHover == true) {
+		return true;
+	}
+	
+	return false;
+}
 // ...End
 
