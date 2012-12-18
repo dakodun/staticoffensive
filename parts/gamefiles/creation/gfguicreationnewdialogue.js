@@ -167,7 +167,7 @@ GFGUICreationNewDialogue.prototype.Process = function(point) {
 			
 			if ((x >= 1 && x <= 20) && (y >= 1 && y <= 20)) {
 				{
-					var str = "a:" + "tileset_test" + ";{";
+					var str = "a:tileset_test;{";
 					for (var i = 0; i < y; ++i) {
 						for (var j = 0; j < x; ++j) {
 							str += "20oa";
@@ -190,12 +190,19 @@ GFGUICreationNewDialogue.prototype.Process = function(point) {
 					var seg = new GFMapSegment();
 					seg.mPos.Set(0, 0); seg.SetUp(bp);
 					
-					currScene.mCreationMap.mSegment.Copy(seg);
+					currScene.mMap.mSegment.Copy(seg);
+					currScene.mMap.mBounds[0] = currScene.mMap.mSegment.mBounds.mBounds[0];
+					currScene.mMap.mBounds[1] = currScene.mMap.mSegment.mBounds.mBounds[1];
+					currScene.mMap.mBounds[2] = currScene.mMap.mSegment.mBounds.mBounds[2];
+					currScene.mMap.mBounds[3] = currScene.mMap.mSegment.mBounds.mBounds[3];
 				}
 				
 				{
-					var trans = new IVec2(0, 0); trans.Copy(currScene.mCam.mTranslate);
+					currScene.mCam.Translate(new IVec2(-currScene.mCam.mTranslate.mX, -currScene.mCam.mTranslate.mY));
 					
+					var trans = new IVec2(nmain.game.mCanvasSize.mX / 2, nmain.game.mCanvasSize.mY / 2);
+					trans.mX -= currScene.mMap.mSegment.mBounds.GetWidth() / 2; trans.mY -= 30;
+					trans.mX = -(Math.round(trans.mX)); trans.mY = -(Math.round(trans.mY));
 					currScene.mCam.Translate(trans);
 				}
 				
