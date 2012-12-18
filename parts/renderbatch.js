@@ -123,8 +123,12 @@ RenderBatch.prototype.Render = function(camera, target) {
 	for (var i = 0; i < this.mRenderData.length; ++i) {
 		targ.save();
 		
-		if (this.mRenderData[i].mAbsolute == true) {
+		if (this.mRenderData[i].mAbsolute == false) {
 			cam.Apply();
+		}
+		else {
+			scrTL.Set(0, 0);
+			scrBR.Set(nmain.game.mCanvasSize.mX, nmain.game.mCanvasSize.mY);
 		}
 		
 		if (this.mRenderData[i].Type() == "Sprite") {
