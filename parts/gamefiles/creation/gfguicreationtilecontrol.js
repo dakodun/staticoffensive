@@ -85,11 +85,30 @@ GFGUICreationTileControl.prototype.SetUp = function(initTex) {
 };
 
 GFGUICreationTileControl.prototype.Input = function() {
+	var currScene = nmgrs.sceneMan.mCurrScene;
+	
 	for (var i = 0; i < this.mOptionsArrows.length; ++i) {
 		this.mOptionsArrows[i].Input();
 	}
 	
 	this.mSetTexture.Input();
+	
+	if (nmgrs.inputMan.GetMousePressed(nmouse.button.code.left)) {
+		var tile = currScene.mMap.mCurrentTile;
+		if (tile != -1) {
+			var tex = nmgrs.resMan.mTexStore.GetResource(this.mCurrentTexture);
+			
+			currScene.mMap.mSegment.mTiles[tile].mBlank = false;
+			currScene.mMap.mSegment.mTiles[tile].mZ = this.mCurrTile.mZ;
+			currScene.mMap.mSegment.mTiles[tile].mSlopeDirection = this.mCurrTile.mSlopeDirection;
+			currScene.mMap.mSegment.mTiles[tile].mSpecial = this.mCurrTile.mSpecial;
+			
+			currScene.mMap.mSegment.mTiles[tile].SetUp(tex);
+			currScene.mMap.mSegment.mTiles[tile].ChangeZLevel(currScene.mMap.mSegment.mCurrZLevel);
+			
+			currScene.mMap.SetTileBounds(tile);
+		}
+	}
 }
 
 GFGUICreationTileControl.prototype.Process = function(point) {
