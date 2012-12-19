@@ -34,8 +34,8 @@ GFCreationScene.prototype.SetUp = function() {
 	
 	{
 		var bp = new GFBluePrint();
-		bp.SetUp("a:tileset_test;{20oa?20oa?20oa?20oa?20oa!20oa?20oa?20oa?20oa?20oa!" +
-				"20oa?20oa?20oa?20oa?20oa!20oa?20oa?20oa?20oa?20oa!20oa?20oa?20oa?20oa?20oa}");
+		bp.SetUp("a:tileset_test;{70oa?70oa?70oa?70oa?70oa!70oa?70oa?70oa?70oa?70oa!" +
+				"70oa?70oa?70oa?70oa?70oa!70oa?70oa?70oa?70oa?70oa!70oa?70oa?70oa?70oa?70oa}");
 		
 		var seg = new GFMapSegment();
 		seg.mPos.Set(0, 0); seg.SetUp(bp);
@@ -45,6 +45,8 @@ GFCreationScene.prototype.SetUp = function() {
 		this.mMap.mBounds[1] = this.mMap.mSegment.mBounds.mBounds[1];
 		this.mMap.mBounds[2] = this.mMap.mSegment.mBounds.mBounds[2];
 		this.mMap.mBounds[3] = this.mMap.mSegment.mBounds.mBounds[3];
+		
+		this.mMap.SetUp();
 	}
 	
 	var trans = new IVec2(nmain.game.mCanvasSize.mX / 2, nmain.game.mCanvasSize.mY / 2);
