@@ -24,6 +24,7 @@ InitScene.prototype.SetUp = function() {
 		nmgrs.resLoad.QueueTexture("tileset_grasswhole", "./res/vis/tilesets/tileset_grasswhole.png");
 		nmgrs.resLoad.QueueTexture("tileset_blue", "./res/vis/tilesets/tileset_blue.png");
 		nmgrs.resLoad.QueueTexture("tileset_red", "./res/vis/tilesets/tileset_red.png");
+		nmgrs.resLoad.QueueTexture("gridtile", "./res/vis/tilesets/gridtile.png");
 		
 		nmgrs.resLoad.QueueTexture("gui_map_compassmain", "./res/vis/gui/gui_map_compassmain.png");
 		nmgrs.resLoad.QueueTexture("gui_map_compassextra", "./res/vis/gui/gui_map_compassextra.png");
