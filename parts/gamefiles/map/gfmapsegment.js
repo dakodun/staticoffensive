@@ -123,7 +123,7 @@ GFMapSegment.prototype.Copy = function(other) {
 	this.mShowBounds = other.mShowBounds;
 	this.mBounds.Copy(other.mBounds);
 	
-	this.mBoundsPoly.slice(0, this.mBoundsPoly.length);
+	this.mBoundsPoly.splice(0, this.mBoundsPoly.length);
 	this.mBoundsPoly = this.mBoundsPoly.concat(other.mBoundsPoly);
 }
 
@@ -225,8 +225,10 @@ GFMapSegment.prototype.ChangeZLevel = function(newLevel) {
 		this.mCurrZLevel += newLevel;
 		// for our entire map segment array
 		for (var i = 0; i < this.mTiles.length; ++i) {
-			this.mTiles[i].ChangeZLevel(this.mCurrZLevel);
-			this.mTiles[i].SetBounds(this.mTileBounds.mBounds[this.mTiles[i].mSprite.mCurrFrame]);
+			if (this.mTiles[i].mBlank == false) {
+				this.mTiles[i].ChangeZLevel(this.mCurrZLevel);
+				this.mTiles[i].SetBounds(this.mTileBounds.mBounds[this.mTiles[i].mSprite.mCurrFrame]);
+			}
 		}
 	}
 }
