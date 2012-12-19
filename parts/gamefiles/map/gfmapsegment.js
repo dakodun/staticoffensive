@@ -22,6 +22,11 @@ GFMapConnectivity.prototype.GetCompatible = function(other) {
 	excludeArr[2] = false; excludeArr[3] = false;
 	
 	if (this.mZ == other.mZ - 1 || this.mZ == other.mZ || this.mZ == other.mZ + 1) {
+	
+	// if (other is within 1 of this) OR (other is within 2 AND this is a slope)
+	/* if ((this.mZ == other.mZ - 1 || this.mZ == other.mZ || this.mZ == other.mZ + 1) ||
+			(this.mZ % 2 != 0 && (this.mZ == other.mZ - 2 || this.mZ == other.mZ + 2))) { */
+		
 		if (this.mZ % 2 == 0) { // this is flat
 			if (other.mZ % 2 != 0) { // other is a slope
 				if (this.mZ == other.mZ - 1) { // we're lower than other

@@ -1858,11 +1858,26 @@ RenderCanvas.prototype.GetHeight = function() {
 // DepthSort function
 // sorts renderable resources based on depth
 function DepthSort(first, second) {
-	var result = second.mDepth - first.mDepth;
+	var firstDepth = first.mDepth;
+	var secondDepth = second.mDepth;
+	var result = secondDepth - firstDepth;
+	
+	if (result == 0) {
+		result =  first.mID - second.mID;
+	}
 	
 	return result;
 };
 // ...End
+
+
+// RenderBatchSortElement Class...
+function RenderBatchSortElement() {
+	this.mID = -1;
+	this.mDepth = 0;
+};
+// ...End
+
 
 // RenderBatch Class...
 // a render batch handles all drawing operations and draws according to depth (z) values
@@ -1870,7 +1885,7 @@ function RenderBatch() {
 	this.mRenderData = new Array();
 	
 	this.mNeedSort = false;
-}
+};
 
 // initialise the render batch
 RenderBatch.prototype.SetUp = function() {
@@ -1970,7 +1985,25 @@ RenderBatch.prototype.Render = function(camera, target) {
 	}
 	
 	if (this.mNeedSort == true) {
-		this.mRenderData.sort(DepthSort); // sort the queue
+		var arr = new Array();
+		for (var i = 0; i < this.mRenderData.length; ++i) {
+			var element = new RenderBatchSortElement();
+			element.mID = i;
+			element.mDepth = this.mRenderData[i].mDepth;
+			
+			arr.push(element);
+		}
+		
+		arr.sort(DepthSort);
+		
+		var temp = new Array();
+		for (var i = 0; i < this.mRenderData.length; ++i) {
+			temp.push(this.mRenderData[arr[i].mID]);
+		}
+		
+		this.mRenderData.splice(0, this.mRenderData.length);
+		this.mRenderData = this.mRenderData.concat(temp);
+		
 		this.mNeedSort = false;
 	}
 	
@@ -6074,6 +6107,11 @@ GFMapConnectivity.prototype.GetCompatible = function(other) {
 	excludeArr[2] = false; excludeArr[3] = false;
 	
 	if (this.mZ == other.mZ - 1 || this.mZ == other.mZ || this.mZ == other.mZ + 1) {
+	
+	// if (other is within 1 of this) OR (other is within 2 AND this is a slope)
+	/* if ((this.mZ == other.mZ - 1 || this.mZ == other.mZ || this.mZ == other.mZ + 1) ||
+			(this.mZ % 2 != 0 && (this.mZ == other.mZ - 2 || this.mZ == other.mZ + 2))) { */
+		
 		if (this.mZ % 2 == 0) { // this is flat
 			if (other.mZ % 2 != 0) { // other is a slope
 				if (this.mZ == other.mZ - 1) { // we're lower than other
