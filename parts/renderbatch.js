@@ -117,14 +117,16 @@ RenderBatch.prototype.Render = function(camera, target) {
 		this.mNeedSort = false;
 	}
 	
-	var scrTL = new IVec2(0 + cam.mTranslate.mX, 0 + cam.mTranslate.mY);
-	var scrBR = new IVec2(nmain.game.mCanvasSize.mX + cam.mTranslate.mX, nmain.game.mCanvasSize.mY + cam.mTranslate.mY);
+	var scrTL = new IVec2(0, 0);
+	var scrBR = new IVec2(0, 0);
 	
 	for (var i = 0; i < this.mRenderData.length; ++i) {
 		targ.save();
 		
 		if (this.mRenderData[i].mAbsolute == false) {
 			cam.Apply();
+			scrTL.Set(0 + cam.mTranslate.mX, 0 + cam.mTranslate.mY);
+			scrBR.Set(nmain.game.mCanvasSize.mX + cam.mTranslate.mX, nmain.game.mCanvasSize.mY + cam.mTranslate.mY);
 		}
 		else {
 			scrTL.Set(0, 0);
