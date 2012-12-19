@@ -1974,14 +1974,16 @@ RenderBatch.prototype.Render = function(camera, target) {
 		this.mNeedSort = false;
 	}
 	
-	var scrTL = new IVec2(0 + cam.mTranslate.mX, 0 + cam.mTranslate.mY);
-	var scrBR = new IVec2(nmain.game.mCanvasSize.mX + cam.mTranslate.mX, nmain.game.mCanvasSize.mY + cam.mTranslate.mY);
+	var scrTL = new IVec2(0, 0);
+	var scrBR = new IVec2(0, 0);
 	
 	for (var i = 0; i < this.mRenderData.length; ++i) {
 		targ.save();
 		
 		if (this.mRenderData[i].mAbsolute == false) {
 			cam.Apply();
+			scrTL.Set(0 + cam.mTranslate.mX, 0 + cam.mTranslate.mY);
+			scrBR.Set(nmain.game.mCanvasSize.mX + cam.mTranslate.mX, nmain.game.mCanvasSize.mY + cam.mTranslate.mY);
 		}
 		else {
 			scrTL.Set(0, 0);
@@ -3178,6 +3180,7 @@ InitScene.prototype.SetUp = function() {
 		nmgrs.resLoad.QueueTexture("tileset_grasswhole", "./res/vis/tilesets/tileset_grasswhole.png");
 		nmgrs.resLoad.QueueTexture("tileset_blue", "./res/vis/tilesets/tileset_blue.png");
 		nmgrs.resLoad.QueueTexture("tileset_red", "./res/vis/tilesets/tileset_red.png");
+		nmgrs.resLoad.QueueTexture("gridtile", "./res/vis/tilesets/gridtile.png");
 		
 		nmgrs.resLoad.QueueTexture("gui_map_compassmain", "./res/vis/gui/gui_map_compassmain.png");
 		nmgrs.resLoad.QueueTexture("gui_map_compassextra", "./res/vis/gui/gui_map_compassextra.png");
@@ -3443,8 +3446,8 @@ function GFGUIMapControl() {
 	this.mCompassMain = new Array();
 	this.mCompassMain[0] = new GUIButton(); // north
 	this.mCompassMain[1] = new GUIButton(); // east
-	this.mCompassMain[2] = new GUIButton(); // south
-	this.mCompassMain[3] = new GUIButton(); // west
+	this.mCompassMain[3] = new GUIButton(); // south
+	this.mCompassMain[2] = new GUIButton(); // west
 	
 	this.mZLevelMain = new Array();
 	this.mZLevelMain[0] = new GUIButton(); // up
@@ -3453,7 +3456,11 @@ function GFGUIMapControl() {
 	this.mCompassExtra = new Sprite();
 	this.mZLevelExtra = new Sprite();
 	
-	this.mTranslate = new IVec2(0, 0);
+	this.mKeyDown = new Array();
+	this.mKeyDown[0] = false;
+	this.mKeyDown[1] = false;
+	this.mKeyDown[3] = false;
+	this.mKeyDown[2] = false;
 }
 
 GFGUIMapControl.prototype.SetUp = function() {
@@ -3592,64 +3599,33 @@ GFGUIMapControl.prototype.Input = function() {
 	
 	{ // map scrolling
 		{ // keyboard input
-			var trans = new IVec2(0, 0);
 			if (nmgrs.inputMan.GetKeyboardDown(nkeyboard.key.code.up)) {
-				var x = 0;
-				if (currScene.mCam.mTranslate.mX + (nmain.game.mCanvasSize.mX / 2) - 2 > currScene.mMap.mBounds[0]) {
-					x = -2;
-				}
-				
-				var y = 0;
-				if (currScene.mCam.mTranslate.mY  + (nmain.game.mCanvasSize.mY / 2) - 1 > currScene.mMap.mBounds[1]) {
-					y = -1;
-				}
-				
-				trans.mX += x; trans.mY += y;
+				this.mKeyDown[0] = true;
+			}
+			else {
+				this.mKeyDown[0] = false;
 			}
 			
 			if (nmgrs.inputMan.GetKeyboardDown(nkeyboard.key.code.right)) {
-				var x = 0;
-				if (currScene.mCam.mTranslate.mX + (nmain.game.mCanvasSize.mX / 2) + 2 < currScene.mMap.mBounds[2]) {
-					x = 2;
-				}
-				
-				var y = 0;
-				if (currScene.mCam.mTranslate.mY  + (nmain.game.mCanvasSize.mY / 2) - 1 > currScene.mMap.mBounds[1]) {
-					y = -1;
-				}
-				
-				trans.mX += x; trans.mY += y;
+				this.mKeyDown[1] = true;
+			}
+			else {
+				this.mKeyDown[1] = false;
 			}
 			
 			if (nmgrs.inputMan.GetKeyboardDown(nkeyboard.key.code.down)) {
-				var x = 0;
-				if (currScene.mCam.mTranslate.mX + (nmain.game.mCanvasSize.mX / 2) + 2 < currScene.mMap.mBounds[2]) {
-					x = 2;
-				}
-				
-				var y = 0;
-				if (currScene.mCam.mTranslate.mY  + (nmain.game.mCanvasSize.mY / 2) + 1 < currScene.mMap.mBounds[3]) {
-					y = 1;
-				}
-				
-				trans.mX += x; trans.mY += y;
+				this.mKeyDown[3] = true;
+			}
+			else {
+				this.mKeyDown[3] = false;
 			}
 			
 			if (nmgrs.inputMan.GetKeyboardDown(nkeyboard.key.code.left)) {
-				var x = 0;
-				if (currScene.mCam.mTranslate.mX + (nmain.game.mCanvasSize.mX / 2) - 2 > currScene.mMap.mBounds[0]) {
-					x = -2;
-				}
-				
-				var y = 0;
-				if (currScene.mCam.mTranslate.mY  + (nmain.game.mCanvasSize.mY / 2) + 1 < currScene.mMap.mBounds[3]) {
-					y = 1;
-				}
-				
-				trans.mX += x; trans.mY += y;
+				this.mKeyDown[2] = true;
 			}
-			
-			this.mTranslate.Copy(trans);
+			else {
+				this.mKeyDown[2] = false;
+			}
 		}
 		
 		// mouse input (gui button)
@@ -3682,12 +3658,6 @@ GFGUIMapControl.prototype.Process = function() {
 	// reference to the current scene
 	var currScene = nmgrs.sceneMan.mCurrScene;
 	
-	// process any necessary keyboard translation
-	if (this.mTranslate.mX != 0 || this.mTranslate.mY != 0) {
-		currScene.mCam.Translate(this.mTranslate);
-		this.mTranslate.Set(0, 0);
-	}
-	
 	{ // process all gui button elements
 		var pt = new IVec2(0, 0);
 		pt.Copy(nmgrs.inputMan.GetLocalMouseCoords());
@@ -3702,7 +3672,7 @@ GFGUIMapControl.prototype.Process = function() {
 	}
 	
 	{ // handle main compass gui elements being held down
-		if (this.mCompassMain[0].mDown == true) {
+		if (this.mCompassMain[0].mDown == true || this.mKeyDown[0] == true) {
 			var x = 0;
 			if (currScene.mCam.mTranslate.mX + (nmain.game.mCanvasSize.mX / 2) - 2 > currScene.mMap.mBounds[0]) {
 				x = -2;
@@ -3715,7 +3685,7 @@ GFGUIMapControl.prototype.Process = function() {
 			
 			currScene.mCam.Translate(new IVec2(x, y));
 		}
-		else if (this.mCompassMain[1].mDown == true) {
+		else if (this.mCompassMain[1].mDown == true || this.mKeyDown[1] == true) {
 			var x = 0;
 			if (currScene.mCam.mTranslate.mX + (nmain.game.mCanvasSize.mX / 2) + 2 < currScene.mMap.mBounds[2]) {
 				x = 2;
@@ -3728,7 +3698,7 @@ GFGUIMapControl.prototype.Process = function() {
 			
 			currScene.mCam.Translate(new IVec2(x, y));
 		}
-		else if (this.mCompassMain[3].mDown == true) {
+		else if (this.mCompassMain[3].mDown == true || this.mKeyDown[3] == true) {
 			var x = 0;
 			if (currScene.mCam.mTranslate.mX + (nmain.game.mCanvasSize.mX / 2) + 2 < currScene.mMap.mBounds[2]) {
 				x = 2;
@@ -3741,7 +3711,7 @@ GFGUIMapControl.prototype.Process = function() {
 			
 			currScene.mCam.Translate(new IVec2(x, y));
 		}
-		else if (this.mCompassMain[2].mDown == true) {
+		else if (this.mCompassMain[2].mDown == true || this.mKeyDown[2] == true) {
 			var x = 0;
 			if (currScene.mCam.mTranslate.mX + (nmain.game.mCanvasSize.mX / 2) - 2 > currScene.mMap.mBounds[0]) {
 				x = -2;
@@ -4086,6 +4056,15 @@ GFTestScene.prototype.Render = function() {
 // ...End
 
 
+// GFGridTile Class...
+// game file: 
+function GFGridTile() {
+	this.mTile = new Sprite();
+	this.mID = -1;
+};
+// ...End
+
+
 // GFCreationMap Class...
 // game file: 
 function GFCreationMap() {
@@ -4101,6 +4080,22 @@ function GFCreationMap() {
 	this.mBounds[1] = 0;
 	this.mBounds[2] = 0;
 	this.mBounds[3] = 0;
+	
+	this.mGrid = new Array();
+	
+	{
+		this.mGridBase = new Shape();
+		this.mGridBase.mPos.Set(           8,  42);
+		this.mGridBase.AddPoint(new IVec2(20, -10));
+		this.mGridBase.AddPoint(new IVec2(23, -10));
+		this.mGridBase.AddPoint(new IVec2(43,   0));
+		this.mGridBase.AddPoint(new IVec2(43,   3));
+		this.mGridBase.AddPoint(new IVec2(23,  13));
+		this.mGridBase.AddPoint(new IVec2(20,  13));
+		this.mGridBase.AddPoint(new IVec2( 0,   3));
+		
+		this.mGridBase.mOutline = true;
+	}
 };
 
 GFCreationMap.prototype.Copy = function(other) {
@@ -4113,8 +4108,31 @@ GFCreationMap.prototype.Copy = function(other) {
 	
 	this.mBounds.splice(0, this.mBounds.length);
 	this.mBounds = this.mBounds.concat(other.mBounds);
+	
+	this.mGrid.splice(0, this.mGrid.length);
+	this.mGrid = this.mGrid.concat(other.mGrid);
 }
 
+GFCreationMap.prototype.SetUp = function() {
+	this.mGrid.splice(0, this.mGrid.length);
+	
+	for (var i = 0; i < this.mSegment.mTiles.length; ++i) {
+		if (this.mSegment.mTiles[i].mBlank == true) {
+			var tex = nmgrs.resMan.mTexStore.GetResource("gridtile");
+			
+			var grid = new Sprite();
+			grid.SetTexture(tex);
+			grid.mPos.Copy(this.mSegment.mTiles[i].mSprite.mPos);
+			grid.mDepth = this.mSegment.mTiles[i].mSprite.mDepth;
+			
+			var gridTile = new GFGridTile();
+			gridTile.mTile = grid; gridTile.mID = i;
+			this.mGrid.push(gridTile);
+			
+			this.mSegment.mTiles[i].SetBounds(this.mGridBase);
+		}
+	}
+}
 
 GFCreationMap.prototype.Process = function() {
 	var currScene = nmgrs.sceneMan.mCurrScene;
@@ -4128,36 +4146,8 @@ GFCreationMap.prototype.Process = function() {
 	if (util.PointInConvex(pt, this.mSegment.mBoundsPoly) == true) {
 		for (var i = 0; i < this.mSegment.mTiles.length; ++i) {
 			if (util.PointInConvex(pt, this.mSegment.mTiles[i].mBoundsPoly) == true) {
-				if (this.mCurrentTile != -1) {
-					var tileCurr = new IVec2(0, 0);
-					tileCurr.Copy(this.mSegment.mTiles[this.mCurrentTile].mGlobalPos);
-					
-					var tileCheck = new IVec2(0, 0);
-					tileCheck.Copy(this.mSegment.mTiles[i].mGlobalPos);
-					
-					if (tileCurr.mY < tileCheck.mY) {
-						this.mSegment.mTiles[this.mCurrentTile].mShowBounds = false;
-						
-						this.mSegment.mTiles[i].mShowBounds = true;
-						this.mCurrentTile = i;
-						hoveringTile = true;
-					}
-					else if (tileCurr.mY == tileCheck.mY) {
-						if (tileCurr.mX > tileCheck.mX) {
-							this.mSegment.mTiles[this.mCurrentTile].mShowBounds = false;
-							
-							this.mSegment.mTiles[i].mShowBounds = true;
-							this.mCurrentTile = i;
-							hoveringTile = true;
-						}
-						else if (tileCurr.mX == tileCheck.mX) {
-							hoveringTile = true;
-						}
-					}
-				}
-				else {
-					this.mSegment.mTiles[i].mShowBounds = true;
-					this.mCurrentTile = i;
+				var result = this.HighlightTile(i);
+				if (result == true) {
 					hoveringTile = true;
 				}
 			}
@@ -4177,6 +4167,10 @@ GFCreationMap.prototype.GetRenderData = function() {
 	
 	arr = arr.concat(this.mSegment.GetRenderData());
 	
+	for (var i = 0; i < this.mGrid.length; ++i) {
+		arr.push(this.mGrid[i].mTile);
+	}
+	
 	return arr;
 }
 
@@ -4192,6 +4186,98 @@ GFCreationMap.prototype.UnselectTile = function() {
 	if (this.mCurrentTile != -1) {
 		this.mSegment.mTiles[this.mCurrentTile].mShowBounds = false;
 		this.mCurrentTile = -1;
+	}
+}
+
+GFCreationMap.prototype.HighlightTile = function(id) {
+	if (this.mCurrentTile != -1) {
+		var tileCurr = new IVec2(0, 0);
+		tileCurr.Copy(this.mSegment.mTiles[this.mCurrentTile].mGlobalPos);
+		
+		var tileCheck = new IVec2(0, 0);
+		tileCheck.Copy(this.mSegment.mTiles[id].mGlobalPos);
+		
+		if (tileCurr.mY < tileCheck.mY) {
+			this.mSegment.mTiles[this.mCurrentTile].mShowBounds = false;
+			
+			this.mSegment.mTiles[id].mShowBounds = true;
+			this.mCurrentTile = id;
+			return true;
+		}
+		else if (tileCurr.mY == tileCheck.mY) {
+			if (tileCurr.mX > tileCheck.mX) {
+				this.mSegment.mTiles[this.mCurrentTile].mShowBounds = false;
+				
+				this.mSegment.mTiles[id].mShowBounds = true;
+				this.mCurrentTile = id;
+				return true;
+			}
+			else if (tileCurr.mX == tileCheck.mX) {
+				return true;
+			}
+		}
+	}
+	else {
+		this.mSegment.mTiles[id].mShowBounds = true;
+		this.mCurrentTile = id;
+		return true;
+	}
+	
+	return false
+}
+
+GFCreationMap.prototype.SetTileBounds = function(id) {
+	var currFrame = this.mSegment.mTiles[id].mSprite.mCurrFrame;
+	
+	if (typeof(this.mSegment.mTileBounds.mBounds[currFrame]) != "undefined") { 
+		var bounds = new Shape(); bounds.Copy(this.mSegment.mTileBounds.mBounds[currFrame]);
+		this.mSegment.mTiles[id].SetBounds(bounds);
+		
+		var foundID = -1;
+		for (var i = 0; i < this.mGrid.length; ++i) {
+			if (this.mGrid[i].mID == id) {
+				foundID = i;
+				break;
+			}
+		}
+		
+		if (this.mSegment.mTiles[id].mBlank == true) {
+			if (foundID < 0) {
+				var tex = nmgrs.resMan.mTexStore.GetResource("gridtile");
+				
+				var grid = new Sprite();
+				grid.SetTexture(tex);
+				grid.mPos.Copy(this.mSegment.mTiles[id].mSprite.mPos);
+				grid.mDepth = this.mSegment.mTiles[id].mSprite.mDepth;
+				
+				var gridTile = new GFGridTile();
+				gridTile.mTile = grid; gridTile.mID = id;
+				this.mGrid.push(gridTile);
+			}
+			
+			this.mSegment.mTiles[id].SetBounds(this.mGridBase);
+		}
+		else {
+			if (foundID >= 0) {
+				this.mGrid.splice(foundID, 1);
+			}
+		}
+	}
+	else {
+		/* if (this.mSegment.mTiles[id].mBlank == true) {
+			var tex = nmgrs.resMan.mTexStore.GetResource("gridtile");
+			
+			var grid = new Sprite();
+			grid.SetTexture(tex);
+			grid.mPos.Copy(this.mSegment.mTiles[id].mSprite.mPos);
+			grid.mDepth = this.mSegment.mTiles[id].mSprite.mDepth;
+			
+			var gridTile = new GFGridTile();
+			gridTile.mTile = grid; gridTile.mID = i;
+			this.mGrid.push(gridTile);
+			
+			this.mSegment.mTiles[i].SetBounds(this.mGridBase);
+		} */
 	}
 }
 // ...End
@@ -4233,8 +4319,8 @@ GFCreationScene.prototype.SetUp = function() {
 	
 	{
 		var bp = new GFBluePrint();
-		bp.SetUp("a:tileset_test;{20oa?20oa?20oa?20oa?20oa!20oa?20oa?20oa?20oa?20oa!" +
-				"20oa?20oa?20oa?20oa?20oa!20oa?20oa?20oa?20oa?20oa!20oa?20oa?20oa?20oa?20oa}");
+		bp.SetUp("a:tileset_test;{70oa?70oa?70oa?70oa?70oa!70oa?70oa?70oa?70oa?70oa!" +
+				"70oa?70oa?70oa?70oa?70oa!70oa?70oa?70oa?70oa?70oa!70oa?70oa?70oa?70oa?70oa}");
 		
 		var seg = new GFMapSegment();
 		seg.mPos.Set(0, 0); seg.SetUp(bp);
@@ -4244,6 +4330,8 @@ GFCreationScene.prototype.SetUp = function() {
 		this.mMap.mBounds[1] = this.mMap.mSegment.mBounds.mBounds[1];
 		this.mMap.mBounds[2] = this.mMap.mSegment.mBounds.mBounds[2];
 		this.mMap.mBounds[3] = this.mMap.mSegment.mBounds.mBounds[3];
+		
+		this.mMap.SetUp();
 	}
 	
 	var trans = new IVec2(nmain.game.mCanvasSize.mX / 2, nmain.game.mCanvasSize.mY / 2);
@@ -4718,7 +4806,7 @@ GFGUICreationNewDialogue.prototype.Process = function(point) {
 					var str = "a:tileset_test;{";
 					for (var i = 0; i < y; ++i) {
 						for (var j = 0; j < x; ++j) {
-							str += "20oa";
+							str += "70oa";
 							
 							if (j < x - 1) {
 								str += "?";
@@ -4738,11 +4826,14 @@ GFGUICreationNewDialogue.prototype.Process = function(point) {
 					var seg = new GFMapSegment();
 					seg.mPos.Set(0, 0); seg.SetUp(bp);
 					
+					var map = new GFCreationMap(); currScene.mMap.Copy(map);
 					currScene.mMap.mSegment.Copy(seg);
 					currScene.mMap.mBounds[0] = currScene.mMap.mSegment.mBounds.mBounds[0];
 					currScene.mMap.mBounds[1] = currScene.mMap.mSegment.mBounds.mBounds[1];
 					currScene.mMap.mBounds[2] = currScene.mMap.mSegment.mBounds.mBounds[2];
 					currScene.mMap.mBounds[3] = currScene.mMap.mSegment.mBounds.mBounds[3];
+					
+					currScene.mMap.SetUp();
 				}
 				
 				{
@@ -4876,11 +4967,30 @@ GFGUICreationTileControl.prototype.SetUp = function(initTex) {
 };
 
 GFGUICreationTileControl.prototype.Input = function() {
+	var currScene = nmgrs.sceneMan.mCurrScene;
+	
 	for (var i = 0; i < this.mOptionsArrows.length; ++i) {
 		this.mOptionsArrows[i].Input();
 	}
 	
 	this.mSetTexture.Input();
+	
+	if (nmgrs.inputMan.GetMousePressed(nmouse.button.code.left)) {
+		var tile = currScene.mMap.mCurrentTile;
+		if (tile != -1) {
+			var tex = nmgrs.resMan.mTexStore.GetResource(this.mCurrentTexture);
+			
+			currScene.mMap.mSegment.mTiles[tile].mBlank = false;
+			currScene.mMap.mSegment.mTiles[tile].mZ = this.mCurrTile.mZ;
+			currScene.mMap.mSegment.mTiles[tile].mSlopeDirection = this.mCurrTile.mSlopeDirection;
+			currScene.mMap.mSegment.mTiles[tile].mSpecial = this.mCurrTile.mSpecial;
+			
+			currScene.mMap.mSegment.mTiles[tile].SetUp(tex);
+			currScene.mMap.mSegment.mTiles[tile].ChangeZLevel(currScene.mMap.mSegment.mCurrZLevel);
+			
+			currScene.mMap.SetTileBounds(tile);
+		}
+	}
 }
 
 GFGUICreationTileControl.prototype.Process = function(point) {
@@ -5711,38 +5821,40 @@ GFMap.prototype.Process = function() {
 	for (var i = 0; i < this.mSegments.length; ++i) {
 		if (util.PointInConvex(pt, this.mSegments[i].mMapSegment.mBoundsPoly) == true) {
 			for (var j = 0; j < this.mSegments[i].mMapSegment.mTiles.length; ++j) {
-				if (util.PointInConvex(pt, this.mSegments[i].mMapSegment.mTiles[j].mBoundsPoly) == true) {
-					if (this.mCurrentTile.mX != -1 && this.mCurrentTile.mY != -1) {
-						var tileCurr = new IVec2(0, 0);
-						tileCurr.Copy(this.mSegments[this.mCurrentTile.mX].mMapSegment.mTiles[this.mCurrentTile.mY].mGlobalPos);
-						
-						var tileCheck = new IVec2(0, 0);
-						tileCheck.Copy(this.mSegments[i].mMapSegment.mTiles[j].mGlobalPos);
-						
-						if (tileCurr.mY < tileCheck.mY) {
-							this.mSegments[this.mCurrentTile.mX].mMapSegment.mTiles[this.mCurrentTile.mY].mShowBounds = false;
+				if (this.mSegments[i].mMapSegment.mTiles[j].mBlank == false) {
+					if (util.PointInConvex(pt, this.mSegments[i].mMapSegment.mTiles[j].mBoundsPoly) == true) {
+						if (this.mCurrentTile.mX != -1 && this.mCurrentTile.mY != -1) {
+							var tileCurr = new IVec2(0, 0);
+							tileCurr.Copy(this.mSegments[this.mCurrentTile.mX].mMapSegment.mTiles[this.mCurrentTile.mY].mGlobalPos);
 							
-							this.mSegments[i].mMapSegment.mTiles[j].mShowBounds = true;
-							this.mCurrentTile.mX = i; this.mCurrentTile.mY = j;
-							hoveringTile = true;
-						}
-						else if (tileCurr.mY == tileCheck.mY) {
-							if (tileCurr.mX > tileCheck.mX) {
+							var tileCheck = new IVec2(0, 0);
+							tileCheck.Copy(this.mSegments[i].mMapSegment.mTiles[j].mGlobalPos);
+							
+							if (tileCurr.mY < tileCheck.mY) {
 								this.mSegments[this.mCurrentTile.mX].mMapSegment.mTiles[this.mCurrentTile.mY].mShowBounds = false;
 								
 								this.mSegments[i].mMapSegment.mTiles[j].mShowBounds = true;
 								this.mCurrentTile.mX = i; this.mCurrentTile.mY = j;
 								hoveringTile = true;
 							}
-							else if (tileCurr.mX == tileCheck.mX) {
-								hoveringTile = true;
+							else if (tileCurr.mY == tileCheck.mY) {
+								if (tileCurr.mX > tileCheck.mX) {
+									this.mSegments[this.mCurrentTile.mX].mMapSegment.mTiles[this.mCurrentTile.mY].mShowBounds = false;
+									
+									this.mSegments[i].mMapSegment.mTiles[j].mShowBounds = true;
+									this.mCurrentTile.mX = i; this.mCurrentTile.mY = j;
+									hoveringTile = true;
+								}
+								else if (tileCurr.mX == tileCheck.mX) {
+									hoveringTile = true;
+								}
 							}
 						}
-					}
-					else {
-						this.mSegments[i].mMapSegment.mTiles[j].mShowBounds = true;
-						this.mCurrentTile.mX = i; this.mCurrentTile.mY = j;
-						hoveringTile = true;
+						else {
+							this.mSegments[i].mMapSegment.mTiles[j].mShowBounds = true;
+							this.mCurrentTile.mX = i; this.mCurrentTile.mY = j;
+							hoveringTile = true;
+						}
 					}
 				}
 			}
@@ -6063,7 +6175,7 @@ GFMapSegment.prototype.Copy = function(other) {
 	this.mShowBounds = other.mShowBounds;
 	this.mBounds.Copy(other.mBounds);
 	
-	this.mBoundsPoly.slice(0, this.mBoundsPoly.length);
+	this.mBoundsPoly.splice(0, this.mBoundsPoly.length);
 	this.mBoundsPoly = this.mBoundsPoly.concat(other.mBoundsPoly);
 }
 
@@ -6165,8 +6277,10 @@ GFMapSegment.prototype.ChangeZLevel = function(newLevel) {
 		this.mCurrZLevel += newLevel;
 		// for our entire map segment array
 		for (var i = 0; i < this.mTiles.length; ++i) {
-			this.mTiles[i].ChangeZLevel(this.mCurrZLevel);
-			this.mTiles[i].SetBounds(this.mTileBounds.mBounds[this.mTiles[i].mSprite.mCurrFrame]);
+			if (this.mTiles[i].mBlank == false) {
+				this.mTiles[i].ChangeZLevel(this.mCurrZLevel);
+				this.mTiles[i].SetBounds(this.mTileBounds.mBounds[this.mTiles[i].mSprite.mCurrFrame]);
+			}
 		}
 	}
 }
