@@ -170,7 +170,7 @@ GFGUICreationNewDialogue.prototype.Process = function(point) {
 					var str = "a:tileset_test;{";
 					for (var i = 0; i < y; ++i) {
 						for (var j = 0; j < x; ++j) {
-							str += "20oa";
+							str += "70oa";
 							
 							if (j < x - 1) {
 								str += "?";
@@ -190,11 +190,14 @@ GFGUICreationNewDialogue.prototype.Process = function(point) {
 					var seg = new GFMapSegment();
 					seg.mPos.Set(0, 0); seg.SetUp(bp);
 					
+					var map = new GFCreationMap(); currScene.mMap.Copy(map);
 					currScene.mMap.mSegment.Copy(seg);
 					currScene.mMap.mBounds[0] = currScene.mMap.mSegment.mBounds.mBounds[0];
 					currScene.mMap.mBounds[1] = currScene.mMap.mSegment.mBounds.mBounds[1];
 					currScene.mMap.mBounds[2] = currScene.mMap.mSegment.mBounds.mBounds[2];
 					currScene.mMap.mBounds[3] = currScene.mMap.mSegment.mBounds.mBounds[3];
+					
+					currScene.mMap.SetUp();
 				}
 				
 				{
