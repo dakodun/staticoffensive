@@ -83,38 +83,40 @@ GFMap.prototype.Process = function() {
 	for (var i = 0; i < this.mSegments.length; ++i) {
 		if (util.PointInConvex(pt, this.mSegments[i].mMapSegment.mBoundsPoly) == true) {
 			for (var j = 0; j < this.mSegments[i].mMapSegment.mTiles.length; ++j) {
-				if (util.PointInConvex(pt, this.mSegments[i].mMapSegment.mTiles[j].mBoundsPoly) == true) {
-					if (this.mCurrentTile.mX != -1 && this.mCurrentTile.mY != -1) {
-						var tileCurr = new IVec2(0, 0);
-						tileCurr.Copy(this.mSegments[this.mCurrentTile.mX].mMapSegment.mTiles[this.mCurrentTile.mY].mGlobalPos);
-						
-						var tileCheck = new IVec2(0, 0);
-						tileCheck.Copy(this.mSegments[i].mMapSegment.mTiles[j].mGlobalPos);
-						
-						if (tileCurr.mY < tileCheck.mY) {
-							this.mSegments[this.mCurrentTile.mX].mMapSegment.mTiles[this.mCurrentTile.mY].mShowBounds = false;
+				if (this.mSegments[i].mMapSegment.mTiles[j].mBlank == false) {
+					if (util.PointInConvex(pt, this.mSegments[i].mMapSegment.mTiles[j].mBoundsPoly) == true) {
+						if (this.mCurrentTile.mX != -1 && this.mCurrentTile.mY != -1) {
+							var tileCurr = new IVec2(0, 0);
+							tileCurr.Copy(this.mSegments[this.mCurrentTile.mX].mMapSegment.mTiles[this.mCurrentTile.mY].mGlobalPos);
 							
-							this.mSegments[i].mMapSegment.mTiles[j].mShowBounds = true;
-							this.mCurrentTile.mX = i; this.mCurrentTile.mY = j;
-							hoveringTile = true;
-						}
-						else if (tileCurr.mY == tileCheck.mY) {
-							if (tileCurr.mX > tileCheck.mX) {
+							var tileCheck = new IVec2(0, 0);
+							tileCheck.Copy(this.mSegments[i].mMapSegment.mTiles[j].mGlobalPos);
+							
+							if (tileCurr.mY < tileCheck.mY) {
 								this.mSegments[this.mCurrentTile.mX].mMapSegment.mTiles[this.mCurrentTile.mY].mShowBounds = false;
 								
 								this.mSegments[i].mMapSegment.mTiles[j].mShowBounds = true;
 								this.mCurrentTile.mX = i; this.mCurrentTile.mY = j;
 								hoveringTile = true;
 							}
-							else if (tileCurr.mX == tileCheck.mX) {
-								hoveringTile = true;
+							else if (tileCurr.mY == tileCheck.mY) {
+								if (tileCurr.mX > tileCheck.mX) {
+									this.mSegments[this.mCurrentTile.mX].mMapSegment.mTiles[this.mCurrentTile.mY].mShowBounds = false;
+									
+									this.mSegments[i].mMapSegment.mTiles[j].mShowBounds = true;
+									this.mCurrentTile.mX = i; this.mCurrentTile.mY = j;
+									hoveringTile = true;
+								}
+								else if (tileCurr.mX == tileCheck.mX) {
+									hoveringTile = true;
+								}
 							}
 						}
-					}
-					else {
-						this.mSegments[i].mMapSegment.mTiles[j].mShowBounds = true;
-						this.mCurrentTile.mX = i; this.mCurrentTile.mY = j;
-						hoveringTile = true;
+						else {
+							this.mSegments[i].mMapSegment.mTiles[j].mShowBounds = true;
+							this.mCurrentTile.mX = i; this.mCurrentTile.mY = j;
+							hoveringTile = true;
+						}
 					}
 				}
 			}
