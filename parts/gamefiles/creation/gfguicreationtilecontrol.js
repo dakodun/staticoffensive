@@ -14,6 +14,8 @@ function GFGUICreationTileControl() {
 		
 		this.mCurrTileText[6] = new Text();
 		this.mCurrTileText[7] = new Text();
+		
+		this.mCurrTileText[8] = new Text();
 	}
 	
 	{
@@ -93,7 +95,7 @@ GFGUICreationTileControl.prototype.Input = function() {
 	
 	this.mSetTexture.Input();
 	
-	if (nmgrs.inputMan.GetMousePressed(nmouse.button.code.left)) {
+	if (nmgrs.inputMan.GetMouseDown(nmouse.button.code.left)) {
 		var tile = currScene.mMap.mCurrentTile;
 		if (tile != -1) {
 			var tex = nmgrs.resMan.mTexStore.GetResource(this.mCurrentTexture);
@@ -107,6 +109,7 @@ GFGUICreationTileControl.prototype.Input = function() {
 			currScene.mMap.mSegment.mTiles[tile].ChangeZLevel(currScene.mMap.mSegment.mCurrZLevel);
 			
 			currScene.mMap.SetTileBounds(tile);
+			currScene.mMap.SetTileSpecial(tile);
 		}
 	}
 }
@@ -131,12 +134,32 @@ GFGUICreationTileControl.prototype.Process = function(point) {
 			
 			this.UpdateTileSprite();
 			this.mCurrTileText[3].mString = this.mZLevels[this.mCurrTile.mZ];
+			
+			{
+				this.mCurrTileText[8].mPos.Copy(this.mCurrTile.mSprite.mPos);
+				this.mCurrTileText[8].mPos.mX += 30;
+				this.mCurrTileText[8].mPos.mY += 8 + (8 * (3 - Math.floor(this.mCurrTile.mZ / 2)));
+				
+				if (this.mCurrTile.mZ % 2 != 0) {
+					this.mCurrTileText[8].mPos.mY -= 4;
+				}
+			}
 		}
 		else if (this.mOptionsArrows[1].OnClick() == true) {
 			this.mCurrTile.mZ = (this.mCurrTile.mZ + 1) % 8;
 			
 			this.UpdateTileSprite();
 			this.mCurrTileText[3].mString = this.mZLevels[this.mCurrTile.mZ];
+			
+			{
+				this.mCurrTileText[8].mPos.Copy(this.mCurrTile.mSprite.mPos);
+				this.mCurrTileText[8].mPos.mX += 30;
+				this.mCurrTileText[8].mPos.mY += 8 + (8 * (3 - Math.floor(this.mCurrTile.mZ / 2)));
+				
+				if (this.mCurrTile.mZ % 2 != 0) {
+					this.mCurrTileText[8].mPos.mY -= 4;
+				}
+			}
 		}
 		else if (this.mOptionsArrows[2].OnClick() == true) {
 			this.mCurrTile.mSlopeDirection--;
@@ -161,12 +184,46 @@ GFGUICreationTileControl.prototype.Process = function(point) {
 			
 			this.mCurrTile.mSpecial = this.mTypesTile[this.mCurrentType];
 			this.mCurrTileText[5].mString = this.mTypes[this.mCurrentType];
+			
+			{
+				switch (this.mCurrTile.mSpecial) {
+					case 'e' :
+						this.mCurrTileText[8].mString = "Ent";
+						break;
+					case 'x' :
+						this.mCurrTileText[8].mString = "Ext";
+						break;
+					case 'b' :
+						this.mCurrTileText[8].mString = "Bth";
+						break;
+					case 'o' :
+						this.mCurrTileText[8].mString = "";
+						break;
+				}
+			}
 		}
 		else if (this.mOptionsArrows[5].OnClick() == true) {
 			this.mCurrentType = (this.mCurrentType + 1) % 4;
 			
 			this.mCurrTile.mSpecial = this.mTypesTile[this.mCurrentType];
 			this.mCurrTileText[5].mString = this.mTypes[this.mCurrentType];
+			
+			{
+				switch (this.mCurrTile.mSpecial) {
+					case 'e' :
+						this.mCurrTileText[8].mString = "Ent";
+						break;
+					case 'x' :
+						this.mCurrTileText[8].mString = "Ext";
+						break;
+					case 'b' :
+						this.mCurrTileText[8].mString = "Bth";
+						break;
+					case 'o' :
+						this.mCurrTileText[8].mString = "";
+						break;
+				}
+			}
 		}
 		else if (this.mSetTexture.OnClick() == true) {
 			currScene.mPersist = true;
@@ -179,8 +236,12 @@ GFGUICreationTileControl.prototype.Process = function(point) {
 GFGUICreationTileControl.prototype.GetRenderData = function() {
 	var arr = new Array();
 	
-	for (var i = 0; i < this.mCurrTileText.length; ++i) {
+	for (var i = 0; i < this.mCurrTileText.length - 1; ++i) {
 		arr.push(this.mCurrTileText[i]);
+	}
+	
+	if (this.mCurrTile.mBlank == false) {
+		arr.push(this.mCurrTileText[8]);
 	}
 	
 	arr = arr.concat(this.mCurrTile.GetRenderData());
@@ -242,6 +303,21 @@ GFGUICreationTileControl.prototype.SetUpText = function() {
 		this.mCurrTileText[7].mString = this.mCurrentTexture;
 		this.mCurrTileText[7].mPos.Set(540, 360);
 		this.mCurrTileText[7].mColour = "#000000";
+	}
+	
+	{
+		this.mCurrTileText[8].SetFontSize(12);
+		this.mCurrTileText[8].mString = "";
+		this.mCurrTileText[8].mShadow = true;
+		this.mCurrTileText[8].mDepth = this.mCurrTile.mSprite.mDepth - 1;
+		
+		this.mCurrTileText[8].mPos.Copy(this.mCurrTile.mSprite.mPos);
+		this.mCurrTileText[8].mPos.mX += 30;
+		this.mCurrTileText[8].mPos.mY += 8 + (8 * (3 - Math.floor(this.mCurrTile.mZ / 2)));
+		
+		if (this.mCurrTile.mZ % 2 != 0) {
+			this.mCurrTileText[8].mPos.mY -= 4;
+		}
 	}
 }
 
