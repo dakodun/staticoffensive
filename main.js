@@ -6029,24 +6029,104 @@ GFMapGen.prototype.GenerateMap = function(bpCollection, numParts) {
 								
 								seg.SetUp(bp);
 								
-								var collision = false;
-								for (var m = 0; m < map.mSegments.length; ++m) {
-									/* alert(map.mSegments[m].mMapSegment.mPos.Output() + " " + map.mSegments[m].mMapSegment.mSize.Output() + " " +
-											seg.mPos.Output()  + " " + seg.mSize.Output()); */
+								var cont = true; // whether we should continue after out final checks
+								
+								// these checks are seperated from mapsegment compatibility checks as we need both
+								// segment's positions first
+								if (entrance.mZ % 2 != 0 && (entrance.mZ == exit.mZ - 2 || entrance.mZ == exit.mZ + 2)) {
+									// entrance and exit positions and slope directions
+									var entPos = new IVec2(0, 0); var exitPos = new IVec2(0, 0);
+									var entSlope = 0; var exitSlope = 0;
 									
-									if (util.RectangleCollision(map.mSegments[m].mMapSegment.mPos, 
-											map.mSegments[m].mMapSegment.mSize, seg.mPos, seg.mSize, false) == true) { // no collisions
+									if (entrance.mZ == exit.mZ - 2) { // other is smaller
+										entPos.Copy(entrance.mGlobalPos);
+										entPos.mX += x; entPos.mY += y;
 										
-										collision = true
-										break;
+										exitPos.Copy(exit.mGlobalPos);
+										
+										entSlope = entrance.mSlopeDirection;
+										exitSlope = exit.mSlopeDirection;
+									}
+									else if (entrance.mZ == exit.mZ + 2) { // other is bigger
+										// reverse entrance and exit
+										exitPos.Copy(entrance.mGlobalPos);
+										exitPos.mX += x; exitPos.mY += y;
+										
+										entPos.Copy(exit.mGlobalPos);
+										
+										exitSlope = entrance.mSlopeDirection;
+										entSlope = exit.mSlopeDirection;
+									}
+									
+									// store the offset for the front and east tile depending on slope direction
+									var front = new IVec2(0, 0); var east = new IVec2(0, 0);
+									switch (exitSlope) {
+										case 0 :
+											front = new IVec2(0, -1);
+											east = new IVec2(1, 0);
+											break;
+										case 1 :
+											front = new IVec2(1, 0);
+											east = new IVec2(0, 1);
+											break;
+										case 2 :
+											front = new IVec2(0, 1);
+											east = new IVec2(-1, 0);
+											break;
+										case 3 :
+											front = new IVec2(-1, 0);
+											east = new IVec2(0, -1);
+											break;
+									}
+									
+									// if other tile is in front
+									if (exitPos.mX == entPos.mX - front.mX && exitPos.mY == entPos.mY - front.mY) {
+										cont = false;
+									}
+									else if (exitPos.mX == entPos.mX + front.mX && exitPos.mY == entPos.mY + front.mY) { // otherwise if other tile is behind
+										// if slopes directions are opposite
+										if (exitSlope == (entSlope + 2) % 4) {
+											cont = false;
+										}
+									}
+									else { // other tile is to the side
+										// if slope directions match
+										if (exitSlope == entSlope) {
+											cont = false;
+										}
+										else {
+											// if we are to the east
+											if (exitPos.mX == entPos.mX - east.mX && exitPos.mY == entPos.mY - east.mY) {
+												if ((exitSlope + 1) % 4 == entSlope) { // slope is facing away
+													cont = false;
+												}
+											}
+											else { // to the west
+												if ((exitSlope + 3) % 4 == entSlope) {
+													cont = false;
+												}
+											}
+										}
 									}
 								}
 								
-								if (collision == false) {
-									map.AddSegment(seg);
-									allDone = true;
-									success = true;
-									break;
+								if (cont == true) {
+									var collision = false;
+									for (var m = 0; m < map.mSegments.length; ++m) {
+										if (util.RectangleCollision(map.mSegments[m].mMapSegment.mPos, 
+												map.mSegments[m].mMapSegment.mSize, seg.mPos, seg.mSize, false) == true) { // no collisions
+											
+											collision = true;
+											break;
+										}
+									}
+									
+									if (collision == false) {
+										map.AddSegment(seg);
+										allDone = true;
+										success = true;
+										break;
+									}
 								}
 							}
 						}
@@ -6106,11 +6186,8 @@ GFMapConnectivity.prototype.GetCompatible = function(other) {
 	excludeArr[0] = false; excludeArr[1] = false;
 	excludeArr[2] = false; excludeArr[3] = false;
 	
-	if (this.mZ == other.mZ - 1 || this.mZ == other.mZ || this.mZ == other.mZ + 1) {
-	
-	// if (other is within 1 of this) OR (other is within 2 AND this is a slope)
-	/* if ((this.mZ == other.mZ - 1 || this.mZ == other.mZ || this.mZ == other.mZ + 1) ||
-			(this.mZ % 2 != 0 && (this.mZ == other.mZ - 2 || this.mZ == other.mZ + 2))) { */
+	if ((this.mZ == other.mZ - 1 || this.mZ == other.mZ || this.mZ == other.mZ + 1) ||
+			(this.mZ % 2 != 0 && (this.mZ == other.mZ - 2 || this.mZ == other.mZ + 2))) {
 		
 		if (this.mZ % 2 == 0) { // this is flat
 			if (other.mZ % 2 != 0) { // other is a slope
@@ -6118,7 +6195,7 @@ GFMapConnectivity.prototype.GetCompatible = function(other) {
 					// exclude opposite of other.SlopeDirection
 					excludeArr[(other.mSlopeDirection + 2) % 4] = true;
 				}
-				else { // we're higher than other
+				else if (this.mZ == other.mZ + 1) { // we're higher than other
 					// exclude other.SlopeDirection
 					excludeArr[other.mSlopeDirection] = true;
 				}
@@ -6131,13 +6208,13 @@ GFMapConnectivity.prototype.GetCompatible = function(other) {
 					excludeArr[(this.mSlopeDirection + 2) % 4] = true;
 					
 				}
-				else { // we're higher than other
+				else if (this.mZ == other.mZ + 1) { // we're higher than other
 					// exclude this.SlopeDirection
 					excludeArr[this.mSlopeDirection] = true;
 				}
 			}
-			else { // other is a slope
-				if (this.mSlopeDirection == other.mSlopeDirection) {
+			else if (this.mZ == other.mZ) { // other is a slope
+				if (this.mSlopeDirection == other.mSlopeDirection) { // if slopes are same direction
 					excludeArr[(this.mSlopeDirection + 2) % 4] = true;
 					excludeArr[this.mSlopeDirection] = true;
 				}
