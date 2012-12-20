@@ -7,6 +7,15 @@ function GFGridTile() {
 // ...End
 
 
+// GFSpecialTile Class...
+// game file: 
+function GFSpecialTile() {
+	this.mText = new Text();
+	this.mID = -1;
+};
+// ...End
+
+
 // GFCreationMap Class...
 // game file: 
 function GFCreationMap() {
@@ -38,6 +47,8 @@ function GFCreationMap() {
 		
 		this.mGridBase.mOutline = true;
 	}
+	
+	this.mSpecial = new Array();
 };
 
 GFCreationMap.prototype.Copy = function(other) {
@@ -111,6 +122,10 @@ GFCreationMap.prototype.GetRenderData = function() {
 	
 	for (var i = 0; i < this.mGrid.length; ++i) {
 		arr.push(this.mGrid[i].mTile);
+	}
+	
+	for (var i = 0; i < this.mSpecial.length; ++i) {
+		arr.push(this.mSpecial[i].mText);
 	}
 	
 	return arr;
@@ -205,21 +220,50 @@ GFCreationMap.prototype.SetTileBounds = function(id) {
 			}
 		}
 	}
-	else {
-		/* if (this.mSegment.mTiles[id].mBlank == true) {
-			var tex = nmgrs.resMan.mTexStore.GetResource("gridtile");
+}
+
+GFCreationMap.prototype.SetTileSpecial = function(id) {
+	for (var i = 0; i < this.mSpecial.length; ++i) {
+		if (this.mSpecial[i].mID == id) {
+			this.mSpecial.splice(i, 1);
+			break;
+		}
+	}
+	
+	if (this.mSegment.mTiles[id].mBlank == false) {
+		if (this.mSegment.mTiles[id].mSpecial != 'o') {
+			var special = new Text();
 			
-			var grid = new Sprite();
-			grid.SetTexture(tex);
-			grid.mPos.Copy(this.mSegment.mTiles[id].mSprite.mPos);
-			grid.mDepth = this.mSegment.mTiles[id].mSprite.mDepth;
+			var font = nmgrs.resMan.mFontStore.GetResource("pixantiqua");
+			special.SetFont(font);
+			special.SetFontSize(12);
+			special.mAlign = "centre";
+			special.mDepth = 0;
+			special.mShadow = true;
 			
-			var gridTile = new GFGridTile();
-			gridTile.mTile = grid; gridTile.mID = i;
-			this.mGrid.push(gridTile);
+			special.mPos.Copy(this.mSegment.mTiles[id].mSprite.mPos);
+			special.mPos.mX += 30; special.mPos.mY += 8 + (8 * (3 - Math.floor(this.mSegment.mTiles[id].mZ / 2)));
 			
-			this.mSegment.mTiles[i].SetBounds(this.mGridBase);
-		} */
+			if (this.mSegment.mTiles[id].mZ % 2 != 0) {
+				special.mPos.mY -= 4;
+			}
+			
+			switch (this.mSegment.mTiles[id].mSpecial) {
+				case 'e' :
+					special.mString = "Ent";
+					break;
+				case 'x' :
+					special.mString = "Ext";
+					break;
+				case 'b' :
+					special.mString = "Bth";
+					break;
+			}
+			
+			var specialTile = new GFSpecialTile();
+			specialTile.mText = special; specialTile.mID = id;
+			this.mSpecial.push(specialTile);
+		}
 	}
 }
 // ...End
