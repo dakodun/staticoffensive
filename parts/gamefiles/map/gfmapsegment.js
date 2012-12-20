@@ -21,11 +21,8 @@ GFMapConnectivity.prototype.GetCompatible = function(other) {
 	excludeArr[0] = false; excludeArr[1] = false;
 	excludeArr[2] = false; excludeArr[3] = false;
 	
-	if (this.mZ == other.mZ - 1 || this.mZ == other.mZ || this.mZ == other.mZ + 1) {
-	
-	// if (other is within 1 of this) OR (other is within 2 AND this is a slope)
-	/* if ((this.mZ == other.mZ - 1 || this.mZ == other.mZ || this.mZ == other.mZ + 1) ||
-			(this.mZ % 2 != 0 && (this.mZ == other.mZ - 2 || this.mZ == other.mZ + 2))) { */
+	if ((this.mZ == other.mZ - 1 || this.mZ == other.mZ || this.mZ == other.mZ + 1) ||
+			(this.mZ % 2 != 0 && (this.mZ == other.mZ - 2 || this.mZ == other.mZ + 2))) {
 		
 		if (this.mZ % 2 == 0) { // this is flat
 			if (other.mZ % 2 != 0) { // other is a slope
@@ -33,7 +30,7 @@ GFMapConnectivity.prototype.GetCompatible = function(other) {
 					// exclude opposite of other.SlopeDirection
 					excludeArr[(other.mSlopeDirection + 2) % 4] = true;
 				}
-				else { // we're higher than other
+				else if (this.mZ == other.mZ + 1) { // we're higher than other
 					// exclude other.SlopeDirection
 					excludeArr[other.mSlopeDirection] = true;
 				}
@@ -46,13 +43,13 @@ GFMapConnectivity.prototype.GetCompatible = function(other) {
 					excludeArr[(this.mSlopeDirection + 2) % 4] = true;
 					
 				}
-				else { // we're higher than other
+				else if (this.mZ == other.mZ + 1) { // we're higher than other
 					// exclude this.SlopeDirection
 					excludeArr[this.mSlopeDirection] = true;
 				}
 			}
-			else { // other is a slope
-				if (this.mSlopeDirection == other.mSlopeDirection) {
+			else if (this.mZ == other.mZ) { // other is a slope
+				if (this.mSlopeDirection == other.mSlopeDirection) { // if slopes are same direction
 					excludeArr[(this.mSlopeDirection + 2) % 4] = true;
 					excludeArr[this.mSlopeDirection] = true;
 				}
