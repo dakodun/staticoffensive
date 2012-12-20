@@ -21,8 +21,8 @@ GFGUICreationBar.prototype.SetUp = function() {
 		var tex = nmgrs.resMan.mTexStore.GetResource("gui_creation_topmenunew");
 		var baseBut = new GUIButton();
 		
-		baseBut.SetUp(new IVec2(8, 10), new IVec2(54, 24), -5000);
-		baseBut.mPos.Set(8, 10);
+		baseBut.SetUp(new IVec2(12, 36), new IVec2(38, 18), -5000);
+		baseBut.mPos.Set(12, 36);
 		
 		baseBut.mSpriteIdle.SetAnimatedTexture(tex, 3, 1, -1, -1);
 		baseBut.mSpriteIdle.SetCurrentFrame(0);
@@ -38,8 +38,13 @@ GFGUICreationBar.prototype.SetUp = function() {
 		
 		this.mMenus[0].SetUp(baseBut);
 		this.AddItem(this.mMenus[0], "new", false);
-		this.AddItem(this.mMenus[0], "old", true);
-		this.AddItem(this.mMenus[0], "farts", false);
+		var newPos = new IVec2(0, 0); newPos.Copy(this.mMenus[0].mItems[0].mPos); newPos.mY += 2;
+		this.mMenus[0].mItems[0].mPos.Copy(newPos);
+		this.mMenus[0].mItems[0].SetSpritePositions(newPos);
+		
+		this.AddItem(this.mMenus[0], "load", true);
+		this.AddItem(this.mMenus[0], "import", false);
+		this.AddItem(this.mMenus[0], "export", true);
 	}
 }
 
@@ -61,10 +66,13 @@ GFGUICreationBar.prototype.Process = function(point) {
 			currScene.mCreationControl.mDialogueOpen = true;
 		}
 		else if (this.mMenus[0].OnClick(1) == true) {
-			alert("old");
+			
 		}
 		else if (this.mMenus[0].OnClick(2) == true) {
-			alert("burps");
+			
+		}
+		else if (this.mMenus[0].OnClick(3) == true) {
+			
 		}
 	}
 }
