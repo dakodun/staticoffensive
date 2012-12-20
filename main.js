@@ -1288,7 +1288,7 @@ function Text() {
 	this.mAlign = "left";
 	
 	this.mAbsolute = false;
-}
+};
 
 // returns the type of this object for validity checking
 Text.prototype.Type = function() {
@@ -4523,9 +4523,10 @@ GFGUICreationBar.prototype.SetUp = function() {
 		this.mMenus[0].mItems[0].mPos.Copy(newPos);
 		this.mMenus[0].mItems[0].SetSpritePositions(newPos);
 		
-		this.AddItem(this.mMenus[0], "load", true);
-		this.AddItem(this.mMenus[0], "import", false);
-		this.AddItem(this.mMenus[0], "export", true);
+		this.AddItem(this.mMenus[0], "save", true);
+		this.AddItem(this.mMenus[0], "load", false);
+		this.AddItem(this.mMenus[0], "import", true);
+		this.AddItem(this.mMenus[0], "export", false);
 	}
 }
 
@@ -4553,6 +4554,9 @@ GFGUICreationBar.prototype.Process = function(point) {
 			
 		}
 		else if (this.mMenus[0].OnClick(3) == true) {
+			
+		}
+		else if (this.mMenus[0].OnClick(4) == true) {
 			
 		}
 	}
@@ -4731,10 +4735,13 @@ function GFGUICreationNewDialogue() {
 	this.mButtons = new Array();
 	this.mButtons[0] = new GUIButton();
 	this.mButtons[1] = new GUIButton();
+	
+	this.mExtraText = new Text();
 }
 
 GFGUICreationNewDialogue.prototype.SetUp = function() {
-	var pos = new IVec2(8, 38);
+	var pos = new IVec2(nmain.game.mCanvasSize.mX / 2, nmain.game.mCanvasSize.mY / 2);
+	pos.mX -= 68; pos.mY -= 48;
 	
 	{
 		var tex = nmgrs.resMan.mTexStore.GetResource("gui_creation_newdialogue_back");
@@ -4840,6 +4847,21 @@ GFGUICreationNewDialogue.prototype.SetUp = function() {
 		
 		this.mButtons[1].mSpriteInactive.SetAnimatedTexture(tex, 3, 1, -1, -1);
 		this.mButtons[1].mSpriteInactive.SetCurrentFrame(0);
+	}
+	
+	{
+		var font = nmgrs.resMan.mFontStore.GetResource("pixantiqua");
+		
+		this.mExtraText
+		
+		this.mExtraText.SetFont(font);
+		this.mExtraText.SetFontSize(12);
+		this.mExtraText.mAlign = "centre";
+		this.mExtraText.mAbsolute = true;
+		this.mExtraText.mDepth = -5100;
+		this.mExtraText.mPos.Set(nmain.game.mCanvasSize.mX / 2, (nmain.game.mCanvasSize.mY / 2) + 52);
+		this.mExtraText.mString = "Minimum Size: (1, 1)\nMaximum Size: (20, 20)";
+		this.mExtraText.mShadow = true;
 	}
 }
 
@@ -4959,6 +4981,8 @@ GFGUICreationNewDialogue.prototype.GetRenderData = function() {
 	for (var i = 0; i < this.mButtons.length; ++i) {
 		arr = arr.concat(this.mButtons[i].GetRenderData());
 	}
+	
+	arr.push(this.mExtraText);
 	
 	return arr;
 }
