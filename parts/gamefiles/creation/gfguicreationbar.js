@@ -42,9 +42,10 @@ GFGUICreationBar.prototype.SetUp = function() {
 		this.mMenus[0].mItems[0].mPos.Copy(newPos);
 		this.mMenus[0].mItems[0].SetSpritePositions(newPos);
 		
-		this.AddItem(this.mMenus[0], "load", true);
-		this.AddItem(this.mMenus[0], "import", false);
-		this.AddItem(this.mMenus[0], "export", true);
+		this.AddItem(this.mMenus[0], "save", true);
+		this.AddItem(this.mMenus[0], "load", false);
+		this.AddItem(this.mMenus[0], "import", true);
+		this.AddItem(this.mMenus[0], "export", false);
 	}
 }
 
@@ -72,6 +73,9 @@ GFGUICreationBar.prototype.Process = function(point) {
 			
 		}
 		else if (this.mMenus[0].OnClick(3) == true) {
+			
+		}
+		else if (this.mMenus[0].OnClick(4) == true) {
 			
 		}
 	}
