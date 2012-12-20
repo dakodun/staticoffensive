@@ -18,7 +18,7 @@ function Text() {
 	this.mAlign = "left";
 	
 	this.mAbsolute = false;
-}
+};
 
 // returns the type of this object for validity checking
 Text.prototype.Type = function() {
