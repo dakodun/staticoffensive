@@ -4817,17 +4817,17 @@ GFGUICreationNewDialogue.prototype.SetUp = function() {
 		this.mButtons[0].SetUp(new IVec2(pos.mX + 36, pos.mY + 64), new IVec2(60, 26), -5101);
 		// this.mButtons[0].mPos.Set(pos.mX + 36, pos.mY + 64);
 		
-		this.mButtons[0].mSpriteIdle.SetAnimatedTexture(tex, 3, 1, -1, -1);
+		this.mButtons[0].mSpriteIdle.SetAnimatedTexture(tex, 4, 1, -1, -1);
 		this.mButtons[0].mSpriteIdle.SetCurrentFrame(0);
 		
-		this.mButtons[0].mSpriteHover.SetAnimatedTexture(tex, 3, 1, -1, -1);
+		this.mButtons[0].mSpriteHover.SetAnimatedTexture(tex, 4, 1, -1, -1);
 		this.mButtons[0].mSpriteHover.SetCurrentFrame(1);
 		
-		this.mButtons[0].mSpriteDown.SetAnimatedTexture(tex, 3, 1, -1, -1);
+		this.mButtons[0].mSpriteDown.SetAnimatedTexture(tex, 4, 1, -1, -1);
 		this.mButtons[0].mSpriteDown.SetCurrentFrame(2);
 		
-		this.mButtons[0].mSpriteInactive.SetAnimatedTexture(tex, 3, 1, -1, -1);
-		this.mButtons[0].mSpriteInactive.SetCurrentFrame(0);
+		this.mButtons[0].mSpriteInactive.SetAnimatedTexture(tex, 4, 1, -1, -1);
+		this.mButtons[0].mSpriteInactive.SetCurrentFrame(3);
 	}
 	
 	{
@@ -4883,7 +4883,7 @@ GFGUICreationNewDialogue.prototype.Process = function(point) {
 			this.mInputBoxes[i].Process(point);
 			
 			{
-				if (this.mInputBoxes[0].mInputText.mString.length > 0) {
+				if (this.mInputBoxes[i].mInputText.mString.length > 0) {
 					var x = Number(this.mInputBoxes[i].mInputText.mString);
 					if (x == 0) {
 						this.mInputBoxes[i].SetText("");
@@ -4900,6 +4900,15 @@ GFGUICreationNewDialogue.prototype.Process = function(point) {
 		
 		for (var i = 0; i < this.mButtons.length; ++i) {
 			this.mButtons[i].Process(point);
+		}
+	}
+	
+	{
+		if (this.mInputBoxes[0].mInputText.mString == "" || this.mInputBoxes[1].mInputText.mString == "") {
+			this.mButtons[0].mActive = false;
+		}
+		else {
+			this.mButtons[0].mActive = true;
 		}
 	}
 	
