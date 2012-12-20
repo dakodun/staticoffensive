@@ -4098,6 +4098,15 @@ function GFGridTile() {
 // ...End
 
 
+// GFSpecialTile Class...
+// game file: 
+function GFSpecialTile() {
+	this.mText = new Text();
+	this.mID = -1;
+};
+// ...End
+
+
 // GFCreationMap Class...
 // game file: 
 function GFCreationMap() {
@@ -4129,6 +4138,8 @@ function GFCreationMap() {
 		
 		this.mGridBase.mOutline = true;
 	}
+	
+	this.mSpecial = new Array();
 };
 
 GFCreationMap.prototype.Copy = function(other) {
@@ -4202,6 +4213,10 @@ GFCreationMap.prototype.GetRenderData = function() {
 	
 	for (var i = 0; i < this.mGrid.length; ++i) {
 		arr.push(this.mGrid[i].mTile);
+	}
+	
+	for (var i = 0; i < this.mSpecial.length; ++i) {
+		arr.push(this.mSpecial[i].mText);
 	}
 	
 	return arr;
@@ -4296,21 +4311,50 @@ GFCreationMap.prototype.SetTileBounds = function(id) {
 			}
 		}
 	}
-	else {
-		/* if (this.mSegment.mTiles[id].mBlank == true) {
-			var tex = nmgrs.resMan.mTexStore.GetResource("gridtile");
+}
+
+GFCreationMap.prototype.SetTileSpecial = function(id) {
+	for (var i = 0; i < this.mSpecial.length; ++i) {
+		if (this.mSpecial[i].mID == id) {
+			this.mSpecial.splice(i, 1);
+			break;
+		}
+	}
+	
+	if (this.mSegment.mTiles[id].mBlank == false) {
+		if (this.mSegment.mTiles[id].mSpecial != 'o') {
+			var special = new Text();
 			
-			var grid = new Sprite();
-			grid.SetTexture(tex);
-			grid.mPos.Copy(this.mSegment.mTiles[id].mSprite.mPos);
-			grid.mDepth = this.mSegment.mTiles[id].mSprite.mDepth;
+			var font = nmgrs.resMan.mFontStore.GetResource("pixantiqua");
+			special.SetFont(font);
+			special.SetFontSize(12);
+			special.mAlign = "centre";
+			special.mDepth = 0;
+			special.mShadow = true;
 			
-			var gridTile = new GFGridTile();
-			gridTile.mTile = grid; gridTile.mID = i;
-			this.mGrid.push(gridTile);
+			special.mPos.Copy(this.mSegment.mTiles[id].mSprite.mPos);
+			special.mPos.mX += 30; special.mPos.mY += 8 + (8 * (3 - Math.floor(this.mSegment.mTiles[id].mZ / 2)));
 			
-			this.mSegment.mTiles[i].SetBounds(this.mGridBase);
-		} */
+			if (this.mSegment.mTiles[id].mZ % 2 != 0) {
+				special.mPos.mY -= 4;
+			}
+			
+			switch (this.mSegment.mTiles[id].mSpecial) {
+				case 'e' :
+					special.mString = "Ent";
+					break;
+				case 'x' :
+					special.mString = "Ext";
+					break;
+				case 'b' :
+					special.mString = "Bth";
+					break;
+			}
+			
+			var specialTile = new GFSpecialTile();
+			specialTile.mText = special; specialTile.mID = id;
+			this.mSpecial.push(specialTile);
+		}
 	}
 }
 // ...End
@@ -4458,8 +4502,8 @@ GFGUICreationBar.prototype.SetUp = function() {
 		var tex = nmgrs.resMan.mTexStore.GetResource("gui_creation_topmenunew");
 		var baseBut = new GUIButton();
 		
-		baseBut.SetUp(new IVec2(8, 10), new IVec2(54, 24), -5000);
-		baseBut.mPos.Set(8, 10);
+		baseBut.SetUp(new IVec2(12, 36), new IVec2(38, 18), -5000);
+		baseBut.mPos.Set(12, 36);
 		
 		baseBut.mSpriteIdle.SetAnimatedTexture(tex, 3, 1, -1, -1);
 		baseBut.mSpriteIdle.SetCurrentFrame(0);
@@ -4475,8 +4519,13 @@ GFGUICreationBar.prototype.SetUp = function() {
 		
 		this.mMenus[0].SetUp(baseBut);
 		this.AddItem(this.mMenus[0], "new", false);
-		this.AddItem(this.mMenus[0], "old", true);
-		this.AddItem(this.mMenus[0], "farts", false);
+		var newPos = new IVec2(0, 0); newPos.Copy(this.mMenus[0].mItems[0].mPos); newPos.mY += 2;
+		this.mMenus[0].mItems[0].mPos.Copy(newPos);
+		this.mMenus[0].mItems[0].SetSpritePositions(newPos);
+		
+		this.AddItem(this.mMenus[0], "load", true);
+		this.AddItem(this.mMenus[0], "import", false);
+		this.AddItem(this.mMenus[0], "export", true);
 	}
 }
 
@@ -4498,10 +4547,13 @@ GFGUICreationBar.prototype.Process = function(point) {
 			currScene.mCreationControl.mDialogueOpen = true;
 		}
 		else if (this.mMenus[0].OnClick(1) == true) {
-			alert("old");
+			
 		}
 		else if (this.mMenus[0].OnClick(2) == true) {
-			alert("burps");
+			
+		}
+		else if (this.mMenus[0].OnClick(3) == true) {
+			
 		}
 	}
 }
@@ -4929,6 +4981,8 @@ function GFGUICreationTileControl() {
 		
 		this.mCurrTileText[6] = new Text();
 		this.mCurrTileText[7] = new Text();
+		
+		this.mCurrTileText[8] = new Text();
 	}
 	
 	{
@@ -5008,7 +5062,7 @@ GFGUICreationTileControl.prototype.Input = function() {
 	
 	this.mSetTexture.Input();
 	
-	if (nmgrs.inputMan.GetMousePressed(nmouse.button.code.left)) {
+	if (nmgrs.inputMan.GetMouseDown(nmouse.button.code.left)) {
 		var tile = currScene.mMap.mCurrentTile;
 		if (tile != -1) {
 			var tex = nmgrs.resMan.mTexStore.GetResource(this.mCurrentTexture);
@@ -5022,6 +5076,7 @@ GFGUICreationTileControl.prototype.Input = function() {
 			currScene.mMap.mSegment.mTiles[tile].ChangeZLevel(currScene.mMap.mSegment.mCurrZLevel);
 			
 			currScene.mMap.SetTileBounds(tile);
+			currScene.mMap.SetTileSpecial(tile);
 		}
 	}
 }
@@ -5046,12 +5101,32 @@ GFGUICreationTileControl.prototype.Process = function(point) {
 			
 			this.UpdateTileSprite();
 			this.mCurrTileText[3].mString = this.mZLevels[this.mCurrTile.mZ];
+			
+			{
+				this.mCurrTileText[8].mPos.Copy(this.mCurrTile.mSprite.mPos);
+				this.mCurrTileText[8].mPos.mX += 30;
+				this.mCurrTileText[8].mPos.mY += 8 + (8 * (3 - Math.floor(this.mCurrTile.mZ / 2)));
+				
+				if (this.mCurrTile.mZ % 2 != 0) {
+					this.mCurrTileText[8].mPos.mY -= 4;
+				}
+			}
 		}
 		else if (this.mOptionsArrows[1].OnClick() == true) {
 			this.mCurrTile.mZ = (this.mCurrTile.mZ + 1) % 8;
 			
 			this.UpdateTileSprite();
 			this.mCurrTileText[3].mString = this.mZLevels[this.mCurrTile.mZ];
+			
+			{
+				this.mCurrTileText[8].mPos.Copy(this.mCurrTile.mSprite.mPos);
+				this.mCurrTileText[8].mPos.mX += 30;
+				this.mCurrTileText[8].mPos.mY += 8 + (8 * (3 - Math.floor(this.mCurrTile.mZ / 2)));
+				
+				if (this.mCurrTile.mZ % 2 != 0) {
+					this.mCurrTileText[8].mPos.mY -= 4;
+				}
+			}
 		}
 		else if (this.mOptionsArrows[2].OnClick() == true) {
 			this.mCurrTile.mSlopeDirection--;
@@ -5076,12 +5151,46 @@ GFGUICreationTileControl.prototype.Process = function(point) {
 			
 			this.mCurrTile.mSpecial = this.mTypesTile[this.mCurrentType];
 			this.mCurrTileText[5].mString = this.mTypes[this.mCurrentType];
+			
+			{
+				switch (this.mCurrTile.mSpecial) {
+					case 'e' :
+						this.mCurrTileText[8].mString = "Ent";
+						break;
+					case 'x' :
+						this.mCurrTileText[8].mString = "Ext";
+						break;
+					case 'b' :
+						this.mCurrTileText[8].mString = "Bth";
+						break;
+					case 'o' :
+						this.mCurrTileText[8].mString = "";
+						break;
+				}
+			}
 		}
 		else if (this.mOptionsArrows[5].OnClick() == true) {
 			this.mCurrentType = (this.mCurrentType + 1) % 4;
 			
 			this.mCurrTile.mSpecial = this.mTypesTile[this.mCurrentType];
 			this.mCurrTileText[5].mString = this.mTypes[this.mCurrentType];
+			
+			{
+				switch (this.mCurrTile.mSpecial) {
+					case 'e' :
+						this.mCurrTileText[8].mString = "Ent";
+						break;
+					case 'x' :
+						this.mCurrTileText[8].mString = "Ext";
+						break;
+					case 'b' :
+						this.mCurrTileText[8].mString = "Bth";
+						break;
+					case 'o' :
+						this.mCurrTileText[8].mString = "";
+						break;
+				}
+			}
 		}
 		else if (this.mSetTexture.OnClick() == true) {
 			currScene.mPersist = true;
@@ -5094,8 +5203,12 @@ GFGUICreationTileControl.prototype.Process = function(point) {
 GFGUICreationTileControl.prototype.GetRenderData = function() {
 	var arr = new Array();
 	
-	for (var i = 0; i < this.mCurrTileText.length; ++i) {
+	for (var i = 0; i < this.mCurrTileText.length - 1; ++i) {
 		arr.push(this.mCurrTileText[i]);
+	}
+	
+	if (this.mCurrTile.mBlank == false) {
+		arr.push(this.mCurrTileText[8]);
 	}
 	
 	arr = arr.concat(this.mCurrTile.GetRenderData());
@@ -5157,6 +5270,21 @@ GFGUICreationTileControl.prototype.SetUpText = function() {
 		this.mCurrTileText[7].mString = this.mCurrentTexture;
 		this.mCurrTileText[7].mPos.Set(540, 360);
 		this.mCurrTileText[7].mColour = "#000000";
+	}
+	
+	{
+		this.mCurrTileText[8].SetFontSize(12);
+		this.mCurrTileText[8].mString = "";
+		this.mCurrTileText[8].mShadow = true;
+		this.mCurrTileText[8].mDepth = this.mCurrTile.mSprite.mDepth - 1;
+		
+		this.mCurrTileText[8].mPos.Copy(this.mCurrTile.mSprite.mPos);
+		this.mCurrTileText[8].mPos.mX += 30;
+		this.mCurrTileText[8].mPos.mY += 8 + (8 * (3 - Math.floor(this.mCurrTile.mZ / 2)));
+		
+		if (this.mCurrTile.mZ % 2 != 0) {
+			this.mCurrTileText[8].mPos.mY -= 4;
+		}
 	}
 }
 
