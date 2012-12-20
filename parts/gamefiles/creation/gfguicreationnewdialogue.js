@@ -10,10 +10,13 @@ function GFGUICreationNewDialogue() {
 	this.mButtons = new Array();
 	this.mButtons[0] = new GUIButton();
 	this.mButtons[1] = new GUIButton();
+	
+	this.mExtraText = new Text();
 }
 
 GFGUICreationNewDialogue.prototype.SetUp = function() {
-	var pos = new IVec2(8, 38);
+	var pos = new IVec2(nmain.game.mCanvasSize.mX / 2, nmain.game.mCanvasSize.mY / 2);
+	pos.mX -= 68; pos.mY -= 48;
 	
 	{
 		var tex = nmgrs.resMan.mTexStore.GetResource("gui_creation_newdialogue_back");
@@ -119,6 +122,21 @@ GFGUICreationNewDialogue.prototype.SetUp = function() {
 		
 		this.mButtons[1].mSpriteInactive.SetAnimatedTexture(tex, 3, 1, -1, -1);
 		this.mButtons[1].mSpriteInactive.SetCurrentFrame(0);
+	}
+	
+	{
+		var font = nmgrs.resMan.mFontStore.GetResource("pixantiqua");
+		
+		this.mExtraText
+		
+		this.mExtraText.SetFont(font);
+		this.mExtraText.SetFontSize(12);
+		this.mExtraText.mAlign = "centre";
+		this.mExtraText.mAbsolute = true;
+		this.mExtraText.mDepth = -5100;
+		this.mExtraText.mPos.Set(nmain.game.mCanvasSize.mX / 2, (nmain.game.mCanvasSize.mY / 2) + 52);
+		this.mExtraText.mString = "Minimum Size: (1, 1)\nMaximum Size: (20, 20)";
+		this.mExtraText.mShadow = true;
 	}
 }
 
@@ -238,6 +256,8 @@ GFGUICreationNewDialogue.prototype.GetRenderData = function() {
 	for (var i = 0; i < this.mButtons.length; ++i) {
 		arr = arr.concat(this.mButtons[i].GetRenderData());
 	}
+	
+	arr.push(this.mExtraText);
 	
 	return arr;
 }
