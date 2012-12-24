@@ -11,7 +11,7 @@ GFGUICreationBar.prototype.SetUp = function() {
 	{
 		var tex = nmgrs.resMan.mTexStore.GetResource("gui_creation_topbar");
 		
-		this.mSprite.mPos.Set(8, 10);
+		this.mSprite.mPos.Set(0, 0);
 		this.mSprite.mDepth = -5000;
 		this.mSprite.SetTexture(tex);
 		this.mSprite.mAbsolute = true;
@@ -21,8 +21,8 @@ GFGUICreationBar.prototype.SetUp = function() {
 		var tex = nmgrs.resMan.mTexStore.GetResource("gui_creation_topmenunew");
 		var baseBut = new GUIButton();
 		
-		baseBut.SetUp(new IVec2(12, 36), new IVec2(38, 18), -5000);
-		baseBut.mPos.Set(12, 36);
+		baseBut.SetUp(new IVec2(16, 3), new IVec2(54, 26), -5000);
+		baseBut.mPos.Set(16, 3);
 		
 		baseBut.mSpriteIdle.SetAnimatedTexture(tex, 3, 1, -1, -1);
 		baseBut.mSpriteIdle.SetCurrentFrame(0);
@@ -41,6 +41,7 @@ GFGUICreationBar.prototype.SetUp = function() {
 		var newPos = new IVec2(0, 0); newPos.Copy(this.mMenus[0].mItems[0].mPos); newPos.mY += 2;
 		this.mMenus[0].mItems[0].mPos.Copy(newPos);
 		this.mMenus[0].mItems[0].SetSpritePositions(newPos);
+		this.mMenus[0].mItemsText[0].mPos.mY += 2;
 		
 		this.AddItem(this.mMenus[0], "save", true);
 		this.AddItem(this.mMenus[0], "load", false);
@@ -100,7 +101,7 @@ GFGUICreationBar.prototype.AddItem = function(menu, text, alt) {
 	}
 	
 	var tex = nmgrs.resMan.mTexStore.GetResource("gui_creation_dropback");
-	var font = nmgrs.resMan.mFontStore.GetResource("pixantiqua");
+	var font = nmgrs.resMan.mFontStore.GetResource("mainfont");
 	
 	{
 		var itemBut = new GUIButton();

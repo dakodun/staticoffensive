@@ -77,7 +77,7 @@ GFGUICreationTileControl.prototype.SetUp = function(initTex) {
 		tile.SetUp(tex);
 		this.mCurrTile = tile;
 		
-		this.mCurrTile.mSprite.mPos.Set(540 - 30, 80);
+		this.mCurrTile.mSprite.mPos.Set(540 - 30, 80 - 30);
 		this.mCurrTile.mSprite.mDepth = -5000;
 		this.mCurrTile.mSprite.mAbsolute = true;
 	}
@@ -256,7 +256,7 @@ GFGUICreationTileControl.prototype.GetRenderData = function() {
 }
 
 GFGUICreationTileControl.prototype.SetUpText = function() {
-	var font = nmgrs.resMan.mFontStore.GetResource("pixantiqua");
+	var font = nmgrs.resMan.mFontStore.GetResource("mainfont");
 	
 	{	
 		for (var i = 0; i < this.mCurrTileText.length; ++i) {
@@ -268,40 +268,40 @@ GFGUICreationTileControl.prototype.SetUpText = function() {
 		
 		this.mCurrTileText[0].SetFontSize(12);
 		this.mCurrTileText[0].mString = "Z - Level";
-		this.mCurrTileText[0].mPos.Set(540, 150);
+		this.mCurrTileText[0].mPos.Set(540, 120);
 		this.mCurrTileText[0].mColour = "#000000";
 		
 		this.mCurrTileText[1].SetFontSize(12);
 		this.mCurrTileText[1].mString = "Slope Direction";
-		this.mCurrTileText[1].mPos.Set(540, 200);
+		this.mCurrTileText[1].mPos.Set(540, 170);
 		this.mCurrTileText[1].mColour = "#000000";
 		
 		this.mCurrTileText[2].SetFontSize(12);
 		this.mCurrTileText[2].mString = "Type";
-		this.mCurrTileText[2].mPos.Set(540, 250);
+		this.mCurrTileText[2].mPos.Set(540, 220);
 		this.mCurrTileText[2].mColour = "#000000";
 		
 		this.mCurrTileText[6].mString = "Set Texture";
-		this.mCurrTileText[6].mPos.Set(540, 323);
+		this.mCurrTileText[6].mPos.Set(540, 293);
 		this.mCurrTileText[6].mShadow = true;
 	}
 	
 	{
 		this.mCurrTileText[3].mString = "1";
-		this.mCurrTileText[3].mPos.Set(540, 160);
+		this.mCurrTileText[3].mPos.Set(540, 130);
 		this.mCurrTileText[3].mShadow = true;
 		
 		this.mCurrTileText[4].mString = "North";
-		this.mCurrTileText[4].mPos.Set(540, 210);
+		this.mCurrTileText[4].mPos.Set(540, 180);
 		this.mCurrTileText[4].mShadow = true;
 		
 		this.mCurrTileText[5].mString = "None";
-		this.mCurrTileText[5].mPos.Set(540, 260);
+		this.mCurrTileText[5].mPos.Set(540, 230);
 		this.mCurrTileText[5].mShadow = true;
 		
 		this.mCurrTileText[7].SetFontSize(12);
 		this.mCurrTileText[7].mString = this.mCurrentTexture;
-		this.mCurrTileText[7].mPos.Set(540, 360);
+		this.mCurrTileText[7].mPos.Set(540, 330);
 		this.mCurrTileText[7].mColour = "#000000";
 	}
 	
@@ -326,8 +326,8 @@ GFGUICreationTileControl.prototype.SetUpButtons = function() {
 		var tex = nmgrs.resMan.mTexStore.GetResource("gui_creation_arrows");
 		
 		{
-			this.mOptionsArrows[0].SetUp(new IVec2(460, 150), new IVec2(22, 38), -5000);
-			this.mOptionsArrows[0].mPos.Set(460, 150);
+			this.mOptionsArrows[0].SetUp(new IVec2(460, 120), new IVec2(22, 38), -5000);
+			this.mOptionsArrows[0].mPos.Set(460, 120);
 			
 			this.mOptionsArrows[0].mSpriteIdle.SetAnimatedTexture(tex, 6, 3, -1, -1);
 			this.mOptionsArrows[0].mSpriteIdle.SetCurrentFrame(0);
@@ -343,8 +343,8 @@ GFGUICreationTileControl.prototype.SetUpButtons = function() {
 		}
 		
 		{
-			this.mOptionsArrows[1].SetUp(new IVec2(600, 150), new IVec2(22, 38), -5000);
-			this.mOptionsArrows[1].mPos.Set(600, 150);
+			this.mOptionsArrows[1].SetUp(new IVec2(600, 120), new IVec2(22, 38), -5000);
+			this.mOptionsArrows[1].mPos.Set(600, 120);
 			
 			this.mOptionsArrows[1].mSpriteIdle.SetAnimatedTexture(tex, 6, 3, -1, -1);
 			this.mOptionsArrows[1].mSpriteIdle.SetCurrentFrame(3);
@@ -360,8 +360,8 @@ GFGUICreationTileControl.prototype.SetUpButtons = function() {
 		}
 		
 		{
-			this.mOptionsArrows[2].SetUp(new IVec2(460, 200), new IVec2(22, 38), -5000);
-			this.mOptionsArrows[2].mPos.Set(460, 200);
+			this.mOptionsArrows[2].SetUp(new IVec2(460, 170), new IVec2(22, 38), -5000);
+			this.mOptionsArrows[2].mPos.Set(460, 170);
 			
 			this.mOptionsArrows[2].mSpriteIdle.SetAnimatedTexture(tex, 6, 3, -1, -1);
 			this.mOptionsArrows[2].mSpriteIdle.SetCurrentFrame(0);
@@ -377,8 +377,8 @@ GFGUICreationTileControl.prototype.SetUpButtons = function() {
 		}
 		
 		{
-			this.mOptionsArrows[3].SetUp(new IVec2(600, 200), new IVec2(22, 38), -5000);
-			this.mOptionsArrows[3].mPos.Set(600, 200);
+			this.mOptionsArrows[3].SetUp(new IVec2(600, 170), new IVec2(22, 38), -5000);
+			this.mOptionsArrows[3].mPos.Set(600, 170);
 			
 			this.mOptionsArrows[3].mSpriteIdle.SetAnimatedTexture(tex, 6, 3, -1, -1);
 			this.mOptionsArrows[3].mSpriteIdle.SetCurrentFrame(3);
@@ -394,8 +394,8 @@ GFGUICreationTileControl.prototype.SetUpButtons = function() {
 		}
 		
 		{
-			this.mOptionsArrows[4].SetUp(new IVec2(460, 250), new IVec2(22, 38), -5000);
-			this.mOptionsArrows[4].mPos.Set(460, 250);
+			this.mOptionsArrows[4].SetUp(new IVec2(460, 220), new IVec2(22, 38), -5000);
+			this.mOptionsArrows[4].mPos.Set(460, 220);
 			
 			this.mOptionsArrows[4].mSpriteIdle.SetAnimatedTexture(tex, 6, 3, -1, -1);
 			this.mOptionsArrows[4].mSpriteIdle.SetCurrentFrame(0);
@@ -411,8 +411,8 @@ GFGUICreationTileControl.prototype.SetUpButtons = function() {
 		}
 		
 		{
-			this.mOptionsArrows[5].SetUp(new IVec2(600, 250), new IVec2(22, 38), -5000);
-			this.mOptionsArrows[5].mPos.Set(600, 250);
+			this.mOptionsArrows[5].SetUp(new IVec2(600, 220), new IVec2(22, 38), -5000);
+			this.mOptionsArrows[5].mPos.Set(600, 220);
 			
 			this.mOptionsArrows[5].mSpriteIdle.SetAnimatedTexture(tex, 6, 3, -1, -1);
 			this.mOptionsArrows[5].mSpriteIdle.SetCurrentFrame(3);
@@ -431,8 +431,8 @@ GFGUICreationTileControl.prototype.SetUpButtons = function() {
 	{
 		var tex = nmgrs.resMan.mTexStore.GetResource("gui_creation_texset");
 		
-		this.mSetTexture.SetUp(new IVec2(460, 320), new IVec2(162, 38), -5000);
-		this.mSetTexture.mPos.Set(460, 320);
+		this.mSetTexture.SetUp(new IVec2(460, 290), new IVec2(162, 38), -5000);
+		this.mSetTexture.mPos.Set(460, 290);
 		
 		this.mSetTexture.mSpriteIdle.SetAnimatedTexture(tex, 3, 1, -1, -1);
 		this.mSetTexture.mSpriteIdle.SetCurrentFrame(0);
