@@ -27,7 +27,7 @@ InitScene.prototype.SetUp = function() {
 		nmgrs.resLoad.QueueTexture("gridtile", "./res/vis/tilesets/gridtile.png");
 		
 		nmgrs.resLoad.QueueTexture("gui_map_compassmain", "./res/vis/gui/gui_map_compassmain.png");
-		nmgrs.resLoad.QueueTexture("gui_map_compassextra", "./res/vis/gui/gui_map_compassextra.png");
+		nmgrs.resLoad.QueueTexture("gui_map_back", "./res/vis/gui/gui_map_back.png");
 		nmgrs.resLoad.QueueTexture("gui_map_zlevelmain", "./res/vis/gui/gui_map_zlevelmain.png");
 		nmgrs.resLoad.QueueTexture("gui_map_zlevelextra", "./res/vis/gui/gui_map_zlevelextra.png");
 		
