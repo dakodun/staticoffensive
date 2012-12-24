@@ -15,7 +15,7 @@ GFTexSelection.prototype.SetUp = function(pos, texStr) {
 	this.mTextureStr = texStr;
 	
 	{
-		var font = nmgrs.resMan.mFontStore.GetResource("pixantiqua");
+		var font = nmgrs.resMan.mFontStore.GetResource("mainfont");
 		this.mTexDisp.SetFont(font);
 		this.mTexDisp.SetFontSize(12);
 		this.mTexDisp.mString = texStr;

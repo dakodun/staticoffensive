@@ -234,7 +234,7 @@ GFCreationMap.prototype.SetTileSpecial = function(id) {
 		if (this.mSegment.mTiles[id].mSpecial != 'o') {
 			var special = new Text();
 			
-			var font = nmgrs.resMan.mFontStore.GetResource("pixantiqua");
+			var font = nmgrs.resMan.mFontStore.GetResource("mainfont");
 			special.SetFont(font);
 			special.SetFontSize(12);
 			special.mAlign = "centre";

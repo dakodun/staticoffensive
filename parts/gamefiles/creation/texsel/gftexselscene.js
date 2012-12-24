@@ -108,7 +108,7 @@ GFTexSelScene.prototype.SetUp = function() {
 		}
 		
 		{
-			var font = nmgrs.resMan.mFontStore.GetResource("pixantiqua");
+			var font = nmgrs.resMan.mFontStore.GetResource("mainfont");
 			this.mCancelText.SetFont(font);
 			this.mCancelText.SetFontSize(24);
 			this.mCancelText.mString = "Cancel";

@@ -29,7 +29,7 @@ GFGUICreationNewDialogue.prototype.SetUp = function() {
 	
 	{
 		var tex = nmgrs.resMan.mTexStore.GetResource("gui_creation_newdialogue_textinput");
-		var font = nmgrs.resMan.mFontStore.GetResource("pixantiqua");
+		var font = nmgrs.resMan.mFontStore.GetResource("mainfont");
 		
 		{
 			this.mInputBoxes[0].mInputText.SetFont(font);
@@ -125,7 +125,7 @@ GFGUICreationNewDialogue.prototype.SetUp = function() {
 	}
 	
 	{
-		var font = nmgrs.resMan.mFontStore.GetResource("pixantiqua");
+		var font = nmgrs.resMan.mFontStore.GetResource("mainfont");
 		
 		this.mExtraText
 		

@@ -67,7 +67,7 @@ GFMenuScene.prototype.SetUp = function() {
 	}
 	
 	{
-		var font = nmgrs.resMan.mFontStore.GetResource("pixantiqua");
+		var font = nmgrs.resMan.mFontStore.GetResource("mainfont");
 		this.mButtonsText[0].SetFont(font);
 		this.mButtonsText[0].SetFontSize(24);
 		this.mButtonsText[0].mString = "To TestScene";

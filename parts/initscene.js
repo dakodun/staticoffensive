@@ -49,7 +49,8 @@ InitScene.prototype.SetUp = function() {
 		nmgrs.resLoad.QueueTexture("menu_button", "./res/vis/gui/menu_button.png");
 		
 		{ // main game font
-			nmgrs.resLoad.QueueFont("pixantiqua", "./res/sys/PixAntiqua");
+			// nmgrs.resLoad.QueueFont("pixantiqua", "./res/sys/PixAntiqua");
+			nmgrs.resLoad.QueueFont("mainfont", "./res/sys/Kingthings Serifique");
 		}
 		
 		nmgrs.resLoad.AcquireResources();
