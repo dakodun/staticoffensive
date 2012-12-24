@@ -3216,7 +3216,7 @@ InitScene.prototype.SetUp = function() {
 		nmgrs.resLoad.QueueTexture("gridtile", "./res/vis/tilesets/gridtile.png");
 		
 		nmgrs.resLoad.QueueTexture("gui_map_compassmain", "./res/vis/gui/gui_map_compassmain.png");
-		nmgrs.resLoad.QueueTexture("gui_map_compassextra", "./res/vis/gui/gui_map_compassextra.png");
+		nmgrs.resLoad.QueueTexture("gui_map_back", "./res/vis/gui/gui_map_back.png");
 		nmgrs.resLoad.QueueTexture("gui_map_zlevelmain", "./res/vis/gui/gui_map_zlevelmain.png");
 		nmgrs.resLoad.QueueTexture("gui_map_zlevelextra", "./res/vis/gui/gui_map_zlevelextra.png");
 		
@@ -3486,6 +3486,7 @@ function GFGUIMapControl() {
 	this.mZLevelMain[0] = new GUIButton(); // up
 	this.mZLevelMain[1] = new GUIButton(); // down
 	
+	this.mBack = new Sprite();
 	this.mZLevelExtra = new Sprite();
 	
 	this.mKeyDown = new Array();
@@ -3503,8 +3504,8 @@ GFGUIMapControl.prototype.SetUp = function() {
 		var tex = nmgrs.resMan.mTexStore.GetResource("gui_map_compassmain");
 		
 		{
-			this.mCompassMain[0].SetUp(new IVec2(530, 10), new IVec2(40, 22), -5000);
-			this.mCompassMain[0].mPos.Set(530, 10);
+			this.mCompassMain[0].SetUp(new IVec2(304, 386), new IVec2(64, 36), -5000);
+			this.mCompassMain[0].mPos.Set(304, 386);
 			
 			this.mCompassMain[0].mSpriteIdle.SetAnimatedTexture(tex, 12, 4, -1, -1);
 			this.mCompassMain[0].mSpriteIdle.SetCurrentFrame(0);
@@ -3520,8 +3521,8 @@ GFGUIMapControl.prototype.SetUp = function() {
 		}
 		
 		{
-			this.mCompassMain[1].SetUp(new IVec2(584, 10), new IVec2(40, 22), -5000);
-			this.mCompassMain[1].mPos.Set(584, 10);
+			this.mCompassMain[1].SetUp(new IVec2(380, 386), new IVec2(64, 36), -5000);
+			this.mCompassMain[1].mPos.Set(380, 386);
 			
 			this.mCompassMain[1].mSpriteIdle.SetAnimatedTexture(tex, 12, 4, -1, -1);
 			this.mCompassMain[1].mSpriteIdle.SetCurrentFrame(1);
@@ -3537,8 +3538,8 @@ GFGUIMapControl.prototype.SetUp = function() {
 		}
 		
 		{
-			this.mCompassMain[2].SetUp(new IVec2(584, 46), new IVec2(40, 22), -5000);
-			this.mCompassMain[2].mPos.Set(584, 46);
+			this.mCompassMain[2].SetUp(new IVec2(380, 434), new IVec2(64, 36), -5000);
+			this.mCompassMain[2].mPos.Set(380, 434);
 			
 			this.mCompassMain[2].mSpriteIdle.SetAnimatedTexture(tex, 12, 4, -1, -1);
 			this.mCompassMain[2].mSpriteIdle.SetCurrentFrame(2);
@@ -3554,8 +3555,8 @@ GFGUIMapControl.prototype.SetUp = function() {
 		}
 		
 		{
-			this.mCompassMain[3].SetUp(new IVec2(530, 46), new IVec2(40, 22), -5000);
-			this.mCompassMain[3].mPos.Set(530, 46);
+			this.mCompassMain[3].SetUp(new IVec2(304, 434), new IVec2(64, 36), -5000);
+			this.mCompassMain[3].mPos.Set(304, 434);
 			
 			this.mCompassMain[3].mSpriteIdle.SetAnimatedTexture(tex, 12, 4, -1, -1);
 			this.mCompassMain[3].mSpriteIdle.SetCurrentFrame(3);
@@ -3575,8 +3576,8 @@ GFGUIMapControl.prototype.SetUp = function() {
 		var tex = nmgrs.resMan.mTexStore.GetResource("gui_map_zlevelmain");
 		
 		{
-			this.mZLevelMain[0].SetUp(new IVec2(440, 10), new IVec2(38, 22), -5000);
-			this.mZLevelMain[0].mPos.Set(440, 10);
+			this.mZLevelMain[0].SetUp(new IVec2(196, 386), new IVec2(64, 36), -5000);
+			this.mZLevelMain[0].mPos.Set(196, 386);
 			
 			this.mZLevelMain[0].mSpriteIdle.SetAnimatedTexture(tex, 6, 2, -1, -1);
 			this.mZLevelMain[0].mSpriteIdle.SetCurrentFrame(0);
@@ -3592,8 +3593,8 @@ GFGUIMapControl.prototype.SetUp = function() {
 		}
 		
 		{
-			this.mZLevelMain[1].SetUp(new IVec2(440, 46), new IVec2(38, 22), -5000);
-			this.mZLevelMain[1].mPos.Set(440, 46);
+			this.mZLevelMain[1].SetUp(new IVec2(196, 434), new IVec2(64, 36), -5000);
+			this.mZLevelMain[1].mPos.Set(196, 434);
 			
 			this.mZLevelMain[1].mSpriteIdle.SetAnimatedTexture(tex, 6, 2, -1, -1);
 			this.mZLevelMain[1].mSpriteIdle.SetCurrentFrame(1);
@@ -3610,9 +3611,18 @@ GFGUIMapControl.prototype.SetUp = function() {
 	}
 	
 	{
+		var tex = nmgrs.resMan.mTexStore.GetResource("gui_map_back");
+		
+		this.mBack.mPos.Set(200, 390);
+		this.mBack.mDepth = -4999;
+		this.mBack.SetTexture(tex);
+		this.mBack.mAbsolute = true;
+	}
+	
+	{
 		var tex = nmgrs.resMan.mTexStore.GetResource("gui_map_zlevelextra");
 		
-		this.mZLevelExtra.mPos.Set(486, 6);
+		this.mZLevelExtra.mPos.Set(264, 396);
 		this.mZLevelExtra.mDepth = -5000;
 		this.mZLevelExtra.SetAnimatedTexture(tex, 4, 4, -1, -1);
 		this.mZLevelExtra.SetCurrentFrame(3);
@@ -3781,6 +3791,8 @@ GFGUIMapControl.prototype.Process = function() {
 GFGUIMapControl.prototype.GetRenderData = function() {
 	var arr = new Array();
 	
+	arr.push(this.mBack);
+	
 	// for all main compass gui elements
 	for (var i = 0; i < this.mCompassMain.length; ++i) {
 		if (this.mKeyDown[i] == true) {
@@ -3808,6 +3820,21 @@ GFGUIMapControl.prototype.GetRenderData = function() {
 }
 
 GFGUIMapControl.prototype.Hovering = function() {
+	{
+		var pt = new IVec2(0, 0);
+		pt.Copy(nmgrs.inputMan.GetLocalMouseCoords());
+		
+		var tl = new IVec2(0, 0); tl.Copy(this.mBack.mPos);
+		tl.mX += 2; tl.mY +=  2;
+		
+		var br = new IVec2(0, 0); br.Copy(this.mBack.mPos);
+		br.mX += this.mBack.GetWidth() + 3; br.mY += this.mBack.GetHeight() + 3;
+		
+		if (util.PointInRectangle(pt, tl, br)) {
+			return true;
+		}
+	}
+	
 	for (var i = 0; i < this.mCompassMain.length; ++i) {
 		if (this.mCompassMain[i].mHover == true) {
 			return true;
