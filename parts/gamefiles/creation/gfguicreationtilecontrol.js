@@ -77,7 +77,7 @@ GFGUICreationTileControl.prototype.SetUp = function(initTex) {
 		tile.SetUp(tex);
 		this.mCurrTile = tile;
 		
-		this.mCurrTile.mSprite.mPos.Set(540 - 30, 80 - 30);
+		this.mCurrTile.mSprite.mPos.Set(540 - 31, 80 - 30);
 		this.mCurrTile.mSprite.mDepth = -5000;
 		this.mCurrTile.mSprite.mAbsolute = true;
 	}

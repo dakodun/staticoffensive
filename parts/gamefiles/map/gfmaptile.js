@@ -18,8 +18,8 @@ function GFMapTile() {
 };
 
 GFMapTile.prototype.SetUp = function(tex) {
-	var x = (this.mGlobalPos.mX * 28) + (this.mGlobalPos.mY * 28);
-	var y = (this.mGlobalPos.mX * -14) + (this.mGlobalPos.mY * 14);
+	var x = (this.mGlobalPos.mX * 30) + (this.mGlobalPos.mY * 30);
+	var y = (this.mGlobalPos.mX * -15) + (this.mGlobalPos.mY * 15);
 	
 	this.mSprite.SetAnimatedTexture(tex, 35, 7, -1, -1);
 	this.mSprite.mPos.Set(x, y);

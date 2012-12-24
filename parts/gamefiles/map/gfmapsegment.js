@@ -133,20 +133,20 @@ GFMapSegment.prototype.SetUp = function(blueprint) {
 	this.mSize.Copy(blueprint.mSize);
 	
 	{
-		var x = (this.mPos.mX * 28) + (this.mPos.mY * 28);
-		var y = (this.mPos.mX * -14) + (this.mPos.mY * 14);
-		this.mBounds.mPos.Set(x, y + 14);
+		var x = (this.mPos.mX * 30) + (this.mPos.mY * 30);
+		var y = (this.mPos.mX * -15) + (this.mPos.mY * 15);
+		this.mBounds.mPos.Set(x, y + 15);
 		
 		this.mBounds.mOutline = true;
 		this.mBounds.mDepth = 0;
 		
-		this.mBounds.AddPoint(new IVec2(28 * this.mSize.mX, -14 * this.mSize.mX));
-		this.mBounds.AddPoint(new IVec2(28 * this.mSize.mX + 3, -14 * this.mSize.mX));
-		this.mBounds.AddPoint(new IVec2((28 * this.mSize.mX) + (28 * this.mSize.mY) + 3, (-14 * this.mSize.mX) + (14 * this.mSize.mY)));
-		this.mBounds.AddPoint(new IVec2((28 * this.mSize.mX) + (28 * this.mSize.mY) + 3, (-14 * this.mSize.mX) + (14 * this.mSize.mY) + 31));
-		this.mBounds.AddPoint(new IVec2((28 * this.mSize.mY) + 3, (14 * this.mSize.mY) + 31));
-		this.mBounds.AddPoint(new IVec2(28 * this.mSize.mY, (14 * this.mSize.mY) + 31));
-		this.mBounds.AddPoint(new IVec2(0, 31));
+		this.mBounds.AddPoint(new IVec2(30 * this.mSize.mX, -15 * this.mSize.mX));
+		this.mBounds.AddPoint(new IVec2(30 * this.mSize.mX + 2, -15 * this.mSize.mX));
+		this.mBounds.AddPoint(new IVec2((30 * this.mSize.mX) + (30 * this.mSize.mY) + 2, (-15 * this.mSize.mX) + (15 * this.mSize.mY)));
+		this.mBounds.AddPoint(new IVec2((30 * this.mSize.mX) + (30 * this.mSize.mY) + 2, (-15 * this.mSize.mX) + (15 * this.mSize.mY) + 30));
+		this.mBounds.AddPoint(new IVec2((30 * this.mSize.mY) + 2, (15 * this.mSize.mY) + 30));
+		this.mBounds.AddPoint(new IVec2(30 * this.mSize.mY, (15 * this.mSize.mY) + 30));
+		this.mBounds.AddPoint(new IVec2(0, 30));
 		
 		this.mBoundsPoly = this.mBoundsPoly.concat(this.mBounds.GetPolygon());
 	}
