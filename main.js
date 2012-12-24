@@ -3223,7 +3223,7 @@ InitScene.prototype.SetUp = function() {
 		nmgrs.resLoad.QueueTexture("gui_creation_topbar", "./res/vis/gui/gui_creation_topbar.png");
 		nmgrs.resLoad.QueueTexture("gui_creation_topmenunew", "./res/vis/gui/gui_creation_topmenunew.png");
 		nmgrs.resLoad.QueueTexture("gui_creation_dropback", "./res/vis/gui/gui_creation_dropback.png");
-		// nmgrs.resLoad.QueueTexture("gui_creation_inputbox", "./res/vis/gui/gui_creation_inputbox.png");
+		nmgrs.resLoad.QueueTexture("gui_creation_dropbottom", "./res/vis/gui/gui_creation_dropbottom.png");
 		nmgrs.resLoad.QueueTexture("gui_creation_arrows", "./res/vis/gui/gui_creation_arrows.png");
 		nmgrs.resLoad.QueueTexture("gui_creation_texset", "./res/vis/gui/gui_creation_texset.png");
 		nmgrs.resLoad.QueueTexture("gui_texselect", "./res/vis/gui/gui_texselect.png");
@@ -3238,7 +3238,6 @@ InitScene.prototype.SetUp = function() {
 		nmgrs.resLoad.QueueTexture("menu_button", "./res/vis/gui/menu_button.png");
 		
 		{ // main game font
-			// nmgrs.resLoad.QueueFont("pixantiqua", "./res/sys/PixAntiqua");
 			nmgrs.resLoad.QueueFont("mainfont", "./res/sys/Kingthings Serifique");
 		}
 		
@@ -4525,6 +4524,7 @@ function GFGUICreationBar() {
 	
 	this.mMenus = new Array();
 	this.mMenus[0] = new GUIDropDown();
+	this.mDropBottom = new Sprite();
 }
 
 GFGUICreationBar.prototype.SetUp = function() {
@@ -4558,15 +4558,26 @@ GFGUICreationBar.prototype.SetUp = function() {
 		
 		this.mMenus[0].SetUp(baseBut);
 		this.AddItem(this.mMenus[0], "new", false);
-		var newPos = new IVec2(0, 0); newPos.Copy(this.mMenus[0].mItems[0].mPos); newPos.mY += 2;
+		var newPos = new IVec2(0, 0); newPos.Copy(this.mMenus[0].mItems[0].mPos); newPos.mY += 3;
 		this.mMenus[0].mItems[0].mPos.Copy(newPos);
 		this.mMenus[0].mItems[0].SetSpritePositions(newPos);
-		this.mMenus[0].mItemsText[0].mPos.mY += 2;
+		this.mMenus[0].mItemsText[0].mPos.mY += 3;
 		
 		this.AddItem(this.mMenus[0], "save", true);
 		this.AddItem(this.mMenus[0], "load", false);
 		this.AddItem(this.mMenus[0], "import", true);
 		this.AddItem(this.mMenus[0], "export", false);
+	}
+	
+	{
+		var tex = nmgrs.resMan.mTexStore.GetResource("gui_creation_dropbottom");
+		
+		var id = this.mMenus[0].mItems.length - 1;
+		this.mDropBottom.mPos.Copy(this.mMenus[0].mItems[id].mPos);
+		this.mDropBottom.mPos.mY += this.mMenus[0].mItems[id].mSpriteIdle.GetHeight();
+		this.mDropBottom.mDepth = -5001;
+		this.mDropBottom.SetTexture(tex);
+		this.mDropBottom.mAbsolute = true;
 	}
 }
 
@@ -4609,6 +4620,10 @@ GFGUICreationBar.prototype.GetRenderData = function() {
 	
 	for (var i = 0; i < this.mMenus.length; ++i) {
 		arr = arr.concat(this.mMenus[i].GetRenderData());
+		
+		if (this.mMenus[i].mExpanded == true) {
+			arr.push(this.mDropBottom);
+		}
 	}
 	
 	return arr;
@@ -4617,7 +4632,7 @@ GFGUICreationBar.prototype.GetRenderData = function() {
 GFGUICreationBar.prototype.AddItem = function(menu, text, alt) {
 	var baseFrame = 0;
 	if (alt == true) {
-		baseFrame = 3;
+		baseFrame = 1;
 	}
 	
 	var tex = nmgrs.resMan.mTexStore.GetResource("gui_creation_dropback");
@@ -4627,16 +4642,16 @@ GFGUICreationBar.prototype.AddItem = function(menu, text, alt) {
 		var itemBut = new GUIButton();
 		itemBut.SetUp(new IVec2(0, 0), new IVec2(176, 16), -5000);
 		
-		itemBut.mSpriteIdle.SetAnimatedTexture(tex, 6, 1, -1, -1);
+		itemBut.mSpriteIdle.SetAnimatedTexture(tex, 6, 2, -1, -1);
 		itemBut.mSpriteIdle.SetCurrentFrame(baseFrame);
 		
-		itemBut.mSpriteHover.SetAnimatedTexture(tex, 6, 1, -1, -1);
-		itemBut.mSpriteHover.SetCurrentFrame(baseFrame + 1);
+		itemBut.mSpriteHover.SetAnimatedTexture(tex, 6, 2, -1, -1);
+		itemBut.mSpriteHover.SetCurrentFrame(baseFrame + 2);
 		
-		itemBut.mSpriteDown.SetAnimatedTexture(tex, 6, 1, -1, -1);
-		itemBut.mSpriteDown.SetCurrentFrame(baseFrame + 2);
+		itemBut.mSpriteDown.SetAnimatedTexture(tex, 6, 2, -1, -1);
+		itemBut.mSpriteDown.SetCurrentFrame(baseFrame + 4);
 		
-		itemBut.mSpriteInactive.SetAnimatedTexture(tex, 6, 1, -1, -1);
+		itemBut.mSpriteInactive.SetAnimatedTexture(tex, 6, 2, -1, -1);
 		itemBut.mSpriteInactive.SetCurrentFrame(baseFrame);
 		
 		var itemTxt = new Text();
@@ -4646,7 +4661,7 @@ GFGUICreationBar.prototype.AddItem = function(menu, text, alt) {
 		itemTxt.mString = text;
 		itemTxt.mAlign = "left";
 		itemTxt.mPos.Set(26, 0);
-		itemTxt.mColour = "#4A4A66";
+		itemTxt.mColour = "#C8B792";
 			
 		menu.AddItem(itemBut, itemTxt);
 	}
