@@ -4168,14 +4168,12 @@ function GFCreationMap() {
 	
 	{
 		this.mGridBase = new Shape();
-		this.mGridBase.mPos.Set(           8,  42);
-		this.mGridBase.AddPoint(new IVec2(20, -10));
-		this.mGridBase.AddPoint(new IVec2(23, -10));
-		this.mGridBase.AddPoint(new IVec2(43,   0));
-		this.mGridBase.AddPoint(new IVec2(43,   3));
-		this.mGridBase.AddPoint(new IVec2(23,  13));
-		this.mGridBase.AddPoint(new IVec2(20,  13));
-		this.mGridBase.AddPoint(new IVec2( 0,   3));
+		this.mGridBase.mPos.Set(           4,  43);
+		this.mGridBase.AddPoint(new IVec2(27, -13));
+		this.mGridBase.AddPoint(new IVec2(53,   0));
+		this.mGridBase.AddPoint(new IVec2(53,   1));
+		this.mGridBase.AddPoint(new IVec2(26,  14));
+		this.mGridBase.AddPoint(new IVec2( 0,   1));
 		
 		this.mGridBase.mOutline = true;
 	}
