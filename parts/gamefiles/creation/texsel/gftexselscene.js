@@ -58,33 +58,33 @@ GFTexSelScene.prototype.SetUp = function() {
 		{
 			this.mArrows[0].SetUp(new IVec2(8, 434), new IVec2(22, 38), -5000);
 			
-			this.mArrows[0].mSpriteIdle.SetAnimatedTexture(tex, 6, 3, -1, -1);
+			this.mArrows[0].mSpriteIdle.SetAnimatedTexture(tex, 6, 2, -1, -1);
 			this.mArrows[0].mSpriteIdle.SetCurrentFrame(0);
 			
-			this.mArrows[0].mSpriteHover.SetAnimatedTexture(tex, 6, 3, -1, -1);
-			this.mArrows[0].mSpriteHover.SetCurrentFrame(1);
+			this.mArrows[0].mSpriteHover.SetAnimatedTexture(tex, 6, 2, -1, -1);
+			this.mArrows[0].mSpriteHover.SetCurrentFrame(2);
 			
-			this.mArrows[0].mSpriteDown.SetAnimatedTexture(tex, 6, 3, -1, -1);
-			this.mArrows[0].mSpriteDown.SetCurrentFrame(2);
+			this.mArrows[0].mSpriteDown.SetAnimatedTexture(tex, 6, 2, -1, -1);
+			this.mArrows[0].mSpriteDown.SetCurrentFrame(4);
 			
-			this.mArrows[0].mSpriteInactive.SetAnimatedTexture(tex, 6, 3, -1, -1);
+			this.mArrows[0].mSpriteInactive.SetAnimatedTexture(tex, 6, 2, -1, -1);
 			this.mArrows[0].mSpriteInactive.SetCurrentFrame(0);
 		}
 		
 		{
 			this.mArrows[1].SetUp(new IVec2(610, 434), new IVec2(22, 38), -5000);
 			
-			this.mArrows[1].mSpriteIdle.SetAnimatedTexture(tex, 6, 3, -1, -1);
-			this.mArrows[1].mSpriteIdle.SetCurrentFrame(3);
+			this.mArrows[1].mSpriteIdle.SetAnimatedTexture(tex, 6, 2, -1, -1);
+			this.mArrows[1].mSpriteIdle.SetCurrentFrame(1);
 			
-			this.mArrows[1].mSpriteHover.SetAnimatedTexture(tex, 6, 3, -1, -1);
-			this.mArrows[1].mSpriteHover.SetCurrentFrame(4);
+			this.mArrows[1].mSpriteHover.SetAnimatedTexture(tex, 6, 2, -1, -1);
+			this.mArrows[1].mSpriteHover.SetCurrentFrame(3);
 			
-			this.mArrows[1].mSpriteDown.SetAnimatedTexture(tex, 6, 3, -1, -1);
+			this.mArrows[1].mSpriteDown.SetAnimatedTexture(tex, 6, 2, -1, -1);
 			this.mArrows[1].mSpriteDown.SetCurrentFrame(5);
 			
-			this.mArrows[1].mSpriteInactive.SetAnimatedTexture(tex, 6, 3, -1, -1);
-			this.mArrows[1].mSpriteInactive.SetCurrentFrame(3);
+			this.mArrows[1].mSpriteInactive.SetAnimatedTexture(tex, 6, 2, -1, -1);
+			this.mArrows[1].mSpriteInactive.SetCurrentFrame(1);
 		}
 	}
 	
@@ -92,7 +92,7 @@ GFTexSelScene.prototype.SetUp = function() {
 		{
 			var tex = nmgrs.resMan.mTexStore.GetResource("gui_creation_texset");
 			
-			this.mCancel.SetUp(new IVec2(239, 434), new IVec2(162, 38), -5000);
+			this.mCancel.SetUp(new IVec2(239, 434), new IVec2(162, 38), 100);
 			
 			this.mCancel.mSpriteIdle.SetAnimatedTexture(tex, 3, 1, -1, -1);
 			this.mCancel.mSpriteIdle.SetCurrentFrame(0);
@@ -110,11 +110,11 @@ GFTexSelScene.prototype.SetUp = function() {
 		{
 			var font = nmgrs.resMan.mFontStore.GetResource("mainfont");
 			this.mCancelText.SetFont(font);
-			this.mCancelText.SetFontSize(24);
+			this.mCancelText.SetFontSize(23);
 			this.mCancelText.mString = "Cancel";
 			this.mCancelText.mAlign = "centre";
-			this.mCancelText.mPos.Set(320, 437);
-			this.mCancelText.mShadow = true;
+			this.mCancelText.mPos.Set(320, 439);
+			this.mCancelText.mColour = "#270100";
 		}
 	}
 }
@@ -153,6 +153,16 @@ GFTexSelScene.prototype.Process = function() {
 		}
 		
 		this.mCancel.Process(pt);
+		
+		if (this.mCancel.mStatus == "down") {
+			this.mCancelText.mColour = "#0B0505";
+		}
+		else if (this.mCancel.mStatus == "hover") {
+			this.mCancelText.mColour = "#501E11";
+		}
+		else {
+			this.mCancelText.mColour = "#270100";
+		}
 		
 		for (var i = 0; i < this.mTexSelections.length; ++i) {
 			this.mTexSelections[i].Process(pt);
