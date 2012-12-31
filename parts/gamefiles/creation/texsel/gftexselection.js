@@ -53,7 +53,7 @@ GFTexSelection.prototype.SetUp = function(pos, texStr) {
 	{
 		var tex = nmgrs.resMan.mTexStore.GetResource("gui_texselect");
 		
-		this.mButton.SetUp(new IVec2(this.mPos.mX - 9, this.mPos.mY - 9), new IVec2(190, 152), -5000);
+		this.mButton.SetUp(new IVec2(this.mPos.mX - 10, this.mPos.mY - 11), new IVec2(202, 153), 10000);
 		
 		this.mButton.mSpriteIdle.SetAnimatedTexture(tex, 3, 1, -1, -1);
 		this.mButton.mSpriteIdle.SetCurrentFrame(0);
