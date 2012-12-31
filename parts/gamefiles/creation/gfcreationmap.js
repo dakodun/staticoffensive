@@ -62,6 +62,9 @@ GFCreationMap.prototype.Copy = function(other) {
 	
 	this.mGrid.splice(0, this.mGrid.length);
 	this.mGrid = this.mGrid.concat(other.mGrid);
+	
+	this.mSpecial.splice(0, this.mSpecial.length);
+	this.mSpecial = this.mSpecial.concat(other.mSpecial);
 }
 
 GFCreationMap.prototype.SetUp = function() {
