@@ -4527,6 +4527,10 @@ function GFGUICreationBar() {
 	
 	this.mMenus = new Array();
 	this.mMenus[0] = new GUIDropDown();
+	
+	this.mMenusText = new Array();
+	this.mMenusText[0] = new Text();
+	
 	this.mDropBottom = new Sprite();
 }
 
@@ -4573,6 +4577,18 @@ GFGUICreationBar.prototype.SetUp = function() {
 	}
 	
 	{
+		var font = nmgrs.resMan.mFontStore.GetResource("mainfont");
+		this.mMenusText[0].SetFont(font);
+		this.mMenusText[0].SetFontSize(12);
+		this.mMenusText[0].mAbsolute = true;
+		this.mMenusText[0].mString = "File";
+		this.mMenusText[0].mAlign = "centre";
+		this.mMenusText[0].mPos.Set(42, 9);
+		this.mMenusText[0].mColour = "#270100";
+		this.mMenusText[0].mDepth = -5001;
+	}
+	
+	{
 		var tex = nmgrs.resMan.mTexStore.GetResource("gui_creation_dropbottom");
 		
 		var id = this.mMenus[0].mItems.length - 1;
@@ -4595,6 +4611,18 @@ GFGUICreationBar.prototype.Process = function(point) {
 	
 	for (var i = 0; i < this.mMenus.length; ++i) {
 		this.mMenus[i].Process(point);
+	}
+	
+	for (var i = 0; i < this.mMenusText.length; ++i) {
+		if (this.mMenus[i].mStatus == "down") {
+			this.mMenusText[i].mColour = "#0B0505";
+		}
+		else if (this.mMenus[i].mStatus == "hover") {
+			this.mMenusText[i].mColour = "#501E11";
+		}
+		else {
+			this.mMenusText[i].mColour = "#270100";
+		}
 	}
 	
 	{
@@ -4623,6 +4651,7 @@ GFGUICreationBar.prototype.GetRenderData = function() {
 	
 	for (var i = 0; i < this.mMenus.length; ++i) {
 		arr = arr.concat(this.mMenus[i].GetRenderData());
+		arr.push(this.mMenusText[i]);
 		
 		if (this.mMenus[i].mExpanded == true) {
 			arr.push(this.mDropBottom);
@@ -4794,6 +4823,7 @@ function GFGUICreationNewDialogue() {
 	this.mButtons[0] = new GUIButton();
 	this.mButtons[1] = new GUIButton();
 	
+	this.mConfirmText = new Text();
 	this.mExtraText = new Text();
 }
 
@@ -4891,7 +4921,7 @@ GFGUICreationNewDialogue.prototype.SetUp = function() {
 	{
 		var tex = nmgrs.resMan.mTexStore.GetResource("gui_creation_newdialogue_cancelbutton");
 		
-		this.mButtons[1].SetUp(new IVec2(pos.mX + 112, pos.mY + 72), new IVec2(18, 18), -5101);
+		this.mButtons[1].SetUp(new IVec2(pos.mX + 111, pos.mY + 71), new IVec2(18, 18), -5101);
 		// this.mButtons[1].mPos.Set(pos.mX + 112, pos.mY + 72);
 		
 		this.mButtons[1].mSpriteIdle.SetAnimatedTexture(tex, 3, 1, -1, -1);
@@ -4910,16 +4940,27 @@ GFGUICreationNewDialogue.prototype.SetUp = function() {
 	{
 		var font = nmgrs.resMan.mFontStore.GetResource("mainfont");
 		
-		this.mExtraText
+		{
+			this.mConfirmText.SetFont(font);
+			this.mConfirmText.SetFontSize(12);
+			this.mConfirmText.mAbsolute = true;
+			this.mConfirmText.mString = "Confirm";
+			this.mConfirmText.mAlign = "centre";
+			this.mConfirmText.mPos.Set(pos.mX + 66, pos.mY + 70);
+			this.mConfirmText.mColour = "#270100";
+			this.mConfirmText.mDepth = -5102;
+		}
 		
-		this.mExtraText.SetFont(font);
-		this.mExtraText.SetFontSize(12);
-		this.mExtraText.mAlign = "centre";
-		this.mExtraText.mAbsolute = true;
-		this.mExtraText.mDepth = -5100;
-		this.mExtraText.mPos.Set(nmain.game.mCanvasSize.mX / 2, (nmain.game.mCanvasSize.mY / 2) + 52);
-		this.mExtraText.mString = "Minimum Size: (1, 1)\nMaximum Size: (20, 20)";
-		this.mExtraText.mShadow = true;
+		{
+			this.mExtraText.SetFont(font);
+			this.mExtraText.SetFontSize(12);
+			this.mExtraText.mAlign = "centre";
+			this.mExtraText.mAbsolute = true;
+			this.mExtraText.mDepth = -5100;
+			this.mExtraText.mPos.Set(nmain.game.mCanvasSize.mX / 2, (nmain.game.mCanvasSize.mY / 2) + 52);
+			this.mExtraText.mString = "Minimum Size: (1, 1)\nMaximum Size: (20, 20)";
+			this.mExtraText.mShadow = true;
+		}
 	}
 }
 
@@ -4958,6 +4999,21 @@ GFGUICreationNewDialogue.prototype.Process = function(point) {
 		
 		for (var i = 0; i < this.mButtons.length; ++i) {
 			this.mButtons[i].Process(point);
+		}
+		
+		if (this.mButtons[0].mActive == false) {
+			this.mConfirmText.mColour = "#1E1915";
+		}
+		else {
+			if (this.mButtons[0].mStatus == "down") {
+				this.mConfirmText.mColour = "#0B0505";
+			}
+			else if (this.mButtons[0].mStatus == "hover") {
+				this.mConfirmText.mColour = "#501E11";
+			}
+			else {
+				this.mConfirmText.mColour = "#270100";
+			}
 		}
 	}
 	
@@ -5049,6 +5105,7 @@ GFGUICreationNewDialogue.prototype.GetRenderData = function() {
 		arr = arr.concat(this.mButtons[i].GetRenderData());
 	}
 	
+	arr.push(this.mConfirmText);
 	arr.push(this.mExtraText);
 	
 	return arr;
