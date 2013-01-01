@@ -5,6 +5,10 @@ function GFGUICreationBar() {
 	
 	this.mMenus = new Array();
 	this.mMenus[0] = new GUIDropDown();
+	
+	this.mMenusText = new Array();
+	this.mMenusText[0] = new Text();
+	
 	this.mDropBottom = new Sprite();
 }
 
@@ -51,6 +55,18 @@ GFGUICreationBar.prototype.SetUp = function() {
 	}
 	
 	{
+		var font = nmgrs.resMan.mFontStore.GetResource("mainfont");
+		this.mMenusText[0].SetFont(font);
+		this.mMenusText[0].SetFontSize(12);
+		this.mMenusText[0].mAbsolute = true;
+		this.mMenusText[0].mString = "File";
+		this.mMenusText[0].mAlign = "centre";
+		this.mMenusText[0].mPos.Set(42, 9);
+		this.mMenusText[0].mColour = "#270100";
+		this.mMenusText[0].mDepth = -5001;
+	}
+	
+	{
 		var tex = nmgrs.resMan.mTexStore.GetResource("gui_creation_dropbottom");
 		
 		var id = this.mMenus[0].mItems.length - 1;
@@ -73,6 +89,18 @@ GFGUICreationBar.prototype.Process = function(point) {
 	
 	for (var i = 0; i < this.mMenus.length; ++i) {
 		this.mMenus[i].Process(point);
+	}
+	
+	for (var i = 0; i < this.mMenusText.length; ++i) {
+		if (this.mMenus[i].mStatus == "down") {
+			this.mMenusText[i].mColour = "#0B0505";
+		}
+		else if (this.mMenus[i].mStatus == "hover") {
+			this.mMenusText[i].mColour = "#501E11";
+		}
+		else {
+			this.mMenusText[i].mColour = "#270100";
+		}
 	}
 	
 	{
@@ -101,6 +129,7 @@ GFGUICreationBar.prototype.GetRenderData = function() {
 	
 	for (var i = 0; i < this.mMenus.length; ++i) {
 		arr = arr.concat(this.mMenus[i].GetRenderData());
+		arr.push(this.mMenusText[i]);
 		
 		if (this.mMenus[i].mExpanded == true) {
 			arr.push(this.mDropBottom);
