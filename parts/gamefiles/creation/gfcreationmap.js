@@ -267,5 +267,56 @@ GFCreationMap.prototype.SetTileSpecial = function(id) {
 		}
 	}
 }
+
+GFCreationMap.prototype.ToString = function() {
+	var texArr = new Array();
+	var texAlph = new Array("a", "b", "c", "d", "e", "f", "g", "h", "i", "j", "k", "l",
+			"m", "n", "o", "p", "q", "r", "s", "t", "u", "v", "w", "x", "y", "z");
+	
+	var texStr = "";
+	
+	var tileStr = "";
+	for (var y = 0; y < this.mSegment.mSize.mY; ++y) {
+		for (var x = 0; x < this.mSegment.mSize.mX; ++x) {
+			var id = x + (y * this.mSegment.mSize.mX);
+			tileStr += this.mSegment.mTiles[id].mZ;
+			tileStr += this.mSegment.mTiles[id].mSlopeDirection;
+			tileStr += this.mSegment.mTiles[id].mSpecial;
+			
+			{
+				var found = false;
+				
+				for (var i = 0; i < texArr.length; ++i) {
+					if (texArr[i] == this.mSegment.mTiles[id].mTexResString) {
+						tileStr += texAlph[i];
+						
+						found = true;
+						break;
+					}
+				}
+				
+				if (found == false) {
+					texArr.push(this.mSegment.mTiles[id].mTexResString);
+					texStr += texAlph[texArr.length - 1];
+					texStr += ":";
+					texStr += texArr[texArr.length - 1];
+					texStr += ";";
+					
+					tileStr += texAlph[texArr.length - 1];
+				}
+			}
+			
+			if (x < this.mSegment.mSize.mX - 1) {
+				tileStr += "?";
+			}
+		}
+		
+		if (y < this.mSegment.mSize.mY - 1) {
+			tileStr += "!";
+		}
+	}
+	
+	return (texStr + tileStr);
+}
 // ...End
 
