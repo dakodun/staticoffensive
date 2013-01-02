@@ -3,9 +3,9 @@
 function GFGUICreationControl() {
 	this.mTopBar = new GFGUICreationBar();
 	this.mTileControl = new GFGUICreationTileControl();
-	this.mNewDialogue = new GFGUICreationNewDialogue();
 	
-	this.mDialogueOpen = false;
+	this.mDialogueControl = new GFGUICreationDialogueControl();
+	this.mDialogueOpen = "";
 	this.mBlackout = new Shape();
 }
 
@@ -14,7 +14,8 @@ GFGUICreationControl.prototype.SetUp = function(initTex) {
 	
 	this.mTopBar.SetUp();
 	this.mTileControl.SetUp(initTex);
-	this.mNewDialogue.SetUp();
+	
+	this.mDialogueControl.SetUp();
 	
 	{
 		this.mBlackout.mPos.Set(0, 0);
@@ -30,12 +31,12 @@ GFGUICreationControl.prototype.SetUp = function(initTex) {
 };
 
 GFGUICreationControl.prototype.Input = function() {
-	if (this.mDialogueOpen == false) {
+	if (this.mDialogueOpen == "") {
 		this.mTopBar.Input();
 		this.mTileControl.Input();
 	}
 	else {
-		this.mNewDialogue.Input();
+		this.mDialogueControl.Input(this.mDialogueOpen);
 	}
 }
 
@@ -46,12 +47,12 @@ GFGUICreationControl.prototype.Process = function() {
 		var pt = new IVec2(0, 0);
 		pt.Copy(nmgrs.inputMan.GetLocalMouseCoords());
 		
-		if (this.mDialogueOpen == false) {
+		if (this.mDialogueOpen == "") {
 			this.mTopBar.Process(pt);
 			this.mTileControl.Process(pt);
 		}
 		else {
-			this.mNewDialogue.Process(pt);
+			this.mDialogueControl.Process(this.mDialogueOpen, pt);
 		}
 	}
 }
@@ -62,9 +63,9 @@ GFGUICreationControl.prototype.GetRenderData = function() {
 	arr = arr.concat(this.mTopBar.GetRenderData());
 	arr = arr.concat(this.mTileControl.GetRenderData());
 	
-	if (this.mDialogueOpen == true) {
+	if (this.mDialogueOpen != "") {
 		arr.push(this.mBlackout);
-		arr = arr.concat(this.mNewDialogue.GetRenderData());
+		arr = arr.concat(this.mDialogueControl.GetRenderData(this.mDialogueOpen));
 	}
 	
 	return arr;
