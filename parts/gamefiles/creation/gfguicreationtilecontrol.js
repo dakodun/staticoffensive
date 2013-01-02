@@ -106,7 +106,7 @@ GFGUICreationTileControl.prototype.Input = function() {
 			currScene.mMap.mSegment.mTiles[tile].mSlopeDirection = this.mCurrTile.mSlopeDirection;
 			currScene.mMap.mSegment.mTiles[tile].mSpecial = this.mCurrTile.mSpecial;
 			
-			currScene.mMap.mSegment.mTiles[tile].SetUp(tex);
+			currScene.mMap.mSegment.mTiles[tile].SetUp(tex, this.mCurrentTexture);
 			currScene.mMap.mSegment.mTiles[tile].ChangeZLevel(currScene.mMap.mSegment.mCurrZLevel);
 			
 			currScene.mMap.SetTileBounds(tile);

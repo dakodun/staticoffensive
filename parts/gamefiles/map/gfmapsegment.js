@@ -161,7 +161,7 @@ GFMapSegment.prototype.SetUp = function(blueprint) {
 		tile.mSlopeDirection = blueprint.mTiles[i].mSlopeDirection;
 		tile.mSpecial = blueprint.mTiles[i].mSpecial;
 		
-		tile.SetUp(tex);
+		tile.SetUp(tex, blueprint.mTiles[i].mTex);
 		
 		if (typeof(this.mTileBounds.mBounds[tile.mSprite.mCurrFrame]) != "undefined") { 
 			tile.SetBounds(this.mTileBounds.mBounds[tile.mSprite.mCurrFrame]);
