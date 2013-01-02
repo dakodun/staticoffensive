@@ -11,19 +11,22 @@ function GFMapTile() {
 	this.mSprite = new Sprite();
 	this.mTileFrame = 0;
 	this.mBlank = false;
+	this.mTexResString = "";
 	
 	this.mShowBounds = false;
 	this.mBounds = new Shape();
 	this.mBoundsPoly = new Array();
 };
 
-GFMapTile.prototype.SetUp = function(tex) {
+GFMapTile.prototype.SetUp = function(tex, texResStr) {
 	var x = (this.mGlobalPos.mX * 30) + (this.mGlobalPos.mY * 30);
 	var y = (this.mGlobalPos.mX * -15) + (this.mGlobalPos.mY * 15);
 	
 	this.mSprite.SetAnimatedTexture(tex, 35, 7, -1, -1);
 	this.mSprite.mPos.Set(x, y);
 	this.mSprite.mDepth = 2500 - (this.mGlobalPos.mY * 10) + (this.mGlobalPos.mX * 10);
+	
+	this.mTexResString = texResStr;
 	
 	this.mTileFrame = this.mZ;
 	
