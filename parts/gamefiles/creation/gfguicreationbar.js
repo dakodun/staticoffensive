@@ -105,10 +105,10 @@ GFGUICreationBar.prototype.Process = function(point) {
 	
 	{
 		if (this.mMenus[0].OnClick(0) == true) {
-			currScene.mCreationControl.mDialogueOpen = true;
+			currScene.mCreationControl.mDialogueOpen = "new";
 		}
 		else if (this.mMenus[0].OnClick(1) == true) {
-			
+			currScene.mCreationControl.mDialogueOpen = "save";
 		}
 		else if (this.mMenus[0].OnClick(2) == true) {
 			

@@ -263,7 +263,7 @@ GFGUICreationNewDialogue.prototype.Process = function(point) {
 					currScene.mCam.Translate(trans);
 				}
 				
-				currScene.mCreationControl.mDialogueOpen = false;
+				currScene.mCreationControl.mDialogueOpen = "";
 				
 				for (var i = 0; i < this.mInputBoxes.length; ++i) {
 					this.mInputBoxes[i].SetText("");
@@ -271,7 +271,7 @@ GFGUICreationNewDialogue.prototype.Process = function(point) {
 			}
 		}
 		else if (this.mButtons[1].OnClick() == true) {
-			currScene.mCreationControl.mDialogueOpen = false;
+			currScene.mCreationControl.mDialogueOpen = "";
 			
 			for (var i = 0; i < this.mInputBoxes.length; ++i) {
 				this.mInputBoxes[i].SetText("");

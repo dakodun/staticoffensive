@@ -62,7 +62,7 @@ GFCreationScene.prototype.TearDown = function() {
 
 // handles user input
 GFCreationScene.prototype.Input = function() {
-	if (this.mCreationControl.mDialogueOpen == false) {
+	if (this.mCreationControl.mDialogueOpen == "") {
 		this.mMapControl.Input();
 	}
 	
@@ -72,7 +72,7 @@ GFCreationScene.prototype.Input = function() {
 // handles game logic
 GFCreationScene.prototype.Process = function() {
 	{
-		if (this.mCreationControl.mDialogueOpen == false) {
+		if (this.mCreationControl.mDialogueOpen == "") {
 			this.mMapControl.Process();
 			
 			if (this.mHoveringUI == false) {
