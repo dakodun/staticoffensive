@@ -3091,6 +3091,54 @@ GUIInputBox.prototype.SetText = function(string) {
 // ...End
 
 
+// LocalStorage Class...
+// 
+function LocalStorage() {
+	
+};
+
+LocalStorage.prototype.IsSupported = function() {
+	if (typeof(Storage) !== "undefined") {
+		return true;
+	}
+	
+	return false;
+}
+
+LocalStorage.prototype.Save = function(key, data, overwrite) {
+	try {
+		if (localStorage.getItem(key) == null || overwrite == true) {
+			localStorage.setItem(key, data);
+		}
+	} catch (e) {
+		return false;
+	}
+	
+	return true;
+}
+
+LocalStorage.prototype.Load = function(key) {
+	return localStorage.getItem(key);
+}
+
+LocalStorage.prototype.Exists = function(key) {
+	if (localStorage.getItem(key) != null) {
+		return true;
+	}
+	
+	return false;
+}
+
+LocalStorage.prototype.Delete = function(key) {
+	localStorage.removeItem(key);
+}
+
+LocalStorage.prototype.Clear = function() {
+	localStorage.clear();
+}
+// ...End
+
+
 // RNG Class...
 // a pseudo-random number generator
 function RNG(seed) {
@@ -3228,11 +3276,16 @@ InitScene.prototype.SetUp = function() {
 		nmgrs.resLoad.QueueTexture("gui_creation_texset", "./res/vis/gui/gui_creation_texset.png");
 		nmgrs.resLoad.QueueTexture("gui_texselect", "./res/vis/gui/gui_texselect.png");
 		
-		{ // textures for creation "create new" dialogue box
+		{ // textures for creation "new" dialogue box
 			nmgrs.resLoad.QueueTexture("gui_creation_newdialogue_back", "./res/vis/gui/gui_creation_newdialogue_back.png");
 			nmgrs.resLoad.QueueTexture("gui_creation_newdialogue_textinput", "./res/vis/gui/gui_creation_newdialogue_textinput.png");
 			nmgrs.resLoad.QueueTexture("gui_creation_newdialogue_cancelbutton", "./res/vis/gui/gui_creation_newdialogue_cancelbutton.png");
 			nmgrs.resLoad.QueueTexture("gui_creation_newdialogue_confirmbutton", "./res/vis/gui/gui_creation_newdialogue_confirmbutton.png");
+		}
+		
+		{ // textures for creation "save" dialogue box
+			nmgrs.resLoad.QueueTexture("gui_creation_savedialogue_back", "./res/vis/gui/gui_creation_savedialogue_back.png");
+			nmgrs.resLoad.QueueTexture("gui_creation_savedialogue_textinput", "./res/vis/gui/gui_creation_savedialogue_textinput.png");
 		}
 		
 		nmgrs.resLoad.QueueTexture("menu_button", "./res/vis/gui/menu_button.png");
@@ -4398,6 +4451,57 @@ GFCreationMap.prototype.SetTileSpecial = function(id) {
 		}
 	}
 }
+
+GFCreationMap.prototype.ToString = function() {
+	var texArr = new Array();
+	var texAlph = new Array("a", "b", "c", "d", "e", "f", "g", "h", "i", "j", "k", "l",
+			"m", "n", "o", "p", "q", "r", "s", "t", "u", "v", "w", "x", "y", "z");
+	
+	var texStr = "";
+	
+	var tileStr = "";
+	for (var y = 0; y < this.mSegment.mSize.mY; ++y) {
+		for (var x = 0; x < this.mSegment.mSize.mX; ++x) {
+			var id = x + (y * this.mSegment.mSize.mX);
+			tileStr += this.mSegment.mTiles[id].mZ;
+			tileStr += this.mSegment.mTiles[id].mSlopeDirection;
+			tileStr += this.mSegment.mTiles[id].mSpecial;
+			
+			{
+				var found = false;
+				
+				for (var i = 0; i < texArr.length; ++i) {
+					if (texArr[i] == this.mSegment.mTiles[id].mTexResString) {
+						tileStr += texAlph[i];
+						
+						found = true;
+						break;
+					}
+				}
+				
+				if (found == false) {
+					texArr.push(this.mSegment.mTiles[id].mTexResString);
+					texStr += texAlph[texArr.length - 1];
+					texStr += ":";
+					texStr += texArr[texArr.length - 1];
+					texStr += ";";
+					
+					tileStr += texAlph[texArr.length - 1];
+				}
+			}
+			
+			if (x < this.mSegment.mSize.mX - 1) {
+				tileStr += "?";
+			}
+		}
+		
+		if (y < this.mSegment.mSize.mY - 1) {
+			tileStr += "!";
+		}
+	}
+	
+	return (texStr + tileStr);
+}
 // ...End
 
 
@@ -4465,7 +4569,7 @@ GFCreationScene.prototype.TearDown = function() {
 
 // handles user input
 GFCreationScene.prototype.Input = function() {
-	if (this.mCreationControl.mDialogueOpen == false) {
+	if (this.mCreationControl.mDialogueOpen == "") {
 		this.mMapControl.Input();
 	}
 	
@@ -4475,7 +4579,7 @@ GFCreationScene.prototype.Input = function() {
 // handles game logic
 GFCreationScene.prototype.Process = function() {
 	{
-		if (this.mCreationControl.mDialogueOpen == false) {
+		if (this.mCreationControl.mDialogueOpen == "") {
 			this.mMapControl.Process();
 			
 			if (this.mHoveringUI == false) {
@@ -4627,10 +4731,10 @@ GFGUICreationBar.prototype.Process = function(point) {
 	
 	{
 		if (this.mMenus[0].OnClick(0) == true) {
-			currScene.mCreationControl.mDialogueOpen = true;
+			currScene.mCreationControl.mDialogueOpen = "new";
 		}
 		else if (this.mMenus[0].OnClick(1) == true) {
-			
+			currScene.mCreationControl.mDialogueOpen = "save";
 		}
 		else if (this.mMenus[0].OnClick(2) == true) {
 			
@@ -4729,9 +4833,9 @@ GFGUICreationBar.prototype.Hovering = function() {
 function GFGUICreationControl() {
 	this.mTopBar = new GFGUICreationBar();
 	this.mTileControl = new GFGUICreationTileControl();
-	this.mNewDialogue = new GFGUICreationNewDialogue();
 	
-	this.mDialogueOpen = false;
+	this.mDialogueControl = new GFGUICreationDialogueControl();
+	this.mDialogueOpen = "";
 	this.mBlackout = new Shape();
 }
 
@@ -4740,7 +4844,8 @@ GFGUICreationControl.prototype.SetUp = function(initTex) {
 	
 	this.mTopBar.SetUp();
 	this.mTileControl.SetUp(initTex);
-	this.mNewDialogue.SetUp();
+	
+	this.mDialogueControl.SetUp();
 	
 	{
 		this.mBlackout.mPos.Set(0, 0);
@@ -4756,12 +4861,12 @@ GFGUICreationControl.prototype.SetUp = function(initTex) {
 };
 
 GFGUICreationControl.prototype.Input = function() {
-	if (this.mDialogueOpen == false) {
+	if (this.mDialogueOpen == "") {
 		this.mTopBar.Input();
 		this.mTileControl.Input();
 	}
 	else {
-		this.mNewDialogue.Input();
+		this.mDialogueControl.Input(this.mDialogueOpen);
 	}
 }
 
@@ -4772,12 +4877,12 @@ GFGUICreationControl.prototype.Process = function() {
 		var pt = new IVec2(0, 0);
 		pt.Copy(nmgrs.inputMan.GetLocalMouseCoords());
 		
-		if (this.mDialogueOpen == false) {
+		if (this.mDialogueOpen == "") {
 			this.mTopBar.Process(pt);
 			this.mTileControl.Process(pt);
 		}
 		else {
-			this.mNewDialogue.Process(pt);
+			this.mDialogueControl.Process(this.mDialogueOpen, pt);
 		}
 	}
 }
@@ -4788,9 +4893,9 @@ GFGUICreationControl.prototype.GetRenderData = function() {
 	arr = arr.concat(this.mTopBar.GetRenderData());
 	arr = arr.concat(this.mTileControl.GetRenderData());
 	
-	if (this.mDialogueOpen == true) {
+	if (this.mDialogueOpen != "") {
 		arr.push(this.mBlackout);
-		arr = arr.concat(this.mNewDialogue.GetRenderData());
+		arr = arr.concat(this.mDialogueControl.GetRenderData(this.mDialogueOpen));
 	}
 	
 	return arr;
@@ -4806,6 +4911,43 @@ GFGUICreationControl.prototype.Hovering = function() {
 	}
 	
 	return false;
+}
+// ...End
+
+
+// GFGUICreationDialogueControl Class...
+// game file:
+function GFGUICreationDialogueControl() {
+	this.mDialogues = new Array();
+	this.mDialogues["new"] = new GFGUICreationNewDialogue();
+	this.mDialogues["save"] = new GFGUICreationSaveDialogue();
+}
+
+GFGUICreationDialogueControl.prototype.SetUp = function() {
+	this.mDialogues["new"].SetUp();
+	this.mDialogues["save"].SetUp();
+};
+
+GFGUICreationDialogueControl.prototype.Input = function(dialogue) {
+	if (this.mDialogues[dialogue] != null) {
+		this.mDialogues[dialogue].Input();
+	}
+}
+
+GFGUICreationDialogueControl.prototype.Process = function(dialogue, point) {
+	if (this.mDialogues[dialogue] != null) {
+		this.mDialogues[dialogue].Process(point);
+	}
+}
+
+GFGUICreationDialogueControl.prototype.GetRenderData = function(dialogue) {
+	var arr = new Array();
+	
+	if (this.mDialogues[dialogue] != null) {
+		arr = arr.concat(this.mDialogues[dialogue].GetRenderData());
+	}
+	
+	return arr;
 }
 // ...End
 
@@ -5075,7 +5217,7 @@ GFGUICreationNewDialogue.prototype.Process = function(point) {
 					currScene.mCam.Translate(trans);
 				}
 				
-				currScene.mCreationControl.mDialogueOpen = false;
+				currScene.mCreationControl.mDialogueOpen = "";
 				
 				for (var i = 0; i < this.mInputBoxes.length; ++i) {
 					this.mInputBoxes[i].SetText("");
@@ -5083,7 +5225,7 @@ GFGUICreationNewDialogue.prototype.Process = function(point) {
 			}
 		}
 		else if (this.mButtons[1].OnClick() == true) {
-			currScene.mCreationControl.mDialogueOpen = false;
+			currScene.mCreationControl.mDialogueOpen = "";
 			
 			for (var i = 0; i < this.mInputBoxes.length; ++i) {
 				this.mInputBoxes[i].SetText("");
@@ -5107,6 +5249,272 @@ GFGUICreationNewDialogue.prototype.GetRenderData = function() {
 	
 	arr.push(this.mConfirmText);
 	arr.push(this.mExtraText);
+	
+	return arr;
+}
+// ...End
+
+
+// GFGUICreationSaveDialogue Class...
+// game file:
+function GFGUICreationSaveDialogue() {
+	this.mSprite = new Sprite();
+	
+	this.mInputBox = new GUIInputBox();
+	this.mOldString = "";
+	
+	this.mButtons = new Array();
+	this.mButtons[0] = new GUIButton();
+	this.mButtons[1] = new GUIButton();
+	
+	this.mWarningOverwrite = false;
+	this.mWarningOutOfMemory = false;
+	
+	this.mBackText = new Text();
+	this.mConfirmText = new Text();
+	this.mWarningOverwriteText = new Text();
+	this.mWarningOutOfMemoryText = new Text();
+}
+
+GFGUICreationSaveDialogue.prototype.SetUp = function() {
+	var pos = new IVec2(nmain.game.mCanvasSize.mX / 2, nmain.game.mCanvasSize.mY / 2);
+	pos.mX -= 72; pos.mY -= 57;
+	
+	{
+		var tex = nmgrs.resMan.mTexStore.GetResource("gui_creation_savedialogue_back");
+		
+		this.mSprite.mPos.Set(pos.mX, pos.mY);
+		this.mSprite.mDepth = -5100;
+		this.mSprite.SetTexture(tex);
+		this.mSprite.mAbsolute = true;
+	}
+	
+	{
+		var tex = nmgrs.resMan.mTexStore.GetResource("gui_creation_savedialogue_textinput");
+		var font = nmgrs.resMan.mFontStore.GetResource("mainfont");
+		
+		this.mInputBox.mInputText.SetFont(font);
+		this.mInputBox.mInputText.SetFontSize(12);
+		this.mInputBox.mInputText.mColour = "#000000";
+		
+		this.mInputBox.mRenderCanvas.mPos.Set(4, 2);
+		this.mInputBox.mRenderCanvas.mSize.Set(-9, -2);
+		
+		this.mInputBox.SetUp(new IVec2(pos.mX + 7, pos.mY + 42), new IVec2(130, 22), -5101);
+		this.mInputBox.mCaret.mShape.mPos.mY += 2;
+		
+		{
+			this.mInputBox.mSpriteIdle.SetAnimatedTexture(tex, 3, 1, -1, -1);
+			this.mInputBox.mSpriteIdle.SetCurrentFrame(0);
+			
+			this.mInputBox.mSpriteHover.SetAnimatedTexture(tex, 3, 1, -1, -1);
+			this.mInputBox.mSpriteHover.SetCurrentFrame(1);
+			
+			this.mInputBox.mSpriteFocus.SetAnimatedTexture(tex, 3, 1, -1, -1);
+			this.mInputBox.mSpriteFocus.SetCurrentFrame(2);
+			
+			this.mInputBox.mSpriteInactive.SetAnimatedTexture(tex, 3, 1, -1, -1);
+			this.mInputBox.mSpriteInactive.SetCurrentFrame(0);
+		}
+	}
+	
+	{
+		{
+			var tex = nmgrs.resMan.mTexStore.GetResource("gui_creation_newdialogue_confirmbutton");
+			
+			this.mButtons[0].SetUp(new IVec2(pos.mX + 42, pos.mY + 81), new IVec2(60, 26), -5101);
+			
+			this.mButtons[0].mSpriteIdle.SetAnimatedTexture(tex, 4, 1, -1, -1);
+			this.mButtons[0].mSpriteIdle.SetCurrentFrame(0);
+			
+			this.mButtons[0].mSpriteHover.SetAnimatedTexture(tex, 4, 1, -1, -1);
+			this.mButtons[0].mSpriteHover.SetCurrentFrame(1);
+			
+			this.mButtons[0].mSpriteDown.SetAnimatedTexture(tex, 4, 1, -1, -1);
+			this.mButtons[0].mSpriteDown.SetCurrentFrame(2);
+			
+			this.mButtons[0].mSpriteInactive.SetAnimatedTexture(tex, 4, 1, -1, -1);
+			this.mButtons[0].mSpriteInactive.SetCurrentFrame(3);
+		}
+		
+		{
+			var tex = nmgrs.resMan.mTexStore.GetResource("gui_creation_newdialogue_cancelbutton");
+			
+			this.mButtons[1].SetUp(new IVec2(pos.mX + 119, pos.mY + 88), new IVec2(18, 18), -5101);
+			
+			this.mButtons[1].mSpriteIdle.SetAnimatedTexture(tex, 3, 1, -1, -1);
+			this.mButtons[1].mSpriteIdle.SetCurrentFrame(0);
+			
+			this.mButtons[1].mSpriteHover.SetAnimatedTexture(tex, 3, 1, -1, -1);
+			this.mButtons[1].mSpriteHover.SetCurrentFrame(1);
+			
+			this.mButtons[1].mSpriteDown.SetAnimatedTexture(tex, 3, 1, -1, -1);
+			this.mButtons[1].mSpriteDown.SetCurrentFrame(2);
+			
+			this.mButtons[1].mSpriteInactive.SetAnimatedTexture(tex, 3, 1, -1, -1);
+			this.mButtons[1].mSpriteInactive.SetCurrentFrame(0);
+		}
+	}
+	
+	{
+		var font = nmgrs.resMan.mFontStore.GetResource("mainfont");
+		
+		{
+			this.mBackText.SetFont(font);
+			this.mBackText.SetFontSize(12);
+			this.mBackText.mAbsolute = true;
+			this.mBackText.mString = "Enter segment name:";
+			this.mBackText.mAlign = "centre";
+			this.mBackText.mPos.Set(pos.mX + 72, pos.mY + 26);
+			this.mBackText.mColour = "#C8B792";
+			this.mBackText.mDepth = -5102;
+		}
+		
+		{
+			this.mConfirmText.SetFont(font);
+			this.mConfirmText.SetFontSize(12);
+			this.mConfirmText.mAbsolute = true;
+			this.mConfirmText.mString = "Confirm";
+			this.mConfirmText.mAlign = "centre";
+			this.mConfirmText.mPos.Set(pos.mX + 72, pos.mY + 87);
+			this.mConfirmText.mColour = "#270100";
+			this.mConfirmText.mDepth = -5102;
+		}
+		
+		{
+			this.mWarningOverwriteText.SetFont(font);
+			this.mWarningOverwriteText.SetFontSize(12);
+			this.mWarningOverwriteText.mAbsolute = true;
+			this.mWarningOverwriteText.mString = "Warning: overwriting!";
+			this.mWarningOverwriteText.mAlign = "centre";
+			this.mWarningOverwriteText.mPos.Set(pos.mX + 72, pos.mY + 64);
+			this.mWarningOverwriteText.mColour = "#DF5B4E";
+			this.mWarningOverwriteText.mDepth = -5102;
+		}
+		
+		{
+			this.mWarningOutOfMemoryText.SetFont(font);
+			this.mWarningOutOfMemoryText.SetFontSize(12);
+			this.mWarningOutOfMemoryText.mAlign = "centre";
+			this.mWarningOutOfMemoryText.mAbsolute = true;
+			this.mWarningOutOfMemoryText.mDepth = -5100;
+			this.mWarningOutOfMemoryText.mPos.Set(nmain.game.mCanvasSize.mX / 2, (nmain.game.mCanvasSize.mY / 2) + 60);
+			this.mWarningOutOfMemoryText.mString = "Not enough space left in localStorage to save current segment!\n";
+			this.mWarningOutOfMemoryText.mString += "Delete previous segments via the load option in the file menu";
+			this.mWarningOutOfMemoryText.mShadow = true;
+		}
+	}
+}
+
+GFGUICreationSaveDialogue.prototype.Input = function() {
+	this.mInputBox.Input();
+	
+	for (var i = 0; i < this.mButtons.length; ++i) {
+		this.mButtons[i].Input();
+	}
+}
+
+GFGUICreationSaveDialogue.prototype.Process = function(point) {
+	var currScene = nmgrs.sceneMan.mCurrScene;
+	
+	{
+		this.mInputBox.Process(point);
+		
+		for (var i = 0; i < this.mButtons.length; ++i) {
+			this.mButtons[i].Process(point);
+		}
+		
+		if (this.mButtons[0].mActive == false) {
+			this.mConfirmText.mColour = "#1E1915";
+		}
+		else {
+			if (this.mButtons[0].mStatus == "down") {
+				this.mConfirmText.mColour = "#0B0505";
+			}
+			else if (this.mButtons[0].mStatus == "hover") {
+				this.mConfirmText.mColour = "#501E11";
+			}
+			else {
+				this.mConfirmText.mColour = "#270100";
+			}
+		}
+	}
+	
+	{
+		if (this.mInputBox.mInputText.mString == "") {
+			this.mButtons[0].mActive = false;
+		}
+		else {
+			this.mButtons[0].mActive = true;
+		}
+		
+		if (this.mInputBox.mInputText.mString != this.mOldString) {
+			var nameString = "seg";
+			nameString += this.mInputBox.mInputText.mString;
+			
+			var ls = new LocalStorage();
+			if (ls.Exists(nameString)) {
+				this.mWarningOverwrite = true;
+			}
+			else {
+				this.mWarningOverwrite = false;
+			}
+		}
+	}
+	
+	{
+		if (this.mButtons[0].OnClick() == true) {
+			var nameString = "seg";
+			nameString += this.mInputBox.mInputText.mString;
+			
+			var segString = "";
+			segString = currScene.mMap.ToString();
+			
+			var ls = new LocalStorage();
+			
+			if (ls.Save(nameString, segString, true)) {
+				currScene.mCreationControl.mDialogueOpen = "";
+				
+				this.mWarningOverwrite = false;
+				this.mWarningOutOfMemory = false;
+				this.mInputBox.SetText("");
+			}
+			else {
+				this.mWarningOutOfMemory = true;
+			}
+		}
+		else if (this.mButtons[1].OnClick() == true) {
+			currScene.mCreationControl.mDialogueOpen = "";
+			
+			this.mWarningOverwrite = false;
+			this.mWarningOutOfMemory = false;
+			this.mInputBox.SetText("");
+		}
+	}
+	
+	this.mOldString = this.mInputBox.mInputText.mString;
+}
+
+GFGUICreationSaveDialogue.prototype.GetRenderData = function() {
+	var arr = new Array();
+	
+	arr.push(this.mSprite);
+	arr = arr.concat(this.mInputBox.GetRenderData());
+	
+	for (var i = 0; i < this.mButtons.length; ++i) {
+		arr = arr.concat(this.mButtons[i].GetRenderData());
+	}
+	
+	arr.push(this.mBackText);
+	arr.push(this.mConfirmText);
+	
+	if (this.mWarningOverwrite == true) {
+		arr.push(this.mWarningOverwriteText);
+	}
+	
+	if (this.mWarningOutOfMemory == true) {
+		arr.push(this.mWarningOutOfMemoryText);
+	}
 	
 	return arr;
 }
@@ -5221,7 +5629,7 @@ GFGUICreationTileControl.prototype.Input = function() {
 			currScene.mMap.mSegment.mTiles[tile].mSlopeDirection = this.mCurrTile.mSlopeDirection;
 			currScene.mMap.mSegment.mTiles[tile].mSpecial = this.mCurrTile.mSpecial;
 			
-			currScene.mMap.mSegment.mTiles[tile].SetUp(tex);
+			currScene.mMap.mSegment.mTiles[tile].SetUp(tex, this.mCurrentTexture);
 			currScene.mMap.mSegment.mTiles[tile].ChangeZLevel(currScene.mMap.mSegment.mCurrZLevel);
 			
 			currScene.mMap.SetTileBounds(tile);
@@ -6624,7 +7032,7 @@ GFMapSegment.prototype.SetUp = function(blueprint) {
 		tile.mSlopeDirection = blueprint.mTiles[i].mSlopeDirection;
 		tile.mSpecial = blueprint.mTiles[i].mSpecial;
 		
-		tile.SetUp(tex);
+		tile.SetUp(tex, blueprint.mTiles[i].mTex);
 		
 		if (typeof(this.mTileBounds.mBounds[tile.mSprite.mCurrFrame]) != "undefined") { 
 			tile.SetBounds(this.mTileBounds.mBounds[tile.mSprite.mCurrFrame]);
@@ -6713,19 +7121,22 @@ function GFMapTile() {
 	this.mSprite = new Sprite();
 	this.mTileFrame = 0;
 	this.mBlank = false;
+	this.mTexResString = "";
 	
 	this.mShowBounds = false;
 	this.mBounds = new Shape();
 	this.mBoundsPoly = new Array();
 };
 
-GFMapTile.prototype.SetUp = function(tex) {
+GFMapTile.prototype.SetUp = function(tex, texResStr) {
 	var x = (this.mGlobalPos.mX * 30) + (this.mGlobalPos.mY * 30);
 	var y = (this.mGlobalPos.mX * -15) + (this.mGlobalPos.mY * 15);
 	
 	this.mSprite.SetAnimatedTexture(tex, 35, 7, -1, -1);
 	this.mSprite.mPos.Set(x, y);
 	this.mSprite.mDepth = 2500 - (this.mGlobalPos.mY * 10) + (this.mGlobalPos.mX * 10);
+	
+	this.mTexResString = texResStr;
 	
 	this.mTileFrame = this.mZ;
 	
