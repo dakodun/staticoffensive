@@ -13,21 +13,35 @@ LocalStorage.prototype.IsSupported = function() {
 }
 
 LocalStorage.prototype.Save = function(key, data, overwrite) {
-	if (localStorage[key] == null || overwrite == true) {
-		localStorage[key] = data;
+	try {
+		if (localStorage.getItem(key) == null || overwrite == true) {
+			localStorage.setItem(key, data);
+		}
+	} catch (e) {
+		return false;
 	}
+	
+	return true;
 }
 
 LocalStorage.prototype.Load = function(key) {
-	return localStorage[key];
+	return localStorage.getItem(key);
 }
 
 LocalStorage.prototype.Exists = function(key) {
-	if (localStorage[key] != null) {
+	if (localStorage.getItem(key) != null) {
 		return true;
 	}
 	
 	return false;
+}
+
+LocalStorage.prototype.Delete = function(key) {
+	localStorage.removeItem(key);
+}
+
+LocalStorage.prototype.Clear = function() {
+	localStorage.clear();
 }
 // ...End
 
