@@ -117,7 +117,7 @@ GFGUICreationSaveDialogue.prototype.SetUp = function() {
 			this.mConfirmText.SetFont(font);
 			this.mConfirmText.SetFontSize(12);
 			this.mConfirmText.mAbsolute = true;
-			this.mConfirmText.mString = "Confirm";
+			this.mConfirmText.mString = "Save";
 			this.mConfirmText.mAlign = "centre";
 			this.mConfirmText.mPos.Set(pos.mX + 72, pos.mY + 87);
 			this.mConfirmText.mColour = "#270100";
