@@ -211,7 +211,7 @@ GUIListBox.prototype.AddItem = function(itemButton, text) {
 	this.mItemsText.push(txt);
 }
 
-GUIListBox.prototype.DeleteItem = function(id) {
+GUIListBox.prototype.RemoveItem = function(id) {
 	if (id >= 0 && id < this.mItems.length) {
 		this.mItems.splice(id, 1);
 		this.mItemsText.splice(id, 1);
