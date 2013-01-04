@@ -85,6 +85,8 @@ GFCreationMap.prototype.SetUp = function() {
 			
 			this.mSegment.mTiles[i].SetBounds(this.mGridBase);
 		}
+		
+		this.SetTileSpecial(i);
 	}
 }
 
@@ -316,7 +318,7 @@ GFCreationMap.prototype.ToString = function() {
 		}
 	}
 	
-	return (texStr + tileStr);
+	return (texStr + "{" + tileStr + "}");
 }
 // ...End
 
