@@ -5301,8 +5301,12 @@ function GFGUICreationLoadDialogue() {
 	this.mButtons[1] = new GUIButton();
 	this.mButtons[2] = new GUIButton();
 	
+	this.mCurrentSeg = false;
+	this.mWarning = false;
+	
 	this.mConfirmText = new Text();
 	this.mDeleteText = new Text();
+	this.mWarningText = new Text();
 	
 	this.mSegmentList = new Array();
 }
@@ -5416,6 +5420,16 @@ GFGUICreationLoadDialogue.prototype.SetUp = function() {
 			this.mDeleteText.mColour = "#270100";
 			this.mDeleteText.mDepth = -5102;
 		}
+		
+		{
+			this.mWarningText.SetFont(font);
+			this.mWarningText.SetFontSize(12);
+			this.mWarningText.mAlign = "centre";
+			this.mWarningText.mAbsolute = true;
+			this.mWarningText.mDepth = -5100;
+			this.mWarningText.mPos.Set(nmain.game.mCanvasSize.mX / 2, (nmain.game.mCanvasSize.mY / 2) + 148);
+			this.mWarningText.mShadow = true;
+		}
 	}
 }
 
@@ -5448,6 +5462,9 @@ GFGUICreationLoadDialogue.prototype.Process = function(point) {
 			this.mButtons[1].mActive = true;
 		}
 		
+		this.mWarning = false;
+		this.mWarningText.mString = "";
+		
 		if (this.mButtons[0].mActive == false) {
 			this.mConfirmText.mColour = "#1E1915";
 		}
@@ -5457,6 +5474,11 @@ GFGUICreationLoadDialogue.prototype.Process = function(point) {
 			}
 			else if (this.mButtons[0].mStatus == "hover") {
 				this.mConfirmText.mColour = "#501E11";
+				
+				if (this.mCurrentSeg == true) {
+					this.mWarning = true;
+					this.mWarningText.mString = "Warning: loading this segment will discard the current segment!";
+				}
 			}
 			else {
 				this.mConfirmText.mColour = "#270100";
@@ -5472,6 +5494,9 @@ GFGUICreationLoadDialogue.prototype.Process = function(point) {
 			}
 			else if (this.mButtons[1].mStatus == "hover") {
 				this.mDeleteText.mColour = "#501E11";
+				
+				this.mWarning = true;
+				this.mWarningText.mString = "Warning: deleting this segment is irreversible!";
 			}
 			else {
 				this.mDeleteText.mColour = "#270100";
@@ -5509,6 +5534,8 @@ GFGUICreationLoadDialogue.prototype.Process = function(point) {
 					currScene.mCam.Translate(trans);
 				}
 			}
+			
+			currScene.mMapControl.mZLevelExtra.SetCurrentFrame(currScene.mMap.mCurrZLevel);
 			
 			currScene.mCreationControl.mDialogueOpen = "";
 		}
@@ -5548,6 +5575,10 @@ GFGUICreationLoadDialogue.prototype.GetRenderData = function() {
 	arr.push(this.mConfirmText);
 	arr.push(this.mDeleteText);
 	
+	if (this.mWarning == true) {
+		arr.push(this.mWarningText);
+	}
+	
 	return arr;
 }
 
@@ -5555,6 +5586,18 @@ GFGUICreationLoadDialogue.prototype.PopulateSegmentList = function() {
 	this.mSegmentList.splice(0, this.mSegmentList.length);
 	this.mListBox.Clear();
 	this.mOldSelected = -1;
+	
+	{
+		var currScene = nmgrs.sceneMan.mCurrScene;
+		
+		this.mCurrentSeg = false;
+		for (var i = 0; i < currScene.mMap.mSegment.mTiles.length; ++i) {
+			if (currScene.mMap.mSegment.mTiles[i].mZ != 7) {
+				this.mCurrentSeg = true;
+				break;
+			}
+		}
+	}
 	
 	var ls = new LocalStorage;
 	
@@ -6524,6 +6567,7 @@ GFGUICreationTileControl.prototype.SetUpText = function(pos) {
 			this.mCurrTileText[i].SetFontSize(24);
 			this.mCurrTileText[i].mAlign = "centre";
 			this.mCurrTileText[i].mAbsolute = true;
+			this.mCurrTileText[i].mDepth = -5001;
 		}
 		
 		this.mCurrTileText[0].SetFontSize(12);
@@ -6692,7 +6736,7 @@ GFGUICreationTileControl.prototype.SetUpButtons = function(pos) {
 	{
 		var tex = nmgrs.resMan.mTexStore.GetResource("gui_creation_texset");
 		
-		this.mSetTexture.SetUp(new IVec2(pos.mX - 49, pos.mY + 240), new IVec2(162, 38), 100);
+		this.mSetTexture.SetUp(new IVec2(pos.mX - 49, pos.mY + 240), new IVec2(162, 38), -5000);
 		this.mSetTexture.mPos.Set(pos.mX - 49, pos.mY + 240);
 		
 		this.mSetTexture.mSpriteIdle.SetAnimatedTexture(tex, 3, 1, -1, -1);
