@@ -168,14 +168,17 @@ GUIListBox.prototype.GetRenderData = function() {
 
 GUIListBox.prototype.AddItem = function(itemButton, text) {
 	if (this.mItems.length == 0) {
+		this.mTopArrow.mPos.Copy(this.mPos);
 		this.mTopArrow.mPos.mX += itemButton.mSpriteIdle.GetWidth() + 2;
 		this.mTopArrow.SetSpritePositions(this.mTopArrow.mPos);
 		
+		this.mBottomArrow.mPos.Copy(this.mPos);
 		this.mBottomArrow.mPos.mX += itemButton.mSpriteIdle.GetWidth() + 2;
 		this.mBottomArrow.mPos.mY += itemButton.mSpriteIdle.GetHeight() * (this.mItemsMax - 1);
 		this.mBottomArrow.SetSpritePositions(this.mBottomArrow.mPos);
 		
 		this.mSelected = 0;
+		this.mSelectedShape.mPos.Copy(this.mPos);
 		this.mSelectedShape.AddPoint(new IVec2(itemButton.mSpriteIdle.GetWidth(), 0));
 		this.mSelectedShape.AddPoint(new IVec2(itemButton.mSpriteIdle.GetWidth(), itemButton.mSpriteIdle.GetHeight()));
 		this.mSelectedShape.AddPoint(new IVec2(0, itemButton.mSpriteIdle.GetHeight()));
@@ -209,15 +212,44 @@ GUIListBox.prototype.AddItem = function(itemButton, text) {
 }
 
 GUIListBox.prototype.DeleteItem = function(id) {
-
+	if (id >= 0 && id < this.mItems.length) {
+		this.mItems.splice(id, 1);
+		this.mItemsText.splice(id, 1);
+		
+		if (this.mItems.length == 0) {
+			this.Clear();
+		}
+		else {
+			for (var i = id; i < this.mItems.length; ++i) {
+				this.mItems[i].mPos.mY -= this.mItems[i].mSpriteIdle.GetHeight();
+				this.mItems[i].SetSpritePositions(this.mItems[i].mPos);
+				
+				this.mItemsText[i].mPos.mY -= this.mItems[i].mSpriteIdle.GetHeight();
+			}
+			
+			if (this.mItemTop > 0) {
+				this.AdjustItems(-1);
+			}
+			
+			if (id >= this.mItems.length) {
+				if (this.mSelected == id) {
+					this.mSelected--;
+					this.mSelectedShape.mPos.mY -= this.mItems[0].mSpriteIdle.GetHeight();
+				}
+				
+				id--;
+			}
+		}
+	}
 }
 
 GUIListBox.prototype.Clear = function() {
-	this.mSelected = -1;
 	this.mItemTop = 0;
-	
 	this.mItems.splice(0, this.mItems.length);
 	this.mItemsText.splice(0, this.mItemsText.length);
+	
+	this.mSelected = -1;
+	this.mSelectedShape.Clear();
 }
 
 GUIListBox.prototype.AdjustItems = function(amount) {
@@ -226,9 +258,7 @@ GUIListBox.prototype.AdjustItems = function(amount) {
 	for (var i = 0; i < this.mItems.length; ++i) {
 		this.mItems[i].mPos.mY -= amount * this.mItems[i].mSpriteIdle.GetHeight();
 		this.mItems[i].SetSpritePositions(this.mItems[i].mPos);
-	}
-	
-	for (var i = 0; i < this.mItemsText.length; ++i) {
+		
 		this.mItemsText[i].mPos.mY -= amount * this.mItems[i].mSpriteIdle.GetHeight();
 	}
 	
@@ -236,9 +266,11 @@ GUIListBox.prototype.AdjustItems = function(amount) {
 }
 
 GUIListBox.prototype.GetActive = function() {
-	if (this.mSelected > 0) {
+	if (this.mSelected >= 0) {
 		return this.mItemsText[this.mSelected].mString;
 	}
+	
+	return "";
 }
 // ...End
 
