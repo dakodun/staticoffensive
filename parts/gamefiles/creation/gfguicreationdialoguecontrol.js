@@ -4,11 +4,13 @@ function GFGUICreationDialogueControl() {
 	this.mDialogues = new Array();
 	this.mDialogues["new"] = new GFGUICreationNewDialogue();
 	this.mDialogues["save"] = new GFGUICreationSaveDialogue();
+	this.mDialogues["load"] = new GFGUICreationLoadDialogue();
 }
 
 GFGUICreationDialogueControl.prototype.SetUp = function() {
 	this.mDialogues["new"].SetUp();
 	this.mDialogues["save"].SetUp();
+	this.mDialogues["load"].SetUp();
 };
 
 GFGUICreationDialogueControl.prototype.Input = function(dialogue) {
