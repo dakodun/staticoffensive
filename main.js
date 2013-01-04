@@ -3341,7 +3341,7 @@ GUIListBox.prototype.AddItem = function(itemButton, text) {
 	this.mItemsText.push(txt);
 }
 
-GUIListBox.prototype.DeleteItem = function(id) {
+GUIListBox.prototype.RemoveItem = function(id) {
 	if (id >= 0 && id < this.mItems.length) {
 		this.mItems.splice(id, 1);
 		this.mItemsText.splice(id, 1);
@@ -3401,6 +3401,113 @@ GUIListBox.prototype.GetActive = function() {
 	}
 	
 	return "";
+}
+// ...End
+
+
+// GUIDOMButton Class...
+function GUIDOMButton() {
+	this.mPos = new IVec2(0, 0);
+	
+	this.mElement = document.createElement('button');
+	this.mText = null
+};
+
+GUIDOMButton.prototype.Copy = function(other) {
+	
+}
+
+GUIDOMButton.prototype.SetUp = function(pos, text) {
+	this.mPos.Copy(pos);
+	
+	this.mElement.style.position = "absolute";
+	this.mElement.style.left = nmain.game.mCanvasPos.mX + this.mPos.mX + "px";
+	this.mElement.style.top = nmain.game.mCanvasPos.mY + this.mPos.mY + "px";
+	
+	this.mText = document.createTextNode(text);
+	this.mElement.appendChild(this.mText);
+}
+
+GUIDOMButton.prototype.SetPos = function(pos) {
+	this.mPos.Copy(pos);
+	
+	this.mElement.style.left = nmain.game.mCanvasPos.mX + this.mPos.mX + "px";
+	this.mElement.style.top = nmain.game.mCanvasPos.mY + this.mPos.mY + "px";
+}
+// ...End
+
+
+// GUIDOMElement Class...
+function GUIDOMElement() {
+	this.mGUIElement = null;
+	this.mName = "";
+};
+// ...End
+
+
+// GUIDOMContainer Class...
+function GUIDOMContainer() {
+	this.mOldCanvas = new IVec2(0, 0);
+	this.mOldCanvas.Copy(nmain.game.mCanvasPos);
+	
+	this.mElements = new Array();
+};
+
+GUIDOMContainer.prototype.Process = function() {
+	if (this.mOldCanvas.mX != nmain.game.mCanvasPos.mX || this.mOldCanvas.mY != nmain.game.mCanvasPos.mY) {
+		var diff = new IVec2(nmain.game.mCanvasPos.mX - this.mOldCanvas.mX,
+				nmain.game.mCanvasPos.mY - this.mOldCanvas.mY);
+		
+		for (var i = 0; i < this.mElements.length; ++i) {
+			var pos = new IVec2(0, 0); pos.Copy(this.mElements[i].mGUIElement.mPos);
+			this.mElements[i].mGUIElement.SetPos(pos);
+		}
+		
+		this.mOldCanvas.Copy(nmain.game.mCanvasPos);
+	}
+}
+
+GUIDOMContainer.prototype.Add = function(element, elementName) {
+	var found = false;
+	for (var i = 0; i < this.mElements.length; ++i) {
+		if (this.mElements[i].mName == elementName) {
+			found = true;
+			break;
+		}
+	}
+	
+	if (found == false) {
+		var elem = new GUIDOMElement();
+		elem.mGUIElement = element;
+		elem.mName = elementName;
+		
+		this.mElements.push(elem);
+		var id = this.mElements.length - 1;
+		document.body.appendChild(this.mElements[id].mGUIElement.mElement);
+	}
+}
+
+GUIDOMContainer.prototype.Remove = function(elementName) {
+	var id = -1;
+	for (var i = 0; i < this.mElements.length; ++i) {
+		if (this.mElements[i].mName == elementName) {
+			id = i;
+			break;
+		}
+	}
+	
+	if (id >= 0) {
+		document.body.removeChild(this.mElements[id].mGUIElement.mElement);
+		this.mElements.splice(id, 1);
+	}
+}
+
+GUIDOMContainer.prototype.Clear = function() {
+	for (var i = 0; i < this.mElements.length; ++i) {
+		document.body.removeChild(this.mElements[i].mGUIElement.mElement);
+	}
+	
+	this.mElements.splice(0, this.mElements.length);
 }
 // ...End
 
@@ -4246,6 +4353,8 @@ function GFMenuScene() {
 	this.mButtonsText = new Array();
 	this.mButtonsText[0] = new Text();
 	this.mButtonsText[1] = new Text();
+	
+	this.mTest = new GUIDOMContainer();
 }
 
 // returns the type of this object for validity checking
@@ -4318,6 +4427,17 @@ GFMenuScene.prototype.SetUp = function() {
 		this.mButtonsText[1].mShadow = true;
 		this.mButtonsText[1].mDepth = -5000;
 	}
+	
+	{
+		var but = new GUIDOMButton();
+		but.SetUp(new IVec2(0, 0), "Test Button");
+		
+		this.mTest.Add(but, "test");
+		this.mTest.Remove("test");
+		this.mTest.Add(but, "test");
+		this.mTest.Clear();
+		this.mTest.Add(but, "test");
+	}
 }
 
 // cleans up the scene object
@@ -4346,11 +4466,15 @@ GFMenuScene.prototype.Process = function() {
 	{
 		if (this.mButtons[0].OnClick() == true) {
 			nmgrs.sceneMan.ChangeScene(new GFTestScene());
+			this.mTest.Clear();
 		}
 		else if (this.mButtons[1].OnClick() == true) {
 			nmgrs.sceneMan.ChangeScene(new GFCreationScene());
+			this.mTest.Clear();
 		}
 	}
+	
+	this.mTest.Process();
 }
 
 // handles all drawing tasks
@@ -5544,7 +5668,7 @@ GFGUICreationLoadDialogue.prototype.Process = function(point) {
 			var segKey = "seg" + this.mListBox.GetActive();
 			ls.Delete(segKey);
 			
-			this.mListBox.DeleteItem(this.mListBox.mSelected);
+			this.mListBox.RemoveItem(this.mListBox.mSelected);
 			this.mOldSelected = -1;
 		}
 		else if (this.mButtons[2].OnClick() == true) {
