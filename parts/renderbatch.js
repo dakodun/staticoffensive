@@ -307,8 +307,12 @@ RenderBatch.prototype.Render = function(camera, target) {
 			if (intersect == true) {
 				targ.fillStyle = shp.mColour;
 				targ.strokeStyle = shp.mColour;
+				
 				var oldAlpha = targ.globalAlpha;
 				targ.globalAlpha = shp.mAlpha;
+				
+				var oldLineWidth = targ.lineWidth;
+				targ.lineWidth = shp.mLineWidth;
 				
 				targ.beginPath();
 				targ.moveTo(pos.mX, pos.mY);
@@ -325,10 +329,12 @@ RenderBatch.prototype.Render = function(camera, target) {
 					targ.fill();
 				}
 				else {
+					
 					targ.stroke();
 				}
 				
 				targ.globalAlpha = oldAlpha;
+				targ.lineWidth = oldLineWidth;
 			}
 		}
 		else if (this.mRenderData[i].Type() == "RenderData") {

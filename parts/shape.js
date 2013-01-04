@@ -5,6 +5,7 @@ function Shape() {
 	
 	this.mColour = "#FFFFFF";
 	this.mAlpha = 1.0;
+	this.mLineWidth = 1;
 	
 	this.mPos = new IVec2(0, 0);
 	this.mSize = new IVec2(0, 0);
@@ -32,6 +33,7 @@ Shape.prototype.Copy = function(other) {
 	
 	this.mColour = other.mColour;
 	this.mAlpha = other.mAlpha;
+	this.mLineWidth = other.mLineWidth;
 	
 	this.mPos.Copy(other.mPos);
 	this.mSize.Copy(other.mSize);
