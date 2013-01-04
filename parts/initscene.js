@@ -54,6 +54,7 @@ InitScene.prototype.SetUp = function() {
 		{ // textures for creation "load" dialogue box
 			nmgrs.resLoad.QueueTexture("gui_creation_loaddialogue_back", "./res/vis/gui/gui_creation_loaddialogue_back.png");
 			nmgrs.resLoad.QueueTexture("gui_creation_loaddialogue_listbox", "./res/vis/gui/gui_creation_loaddialogue_listbox.png");
+			nmgrs.resLoad.QueueTexture("gui_creation_loaddialogue_listbox_arrows", "./res/vis/gui/gui_creation_loaddialogue_listbox_arrows.png");
 		}
 		
 		nmgrs.resLoad.QueueTexture("menu_button", "./res/vis/gui/menu_button.png");
