@@ -14,6 +14,7 @@ function RenderCanvas() {
 	this.mRotation = 0;
 	
 	this.mAbsolute = false;
+	this.mFrustrumCull = true;
 };
 
 // returns the type of this object for validity checking
@@ -36,10 +37,12 @@ RenderCanvas.prototype.Copy = function(other) {
 	this.mRotation = other.mRotation;
 	
 	this.mAbsolute = other.mAbsolute;
+	this.mFrustrumCull = other.mFrustrumCull;
 }
 
 RenderCanvas.prototype.RenderTo = function(renderable) {
 	var batch = new RenderBatch();
+	batch.mFrustrumCull = this.mFrustrumCull;
 	batch.Clear();
 	
 	batch.Add(renderable);

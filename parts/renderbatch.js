@@ -28,6 +28,7 @@ function RenderBatch() {
 	this.mRenderData = new Array();
 	
 	this.mNeedSort = false;
+	this.mFrustrumCull = true;
 };
 
 // initialise the render batch
@@ -173,24 +174,29 @@ RenderBatch.prototype.Render = function(camera, target) {
 			var sprBR = new IVec2(spr.GetPosition().mX + spr.GetWidth(), spr.GetPosition().mY + spr.GetHeight());
 			
 			var intersect = false;
-			var left = sprTL.mX;
-			var right = scrBR.mX;
-			if (scrTL.mX < sprTL.mX) {
-				left = scrTL.mX;
-				right = sprBR.mX;
-			}
-			
-			if (right - left < spr.GetWidth() + nmain.game.mCanvasSize.mX) {
-				var top = sprTL.mY;
-				var bottom = scrBR.mY;
-				if (scrTL.mY < sprTL.mY) {
-					top = scrTL.mY;
-					bottom = sprBR.mY;
+			if (this.mFrustrumCull == true) {
+				var left = sprTL.mX;
+				var right = scrBR.mX;
+				if (scrTL.mX < sprTL.mX) {
+					left = scrTL.mX;
+					right = sprBR.mX;
 				}
 				
-				if (bottom - top < spr.GetHeight() + nmain.game.mCanvasSize.mY) {
-					intersect = true;
+				if (right - left < spr.GetWidth() + nmain.game.mCanvasSize.mX) {
+					var top = sprTL.mY;
+					var bottom = scrBR.mY;
+					if (scrTL.mY < sprTL.mY) {
+						top = scrTL.mY;
+						bottom = sprBR.mY;
+					}
+					
+					if (bottom - top < spr.GetHeight() + nmain.game.mCanvasSize.mY) {
+						intersect = true;
+					}
 				}
+			}
+			else {
+				intersect = true;
 			}
 			
 			if (intersect == true) {
@@ -215,24 +221,29 @@ RenderBatch.prototype.Render = function(camera, target) {
 			var txtBR = new IVec2(txt.mPos.mX + txt.GetWidth(), txt.mPos.mY + txt.GetHeight());
 			
 			var intersect = false;
-			var left = txtTL.mX;
-			var right = scrBR.mX;
-			if (scrTL.mX < txtTL.mX) {
-				left = scrTL.mX;
-				right = txtBR.mX;
-			}
-			
-			if (right - left < txt.GetWidth() + nmain.game.mCanvasSize.mX) {
-				var top = txtTL.mY;
-				var bottom = scrBR.mY;
-				if (scrTL.mY < txtTL.mY) {
-					top = scrTL.mY;
-					bottom = txtBR.mY;
+			if (this.mFrustrumCull == true) {
+				var left = txtTL.mX;
+				var right = scrBR.mX;
+				if (scrTL.mX < txtTL.mX) {
+					left = scrTL.mX;
+					right = txtBR.mX;
 				}
 				
-				if (bottom - top < txt.GetHeight() + nmain.game.mCanvasSize.mY) {
-					intersect = true;
+				if (right - left < txt.GetWidth() + nmain.game.mCanvasSize.mX) {
+					var top = txtTL.mY;
+					var bottom = scrBR.mY;
+					if (scrTL.mY < txtTL.mY) {
+						top = scrTL.mY;
+						bottom = txtBR.mY;
+					}
+					
+					if (bottom - top < txt.GetHeight() + nmain.game.mCanvasSize.mY) {
+						intersect = true;
+					}
 				}
+			}
+			else {
+				intersect = true;
 			}
 			
 			if (intersect == true) {
@@ -284,24 +295,29 @@ RenderBatch.prototype.Render = function(camera, target) {
 			var shpBR = new IVec2(shp.mPos.mX + shp.mBounds[2], shp.mPos.mY + shp.mBounds[3]);
 			
 			var intersect = false;
-			var left = shpTL.mX;
-			var right = scrBR.mX;
-			if (scrTL.mX < shpTL.mX) {
-				left = scrTL.mX;
-				right = shpBR.mX;
-			}
-			
-			if (right - left < shp.GetWidth() + nmain.game.mCanvasSize.mX) {
-				var top = shpTL.mY;
-				var bottom = scrBR.mY;
-				if (scrTL.mY < shpTL.mY) {
-					top = scrTL.mY;
-					bottom = shpBR.mY;
+			if (this.mFrustrumCull == true) {
+				var left = shpTL.mX;
+				var right = scrBR.mX;
+				if (scrTL.mX < shpTL.mX) {
+					left = scrTL.mX;
+					right = shpBR.mX;
 				}
 				
-				if (bottom - top < shp.GetHeight() + nmain.game.mCanvasSize.mY) {
-					intersect = true;
+				if (right - left < shp.GetWidth() + nmain.game.mCanvasSize.mX) {
+					var top = shpTL.mY;
+					var bottom = scrBR.mY;
+					if (scrTL.mY < shpTL.mY) {
+						top = scrTL.mY;
+						bottom = shpBR.mY;
+					}
+					
+					if (bottom - top < shp.GetHeight() + nmain.game.mCanvasSize.mY) {
+						intersect = true;
+					}
 				}
+			}
+			else {
+				intersect = true;
 			}
 			
 			if (intersect == true) {
@@ -344,24 +360,29 @@ RenderBatch.prototype.Render = function(camera, target) {
 			var idBR = new IVec2(renData.mPos.mX + renData.GetWidth(), renData.mPos.mY + renData.GetHeight());
 			
 			var intersect = false;
-			var left = idTL.mX;
-			var right = scrBR.mX;
-			if (scrTL.mX < idTL.mX) {
-				left = scrTL.mX;
-				right = idBR.mX;
-			}
-			
-			if (right - left < renData.GetWidth() + nmain.game.mCanvasSize.mX) {
-				var top = idTL.mY;
-				var bottom = scrBR.mY;
-				if (scrTL.mY < idTL.mY) {
-					top = scrTL.mY;
-					bottom = idBR.mY;
+			if (this.mFrustrumCull == true) {
+				var left = idTL.mX;
+				var right = scrBR.mX;
+				if (scrTL.mX < idTL.mX) {
+					left = scrTL.mX;
+					right = idBR.mX;
 				}
 				
-				if (bottom - top < renData.GetHeight() + nmain.game.mCanvasSize.mY) {
-					intersect = true;
+				if (right - left < renData.GetWidth() + nmain.game.mCanvasSize.mX) {
+					var top = idTL.mY;
+					var bottom = scrBR.mY;
+					if (scrTL.mY < idTL.mY) {
+						top = scrTL.mY;
+						bottom = idBR.mY;
+					}
+					
+					if (bottom - top < renData.GetHeight() + nmain.game.mCanvasSize.mY) {
+						intersect = true;
+					}
 				}
+			}
+			else {
+				intersect = true;
 			}
 			
 			if (intersect == true) {
@@ -378,24 +399,29 @@ RenderBatch.prototype.Render = function(camera, target) {
 			var canvBR = new IVec2(canv.mPos.mX + canv.GetWidth(), canv.mPos.mY + canv.GetHeight());
 			
 			var intersect = false;
-			var left = canvTL.mX;
-			var right = scrBR.mX;
-			if (scrTL.mX < canvTL.mX) {
-				left = scrTL.mX;
-				right = canvBR.mX;
-			}
-			
-			if (right - left < canv.GetWidth() + nmain.game.mCanvasSize.mX) {
-				var top = canvTL.mY;
-				var bottom = scrBR.mY;
-				if (scrTL.mY < canvTL.mY) {
-					top = scrTL.mY;
-					bottom = canvBR.mY;
+			if (this.mFrustrumCull == true) {
+				var left = canvTL.mX;
+				var right = scrBR.mX;
+				if (scrTL.mX < canvTL.mX) {
+					left = scrTL.mX;
+					right = canvBR.mX;
 				}
 				
-				if (bottom - top < canv.GetHeight() + nmain.game.mCanvasSize.mY) {
-					intersect = true;
+				if (right - left < canv.GetWidth() + nmain.game.mCanvasSize.mX) {
+					var top = canvTL.mY;
+					var bottom = scrBR.mY;
+					if (scrTL.mY < canvTL.mY) {
+						top = scrTL.mY;
+						bottom = canvBR.mY;
+					}
+					
+					if (bottom - top < canv.GetHeight() + nmain.game.mCanvasSize.mY) {
+						intersect = true;
+					}
 				}
+			}
+			else {
+				intersect = true;
 			}
 			
 			if (intersect == true) {
