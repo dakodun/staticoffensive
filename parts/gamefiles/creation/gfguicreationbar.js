@@ -111,7 +111,8 @@ GFGUICreationBar.prototype.Process = function(point) {
 			currScene.mCreationControl.mDialogueOpen = "save";
 		}
 		else if (this.mMenus[0].OnClick(2) == true) {
-			
+			currScene.mCreationControl.mDialogueControl.mDialogues["load"].PopulateSegmentList();
+			currScene.mCreationControl.mDialogueOpen = "load";
 		}
 		else if (this.mMenus[0].OnClick(3) == true) {
 			
@@ -182,8 +183,8 @@ GFGUICreationBar.prototype.Hovering = function() {
 		var pt = new IVec2(0, 0);
 		pt.Copy(nmgrs.inputMan.GetLocalMouseCoords());
 		
-		var tl = new IVec2(10, 12);
-		var br = new IVec2(11, 13);
+		var tl = new IVec2(0, 2);
+		var br = new IVec2(1, 3);
 		br.mX += this.mSprite.GetWidth(); br.mY += this.mSprite.GetHeight();
 		
 		if (util.PointInRectangle(pt, tl, br)) {
