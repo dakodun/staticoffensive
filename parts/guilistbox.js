@@ -66,6 +66,7 @@ GUIListBox.prototype.SetUp = function(pos, depth, arrowTex) {
 	this.mSelectedShape.mPos.Copy(pos);
 	this.mSelectedShape.mDepth = this.mDepth - 2;
 	this.mSelectedShape.mColour = "#FFFFFF";
+	this.mSelectedShape.mLineWidth = 2;
 	this.mSelectedShape.mAbsolute = true;
 	this.mSelectedShape.mOutline = true;
 }
@@ -205,6 +206,18 @@ GUIListBox.prototype.AddItem = function(itemButton, text) {
 	
 	this.mItems.push(but);
 	this.mItemsText.push(txt);
+}
+
+GUIListBox.prototype.DeleteItem = function(id) {
+
+}
+
+GUIListBox.prototype.Clear = function() {
+	this.mSelected = -1;
+	this.mItemTop = 0;
+	
+	this.mItems.splice(0, this.mItems.length);
+	this.mItemsText.splice(0, this.mItemsText.length);
 }
 
 GUIListBox.prototype.AdjustItems = function(amount) {
