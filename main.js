@@ -1803,6 +1803,7 @@ function RenderCanvas() {
 	this.mRotation = 0;
 	
 	this.mAbsolute = false;
+	this.mFrustrumCull = true;
 };
 
 // returns the type of this object for validity checking
@@ -1825,10 +1826,12 @@ RenderCanvas.prototype.Copy = function(other) {
 	this.mRotation = other.mRotation;
 	
 	this.mAbsolute = other.mAbsolute;
+	this.mFrustrumCull = other.mFrustrumCull;
 }
 
 RenderCanvas.prototype.RenderTo = function(renderable) {
 	var batch = new RenderBatch();
+	batch.mFrustrumCull = this.mFrustrumCull;
 	batch.Clear();
 	
 	batch.Add(renderable);
@@ -1887,6 +1890,7 @@ function RenderBatch() {
 	this.mRenderData = new Array();
 	
 	this.mNeedSort = false;
+	this.mFrustrumCull = true;
 };
 
 // initialise the render batch
@@ -2032,24 +2036,29 @@ RenderBatch.prototype.Render = function(camera, target) {
 			var sprBR = new IVec2(spr.GetPosition().mX + spr.GetWidth(), spr.GetPosition().mY + spr.GetHeight());
 			
 			var intersect = false;
-			var left = sprTL.mX;
-			var right = scrBR.mX;
-			if (scrTL.mX < sprTL.mX) {
-				left = scrTL.mX;
-				right = sprBR.mX;
-			}
-			
-			if (right - left < spr.GetWidth() + nmain.game.mCanvasSize.mX) {
-				var top = sprTL.mY;
-				var bottom = scrBR.mY;
-				if (scrTL.mY < sprTL.mY) {
-					top = scrTL.mY;
-					bottom = sprBR.mY;
+			if (this.mFrustrumCull == true) {
+				var left = sprTL.mX;
+				var right = scrBR.mX;
+				if (scrTL.mX < sprTL.mX) {
+					left = scrTL.mX;
+					right = sprBR.mX;
 				}
 				
-				if (bottom - top < spr.GetHeight() + nmain.game.mCanvasSize.mY) {
-					intersect = true;
+				if (right - left < spr.GetWidth() + nmain.game.mCanvasSize.mX) {
+					var top = sprTL.mY;
+					var bottom = scrBR.mY;
+					if (scrTL.mY < sprTL.mY) {
+						top = scrTL.mY;
+						bottom = sprBR.mY;
+					}
+					
+					if (bottom - top < spr.GetHeight() + nmain.game.mCanvasSize.mY) {
+						intersect = true;
+					}
 				}
+			}
+			else {
+				intersect = true;
 			}
 			
 			if (intersect == true) {
@@ -2074,24 +2083,29 @@ RenderBatch.prototype.Render = function(camera, target) {
 			var txtBR = new IVec2(txt.mPos.mX + txt.GetWidth(), txt.mPos.mY + txt.GetHeight());
 			
 			var intersect = false;
-			var left = txtTL.mX;
-			var right = scrBR.mX;
-			if (scrTL.mX < txtTL.mX) {
-				left = scrTL.mX;
-				right = txtBR.mX;
-			}
-			
-			if (right - left < txt.GetWidth() + nmain.game.mCanvasSize.mX) {
-				var top = txtTL.mY;
-				var bottom = scrBR.mY;
-				if (scrTL.mY < txtTL.mY) {
-					top = scrTL.mY;
-					bottom = txtBR.mY;
+			if (this.mFrustrumCull == true) {
+				var left = txtTL.mX;
+				var right = scrBR.mX;
+				if (scrTL.mX < txtTL.mX) {
+					left = scrTL.mX;
+					right = txtBR.mX;
 				}
 				
-				if (bottom - top < txt.GetHeight() + nmain.game.mCanvasSize.mY) {
-					intersect = true;
+				if (right - left < txt.GetWidth() + nmain.game.mCanvasSize.mX) {
+					var top = txtTL.mY;
+					var bottom = scrBR.mY;
+					if (scrTL.mY < txtTL.mY) {
+						top = scrTL.mY;
+						bottom = txtBR.mY;
+					}
+					
+					if (bottom - top < txt.GetHeight() + nmain.game.mCanvasSize.mY) {
+						intersect = true;
+					}
 				}
+			}
+			else {
+				intersect = true;
 			}
 			
 			if (intersect == true) {
@@ -2143,24 +2157,29 @@ RenderBatch.prototype.Render = function(camera, target) {
 			var shpBR = new IVec2(shp.mPos.mX + shp.mBounds[2], shp.mPos.mY + shp.mBounds[3]);
 			
 			var intersect = false;
-			var left = shpTL.mX;
-			var right = scrBR.mX;
-			if (scrTL.mX < shpTL.mX) {
-				left = scrTL.mX;
-				right = shpBR.mX;
-			}
-			
-			if (right - left < shp.GetWidth() + nmain.game.mCanvasSize.mX) {
-				var top = shpTL.mY;
-				var bottom = scrBR.mY;
-				if (scrTL.mY < shpTL.mY) {
-					top = scrTL.mY;
-					bottom = shpBR.mY;
+			if (this.mFrustrumCull == true) {
+				var left = shpTL.mX;
+				var right = scrBR.mX;
+				if (scrTL.mX < shpTL.mX) {
+					left = scrTL.mX;
+					right = shpBR.mX;
 				}
 				
-				if (bottom - top < shp.GetHeight() + nmain.game.mCanvasSize.mY) {
-					intersect = true;
+				if (right - left < shp.GetWidth() + nmain.game.mCanvasSize.mX) {
+					var top = shpTL.mY;
+					var bottom = scrBR.mY;
+					if (scrTL.mY < shpTL.mY) {
+						top = scrTL.mY;
+						bottom = shpBR.mY;
+					}
+					
+					if (bottom - top < shp.GetHeight() + nmain.game.mCanvasSize.mY) {
+						intersect = true;
+					}
 				}
+			}
+			else {
+				intersect = true;
 			}
 			
 			if (intersect == true) {
@@ -2203,24 +2222,29 @@ RenderBatch.prototype.Render = function(camera, target) {
 			var idBR = new IVec2(renData.mPos.mX + renData.GetWidth(), renData.mPos.mY + renData.GetHeight());
 			
 			var intersect = false;
-			var left = idTL.mX;
-			var right = scrBR.mX;
-			if (scrTL.mX < idTL.mX) {
-				left = scrTL.mX;
-				right = idBR.mX;
-			}
-			
-			if (right - left < renData.GetWidth() + nmain.game.mCanvasSize.mX) {
-				var top = idTL.mY;
-				var bottom = scrBR.mY;
-				if (scrTL.mY < idTL.mY) {
-					top = scrTL.mY;
-					bottom = idBR.mY;
+			if (this.mFrustrumCull == true) {
+				var left = idTL.mX;
+				var right = scrBR.mX;
+				if (scrTL.mX < idTL.mX) {
+					left = scrTL.mX;
+					right = idBR.mX;
 				}
 				
-				if (bottom - top < renData.GetHeight() + nmain.game.mCanvasSize.mY) {
-					intersect = true;
+				if (right - left < renData.GetWidth() + nmain.game.mCanvasSize.mX) {
+					var top = idTL.mY;
+					var bottom = scrBR.mY;
+					if (scrTL.mY < idTL.mY) {
+						top = scrTL.mY;
+						bottom = idBR.mY;
+					}
+					
+					if (bottom - top < renData.GetHeight() + nmain.game.mCanvasSize.mY) {
+						intersect = true;
+					}
 				}
+			}
+			else {
+				intersect = true;
 			}
 			
 			if (intersect == true) {
@@ -2237,24 +2261,29 @@ RenderBatch.prototype.Render = function(camera, target) {
 			var canvBR = new IVec2(canv.mPos.mX + canv.GetWidth(), canv.mPos.mY + canv.GetHeight());
 			
 			var intersect = false;
-			var left = canvTL.mX;
-			var right = scrBR.mX;
-			if (scrTL.mX < canvTL.mX) {
-				left = scrTL.mX;
-				right = canvBR.mX;
-			}
-			
-			if (right - left < canv.GetWidth() + nmain.game.mCanvasSize.mX) {
-				var top = canvTL.mY;
-				var bottom = scrBR.mY;
-				if (scrTL.mY < canvTL.mY) {
-					top = scrTL.mY;
-					bottom = canvBR.mY;
+			if (this.mFrustrumCull == true) {
+				var left = canvTL.mX;
+				var right = scrBR.mX;
+				if (scrTL.mX < canvTL.mX) {
+					left = scrTL.mX;
+					right = canvBR.mX;
 				}
 				
-				if (bottom - top < canv.GetHeight() + nmain.game.mCanvasSize.mY) {
-					intersect = true;
+				if (right - left < canv.GetWidth() + nmain.game.mCanvasSize.mX) {
+					var top = canvTL.mY;
+					var bottom = scrBR.mY;
+					if (scrTL.mY < canvTL.mY) {
+						top = scrTL.mY;
+						bottom = canvBR.mY;
+					}
+					
+					if (bottom - top < canv.GetHeight() + nmain.game.mCanvasSize.mY) {
+						intersect = true;
+					}
 				}
+			}
+			else {
+				intersect = true;
 			}
 			
 			if (intersect == true) {
@@ -3269,14 +3298,17 @@ GUIListBox.prototype.GetRenderData = function() {
 
 GUIListBox.prototype.AddItem = function(itemButton, text) {
 	if (this.mItems.length == 0) {
+		this.mTopArrow.mPos.Copy(this.mPos);
 		this.mTopArrow.mPos.mX += itemButton.mSpriteIdle.GetWidth() + 2;
 		this.mTopArrow.SetSpritePositions(this.mTopArrow.mPos);
 		
+		this.mBottomArrow.mPos.Copy(this.mPos);
 		this.mBottomArrow.mPos.mX += itemButton.mSpriteIdle.GetWidth() + 2;
 		this.mBottomArrow.mPos.mY += itemButton.mSpriteIdle.GetHeight() * (this.mItemsMax - 1);
 		this.mBottomArrow.SetSpritePositions(this.mBottomArrow.mPos);
 		
 		this.mSelected = 0;
+		this.mSelectedShape.mPos.Copy(this.mPos);
 		this.mSelectedShape.AddPoint(new IVec2(itemButton.mSpriteIdle.GetWidth(), 0));
 		this.mSelectedShape.AddPoint(new IVec2(itemButton.mSpriteIdle.GetWidth(), itemButton.mSpriteIdle.GetHeight()));
 		this.mSelectedShape.AddPoint(new IVec2(0, itemButton.mSpriteIdle.GetHeight()));
@@ -3310,15 +3342,44 @@ GUIListBox.prototype.AddItem = function(itemButton, text) {
 }
 
 GUIListBox.prototype.DeleteItem = function(id) {
-
+	if (id >= 0 && id < this.mItems.length) {
+		this.mItems.splice(id, 1);
+		this.mItemsText.splice(id, 1);
+		
+		if (this.mItems.length == 0) {
+			this.Clear();
+		}
+		else {
+			for (var i = id; i < this.mItems.length; ++i) {
+				this.mItems[i].mPos.mY -= this.mItems[i].mSpriteIdle.GetHeight();
+				this.mItems[i].SetSpritePositions(this.mItems[i].mPos);
+				
+				this.mItemsText[i].mPos.mY -= this.mItems[i].mSpriteIdle.GetHeight();
+			}
+			
+			if (this.mItemTop > 0) {
+				this.AdjustItems(-1);
+			}
+			
+			if (id >= this.mItems.length) {
+				if (this.mSelected == id) {
+					this.mSelected--;
+					this.mSelectedShape.mPos.mY -= this.mItems[0].mSpriteIdle.GetHeight();
+				}
+				
+				id--;
+			}
+		}
+	}
 }
 
 GUIListBox.prototype.Clear = function() {
-	this.mSelected = -1;
 	this.mItemTop = 0;
-	
 	this.mItems.splice(0, this.mItems.length);
 	this.mItemsText.splice(0, this.mItemsText.length);
+	
+	this.mSelected = -1;
+	this.mSelectedShape.Clear();
 }
 
 GUIListBox.prototype.AdjustItems = function(amount) {
@@ -3327,9 +3388,7 @@ GUIListBox.prototype.AdjustItems = function(amount) {
 	for (var i = 0; i < this.mItems.length; ++i) {
 		this.mItems[i].mPos.mY -= amount * this.mItems[i].mSpriteIdle.GetHeight();
 		this.mItems[i].SetSpritePositions(this.mItems[i].mPos);
-	}
-	
-	for (var i = 0; i < this.mItemsText.length; ++i) {
+		
 		this.mItemsText[i].mPos.mY -= amount * this.mItems[i].mSpriteIdle.GetHeight();
 	}
 	
@@ -3337,9 +3396,11 @@ GUIListBox.prototype.AdjustItems = function(amount) {
 }
 
 GUIListBox.prototype.GetActive = function() {
-	if (this.mSelected > 0) {
+	if (this.mSelected >= 0) {
 		return this.mItemsText[this.mSelected].mString;
 	}
+	
+	return "";
 }
 // ...End
 
@@ -3551,6 +3612,7 @@ InitScene.prototype.SetUp = function() {
 		{ // textures for creation "load" dialogue box
 			nmgrs.resLoad.QueueTexture("gui_creation_loaddialogue_back", "./res/vis/gui/gui_creation_loaddialogue_back.png");
 			nmgrs.resLoad.QueueTexture("gui_creation_loaddialogue_listbox", "./res/vis/gui/gui_creation_loaddialogue_listbox.png");
+			nmgrs.resLoad.QueueTexture("gui_creation_loaddialogue_listbox_arrows", "./res/vis/gui/gui_creation_loaddialogue_listbox_arrows.png");
 		}
 		
 		nmgrs.resLoad.QueueTexture("menu_button", "./res/vis/gui/menu_button.png");
@@ -4534,6 +4596,8 @@ GFCreationMap.prototype.SetUp = function() {
 			
 			this.mSegment.mTiles[i].SetBounds(this.mGridBase);
 		}
+		
+		this.SetTileSpecial(i);
 	}
 }
 
@@ -4765,7 +4829,7 @@ GFCreationMap.prototype.ToString = function() {
 		}
 	}
 	
-	return (texStr + tileStr);
+	return (texStr + "{" + tileStr + "}");
 }
 // ...End
 
@@ -5227,8 +5291,9 @@ function GFGUICreationLoadDialogue() {
 	this.mSprite = new Sprite();
 	
 	this.mListBox = new GUIListBox();
+	this.mOldSelected = -1;
 	
-	this.mRedraw = true;
+	this.mRedraw = false;
 	this.mRenderCanvas = new RenderCanvas();
 	
 	this.mButtons = new Array();
@@ -5257,7 +5322,7 @@ GFGUICreationLoadDialogue.prototype.SetUp = function() {
 	}
 	
 	{
-		this.mListBox.SetUp(pos, -5101, "gui_creation_arrows");
+		this.mListBox.SetUp(new IVec2(pos.mX + 58, pos.mY + 10), -5101, "gui_creation_loaddialogue_listbox_arrows");
 		this.mListBox.mItemsMax = 5;
 	}
 	
@@ -5267,6 +5332,8 @@ GFGUICreationLoadDialogue.prototype.SetUp = function() {
 		
 		this.mRenderCanvas.mDepth = -5101;
 		this.mRenderCanvas.mAbsolute = true;
+		
+		this.mRenderCanvas.mFrustrumCull = false;
 	}
 	
 	{
@@ -5363,77 +5430,22 @@ GFGUICreationLoadDialogue.prototype.Input = function() {
 GFGUICreationLoadDialogue.prototype.Process = function(point) {
 	var currScene = nmgrs.sceneMan.mCurrScene;
 	
-	if (this.mRedraw == true) {
-		var bp = new GFBluePrint();
-		bp.SetUp("a:tileset_test;{60oa?53oa?40oa!60oa?70oa?30oa!00oa?11oa?20oa}");
-		
-		var seg = new GFMapSegment();
-		seg.mPos.Set(0, 0); seg.SetUp(bp);
-		
-		{
-			for (var i = 0; i < seg.mTiles.length; ++i) {
-				// seg.mTiles[i].mSprite.mPos.mX += 0;
-				seg.mTiles[i].mSprite.mPos.mY += -(seg.mBounds.mBounds[1]);
-				
-				// seg.mTiles[i].mBounds.mPos.mX += 0;
-				seg.mTiles[i].mBounds.mPos.mY += -(seg.mBounds.mBounds[1]);
-			}
-			
-			// seg.mBounds.mPos.mX += 0;
-			seg.mBounds.mPos.mY += -(seg.mBounds.mBounds[1]);
-			seg.mBoundsPoly.splice(0, seg.mBoundsPoly.length);
-			seg.mBoundsPoly = seg.mBoundsPoly.concat(seg.mBounds.GetPolygon());
-		}
-		
-		this.mRenderCanvas.Clear();
-		
-		{
-			var arr = new Array();
-			arr = arr.concat(seg.GetRenderData());
-			
-			{
-				var arrSort = new Array();
-				for (var i = 0; i < arr.length; ++i) {
-					var element = new RenderBatchSortElement();
-					element.mID = i;
-					element.mDepth = arr[i].mDepth;
-					
-					arrSort.push(element);
-				}
-				
-				arrSort.sort(DepthSort);
-				
-				var temp = new Array();
-				for (var i = 0; i < arr.length; ++i) {
-					temp.push(arr[arrSort[i].mID]);
-				}
-				
-				arr.splice(0, arr.length);
-				arr = arr.concat(temp);
-				
-				this.mNeedSort = false;
-			}
-			
-			this.mRenderCanvas.mContext.save();
-			this.mRenderCanvas.mContext.scale(0.25, 0.25);
-			for (var i = 0; i < arr.length; ++i) {
-				this.mRenderCanvas.RenderTo(arr[i]);
-			}
-			
-			this.mRenderCanvas.mContext.restore();
-			
-			this.mRenderCanvas.mPos.Set(this.mPos.mX + 161 - ((seg.mBounds.GetWidth() / 4) / 2),
-					this.mPos.mY + 210 - ((seg.mBounds.GetHeight() / 4) / 2));
-		}
-		
-		this.mRedraw = false;
-	}
+	this.RedrawPreview();
 	
 	{
 		this.mListBox.Process(point);
 		
 		for (var i = 0; i < this.mButtons.length; ++i) {
 			this.mButtons[i].Process(point);
+		}
+		
+		if (this.mListBox.mItems.length == 0) {
+			this.mButtons[0].mActive = false;
+			this.mButtons[1].mActive = false;
+		}
+		else {
+			this.mButtons[0].mActive = true;
+			this.mButtons[1].mActive = true;
 		}
 		
 		if (this.mButtons[0].mActive == false) {
@@ -5469,14 +5481,53 @@ GFGUICreationLoadDialogue.prototype.Process = function(point) {
 	
 	{
 		if (this.mButtons[0].OnClick() == true) {
+			var ls = new LocalStorage();
+			var segKey = "seg" + this.mListBox.GetActive();
 			
+			if (ls.Exists(segKey) == true) {
+				var bp = new GFBluePrint();
+				bp.SetUp(ls.Load(segKey));
+				
+				var seg = new GFMapSegment();
+				seg.mPos.Set(0, 0); seg.SetUp(bp);
+				
+				var map = new GFCreationMap(); currScene.mMap.Copy(map);
+				currScene.mMap.mSegment.Copy(seg);
+				currScene.mMap.mBounds[0] = currScene.mMap.mSegment.mBounds.mBounds[0];
+				currScene.mMap.mBounds[1] = currScene.mMap.mSegment.mBounds.mBounds[1];
+				currScene.mMap.mBounds[2] = currScene.mMap.mSegment.mBounds.mBounds[2];
+				currScene.mMap.mBounds[3] = currScene.mMap.mSegment.mBounds.mBounds[3];
+				
+				currScene.mMap.SetUp();
+				
+				{
+					currScene.mCam.Translate(new IVec2(-currScene.mCam.mTranslate.mX, -currScene.mCam.mTranslate.mY));
+					
+					var trans = new IVec2(nmain.game.mCanvasSize.mX / 2, nmain.game.mCanvasSize.mY / 2);
+					trans.mX -= currScene.mMap.mSegment.mBounds.GetWidth() / 2; trans.mY -= 30;
+					trans.mX = -(Math.round(trans.mX)); trans.mY = -(Math.round(trans.mY));
+					currScene.mCam.Translate(trans);
+				}
+			}
+			
+			currScene.mCreationControl.mDialogueOpen = "";
 		}
 		else if (this.mButtons[1].OnClick() == true) {
+			var ls = new LocalStorage();
+			var segKey = "seg" + this.mListBox.GetActive();
+			ls.Delete(segKey);
 			
+			this.mListBox.DeleteItem(this.mListBox.mSelected);
+			this.mOldSelected = -1;
 		}
 		else if (this.mButtons[2].OnClick() == true) {
 			currScene.mCreationControl.mDialogueOpen = "";
 		}
+	}
+	
+	if (this.mOldSelected != this.mListBox.mSelected) {
+		this.mRedraw = true;
+		this.mOldSelected = this.mListBox.mSelected;
 	}
 }
 
@@ -5485,7 +5536,10 @@ GFGUICreationLoadDialogue.prototype.GetRenderData = function() {
 	
 	arr.push(this.mSprite);
 	arr = arr.concat(this.mListBox.GetRenderData());
-	arr.push(this.mRenderCanvas);
+	
+	if (this.mListBox.mItems.length > 0) {
+		arr.push(this.mRenderCanvas);
+	}
 	
 	for (var i = 0; i < this.mButtons.length; ++i) {
 		arr = arr.concat(this.mButtons[i].GetRenderData());
@@ -5500,6 +5554,7 @@ GFGUICreationLoadDialogue.prototype.GetRenderData = function() {
 GFGUICreationLoadDialogue.prototype.PopulateSegmentList = function() {
 	this.mSegmentList.splice(0, this.mSegmentList.length);
 	this.mListBox.Clear();
+	this.mOldSelected = -1;
 	
 	var ls = new LocalStorage;
 	
@@ -5510,12 +5565,14 @@ GFGUICreationLoadDialogue.prototype.PopulateSegmentList = function() {
 		}
 	}
 	
+	this.mSegmentList.sort();
+	
 	var tex = nmgrs.resMan.mTexStore.GetResource("gui_creation_loaddialogue_listbox");
 	var font = nmgrs.resMan.mFontStore.GetResource("mainfont");
 	
 	{
 		var itemBut = new GUIButton();
-		itemBut.SetUp(new IVec2(0, 0), new IVec2(208, 16), -5101);
+		itemBut.SetUp(new IVec2(0, 0), new IVec2(186, 16), -5101);
 		
 		itemBut.mSpriteIdle.SetAnimatedTexture(tex, 3, 1, -1, -1);
 		itemBut.mSpriteIdle.SetCurrentFrame(0);
@@ -5534,13 +5591,88 @@ GFGUICreationLoadDialogue.prototype.PopulateSegmentList = function() {
 		itemTxt.SetFont(font);
 		itemTxt.SetFontSize(12);
 		itemTxt.mAlign = "left";
-		itemTxt.mPos.Set(4, 4);
-		itemTxt.mColour = "#C8B792";
+		itemTxt.mPos.Set(2, 0);
+		itemTxt.mColour = "#2E150F";
 		
 		for (var i = 0; i < this.mSegmentList.length; ++i) {
-			itemTxt.mString = this.mSegmentList[i];
+			itemTxt.mString = this.mSegmentList[i].substr(3, this.mSegmentList[i].length - 3);
 			this.mListBox.AddItem(itemBut, itemTxt);
 		}
+	}
+	
+	this.mRedraw = true;
+}
+
+GFGUICreationLoadDialogue.prototype.RedrawPreview = function() {
+	if (this.mRedraw == true) {
+		var bp = new GFBluePrint();
+		var ls = new LocalStorage();
+		var segKey = "seg" + this.mListBox.GetActive();
+		
+		if (ls.Exists(segKey) == true) {
+			bp.SetUp(ls.Load(segKey));
+			
+			var seg = new GFMapSegment();
+			seg.mPos.Set(0, 0); seg.SetUp(bp);
+			
+			{
+				for (var i = 0; i < seg.mTiles.length; ++i) {
+					// seg.mTiles[i].mSprite.mPos.mX += 0;
+					seg.mTiles[i].mSprite.mPos.mY += -(seg.mBounds.mBounds[1]);
+					
+					// seg.mTiles[i].mBounds.mPos.mX += 0;
+					seg.mTiles[i].mBounds.mPos.mY += -(seg.mBounds.mBounds[1]);
+				}
+				
+				// seg.mBounds.mPos.mX += 0;
+				seg.mBounds.mPos.mY += -(seg.mBounds.mBounds[1]);
+				seg.mBoundsPoly.splice(0, seg.mBoundsPoly.length);
+				seg.mBoundsPoly = seg.mBoundsPoly.concat(seg.mBounds.GetPolygon());
+			}
+			
+			this.mRenderCanvas.Clear();
+			
+			{
+				var arr = new Array();
+				arr = arr.concat(seg.GetRenderData());
+				
+				{
+					var arrSort = new Array();
+					for (var i = 0; i < arr.length; ++i) {
+						var element = new RenderBatchSortElement();
+						element.mID = i;
+						element.mDepth = arr[i].mDepth;
+						
+						arrSort.push(element);
+					}
+					
+					arrSort.sort(DepthSort);
+					
+					var temp = new Array();
+					for (var i = 0; i < arr.length; ++i) {
+						temp.push(arr[arrSort[i].mID]);
+					}
+					
+					arr.splice(0, arr.length);
+					arr = arr.concat(temp);
+					
+					this.mNeedSort = false;
+				}
+				
+				this.mRenderCanvas.mContext.save();
+				this.mRenderCanvas.mContext.scale(0.25, 0.25);
+				for (var i = 0; i < arr.length; ++i) {
+					this.mRenderCanvas.RenderTo(arr[i]);
+				}
+				
+				this.mRenderCanvas.mContext.restore();
+				
+				this.mRenderCanvas.mPos.Set(this.mPos.mX + 161 - ((seg.mBounds.GetWidth() / 4) / 2),
+						this.mPos.mY + 210 - ((seg.mBounds.GetHeight() / 4) / 2));
+			}
+		}
+		
+		this.mRedraw = false;
 	}
 }
 // ...End
