@@ -275,6 +275,7 @@ GFGUICreationTileControl.prototype.SetUpText = function(pos) {
 			this.mCurrTileText[i].SetFontSize(24);
 			this.mCurrTileText[i].mAlign = "centre";
 			this.mCurrTileText[i].mAbsolute = true;
+			this.mCurrTileText[i].mDepth = -5001;
 		}
 		
 		this.mCurrTileText[0].SetFontSize(12);
@@ -443,7 +444,7 @@ GFGUICreationTileControl.prototype.SetUpButtons = function(pos) {
 	{
 		var tex = nmgrs.resMan.mTexStore.GetResource("gui_creation_texset");
 		
-		this.mSetTexture.SetUp(new IVec2(pos.mX - 49, pos.mY + 240), new IVec2(162, 38), 100);
+		this.mSetTexture.SetUp(new IVec2(pos.mX - 49, pos.mY + 240), new IVec2(162, 38), -5000);
 		this.mSetTexture.mPos.Set(pos.mX - 49, pos.mY + 240);
 		
 		this.mSetTexture.mSpriteIdle.SetAnimatedTexture(tex, 3, 1, -1, -1);
