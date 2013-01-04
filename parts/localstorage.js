@@ -1,7 +1,7 @@
 // LocalStorage Class...
 // 
 function LocalStorage() {
-	
+	this.mLength = localStorage.length;
 };
 
 LocalStorage.prototype.IsSupported = function() {
@@ -21,6 +21,7 @@ LocalStorage.prototype.Save = function(key, data, overwrite) {
 		return false;
 	}
 	
+	this.mLength = localStorage.length;
 	return true;
 }
 
@@ -38,10 +39,16 @@ LocalStorage.prototype.Exists = function(key) {
 
 LocalStorage.prototype.Delete = function(key) {
 	localStorage.removeItem(key);
+	this.mLength = localStorage.length;
 }
 
 LocalStorage.prototype.Clear = function() {
 	localStorage.clear();
+	this.mLength = localStorage.length;
+}
+
+LocalStorage.prototype.Key = function(id) {
+	return localStorage.key(id);
 }
 // ...End
 
