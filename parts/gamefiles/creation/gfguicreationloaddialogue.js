@@ -258,7 +258,7 @@ GFGUICreationLoadDialogue.prototype.Process = function(point) {
 			var segKey = "seg" + this.mListBox.GetActive();
 			ls.Delete(segKey);
 			
-			this.mListBox.DeleteItem(this.mListBox.mSelected);
+			this.mListBox.RemoveItem(this.mListBox.mSelected);
 			this.mOldSelected = -1;
 		}
 		else if (this.mButtons[2].OnClick() == true) {
