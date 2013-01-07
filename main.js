@@ -3410,11 +3410,24 @@ function GUIDOMButton() {
 	this.mPos = new IVec2(0, 0);
 	
 	this.mElement = document.createElement('button');
-	this.mText = null
+	
+	this.mHover = false;
+	this.mDown = false;
+	this.mWasClicked = false;
 };
 
+GUIDOMButton.prototype.Type = function() {
+	return "GUIDOMButton";
+}
+
 GUIDOMButton.prototype.Copy = function(other) {
+	this.mPos.Copy(other.mPos);
 	
+	this.mElement = other.mElement;
+	
+	this.mHover = other.mHover;
+	this.mDown = other.mDown;
+	this.mWasClicked = other.mWasClicked;
 }
 
 GUIDOMButton.prototype.SetUp = function(pos, text) {
@@ -3424,8 +3437,12 @@ GUIDOMButton.prototype.SetUp = function(pos, text) {
 	this.mElement.style.left = nmain.game.mCanvasPos.mX + this.mPos.mX + "px";
 	this.mElement.style.top = nmain.game.mCanvasPos.mY + this.mPos.mY + "px";
 	
-	this.mText = document.createTextNode(text);
-	this.mElement.appendChild(this.mText);
+	var txt = document.createTextNode(text);
+	this.mElement.appendChild(txt);
+}
+
+GUIDOMButton.prototype.Process = function() {
+	
 }
 
 GUIDOMButton.prototype.SetPos = function(pos) {
@@ -3433,6 +3450,59 @@ GUIDOMButton.prototype.SetPos = function(pos) {
 	
 	this.mElement.style.left = nmain.game.mCanvasPos.mX + this.mPos.mX + "px";
 	this.mElement.style.top = nmain.game.mCanvasPos.mY + this.mPos.mY + "px";
+}
+
+GUIDOMButton.prototype.OnClick = function() {
+	if (this.mWasClicked == true) {
+		this.mWasClicked = false;
+		return true;
+	}
+	
+	return false;
+}
+
+GUIDOMButton.prototype.RegisterCallbacks = function(e) {
+	this.mElement.onclick = function(e) {
+		this.mWasClicked = true;
+	}
+	
+	this.mElement.onmouseover = function(e) {
+		this.mHover = true;
+	}
+	
+	this.mElement.onmouseout = function(e) {
+		this.mHover = false;
+	}
+	
+	this.mElement.onmousedown = function(e) {
+		this.mDown = true;
+	}
+	
+	this.mElement.onmouseup = function(e) {
+		this.mDown = false;
+	}
+}
+
+GUIDOMButton.prototype.UnregisterCallbacks = function(e) {
+	this.mElement.onclick = function(e) {
+		
+	}
+	
+	this.mElement.onmouseover = function(e) {
+		
+	}
+	
+	this.mElement.onmouseout = function(e) {
+		
+	}
+	
+	this.mElement.onmousedown = function(e) {
+		
+	}
+	
+	this.mElement.onmouseup = function(e) {
+		
+	}
 }
 // ...End
 
@@ -3454,20 +3524,22 @@ function GUIDOMContainer() {
 };
 
 GUIDOMContainer.prototype.Process = function() {
-	if (this.mOldCanvas.mX != nmain.game.mCanvasPos.mX || this.mOldCanvas.mY != nmain.game.mCanvasPos.mY) {
-		var diff = new IVec2(nmain.game.mCanvasPos.mX - this.mOldCanvas.mX,
-				nmain.game.mCanvasPos.mY - this.mOldCanvas.mY);
+	for (var i = 0; i < this.mElements.length; ++i) {
+		this.mElements[i].mGUIElement.Process();
 		
-		for (var i = 0; i < this.mElements.length; ++i) {
+		if (this.mOldCanvas.mX != nmain.game.mCanvasPos.mX || this.mOldCanvas.mY != nmain.game.mCanvasPos.mY) {
+			var diff = new IVec2(nmain.game.mCanvasPos.mX - this.mOldCanvas.mX,
+					nmain.game.mCanvasPos.mY - this.mOldCanvas.mY);
+			
 			var pos = new IVec2(0, 0); pos.Copy(this.mElements[i].mGUIElement.mPos);
 			this.mElements[i].mGUIElement.SetPos(pos);
 		}
-		
-		this.mOldCanvas.Copy(nmain.game.mCanvasPos);
 	}
+	
+	this.mOldCanvas.Copy(nmain.game.mCanvasPos);
 }
 
-GUIDOMContainer.prototype.Add = function(element, elementName) {
+GUIDOMContainer.prototype.AddElement = function(element, elementName) {
 	var found = false;
 	for (var i = 0; i < this.mElements.length; ++i) {
 		if (this.mElements[i].mName == elementName) {
@@ -3478,16 +3550,28 @@ GUIDOMContainer.prototype.Add = function(element, elementName) {
 	
 	if (found == false) {
 		var elem = new GUIDOMElement();
-		elem.mGUIElement = element;
+		
+		{
+			if (element.Type() == "GUIDOMButton") {
+				elem.mGUIElement = new GUIDOMButton();
+			}
+			else if (element.Type() == "GUIDOMInputBox") {
+				elem.mGUIElement = new GUIDOMInputBox();
+			}
+		}
+		
+		elem.mGUIElement.Copy(element);
 		elem.mName = elementName;
 		
 		this.mElements.push(elem);
 		var id = this.mElements.length - 1;
 		document.body.appendChild(this.mElements[id].mGUIElement.mElement);
+		
+		this.mElements[id].mGUIElement.RegisterCallbacks();
 	}
 }
 
-GUIDOMContainer.prototype.Remove = function(elementName) {
+GUIDOMContainer.prototype.RemoveElement = function(elementName) {
 	var id = -1;
 	for (var i = 0; i < this.mElements.length; ++i) {
 		if (this.mElements[i].mName == elementName) {
@@ -3497,17 +3581,164 @@ GUIDOMContainer.prototype.Remove = function(elementName) {
 	}
 	
 	if (id >= 0) {
+		this.mElements[id].mGUIElement.UnregisterCallbacks();
+		
 		document.body.removeChild(this.mElements[id].mGUIElement.mElement);
 		this.mElements.splice(id, 1);
 	}
 }
 
+GUIDOMContainer.prototype.GetElement = function(elementName) {
+	for (var i = 0; i < this.mElements.length; ++i) {
+		if (this.mElements[i].mName == elementName) {
+			return this.mElements.mGUIElement;
+		}
+	}
+	
+	throw Exception("Resource not found.");
+}
+
 GUIDOMContainer.prototype.Clear = function() {
 	for (var i = 0; i < this.mElements.length; ++i) {
+		this.mElements[i].mGUIElement.UnregisterCallbacks();
+		
 		document.body.removeChild(this.mElements[i].mGUIElement.mElement);
 	}
 	
 	this.mElements.splice(0, this.mElements.length);
+}
+// ...End
+
+
+// GUIDOMInputBox Class...
+function GUIDOMInputBox() {
+	this.mPos = new IVec2(0, 0);
+	
+	this.mElement = document.createElement('input');
+	this.mElement.type = "text";
+	
+	this.mOldValue = "";
+	
+	this.mValidInput = new Array();
+	
+	{
+		this.mAlphaUpper = new Array("A", "B", "C", "D", "E", "F", "G", "H", "I", "J", "K", "L", "M", "N",
+				"O", "P", "Q", "R", "S", "T", "U", "V", "W", "X", "Y", "Z", " ");
+				
+		this.mAlphaLower = new Array("a", "b", "c", "d", "e", "f", "g", "h", "i", "j", "k", "l", "m", "n",
+				"o", "p", "q", "r", "s", "t", "u", "v", "w", "x", "y", "z", " ");
+				
+		this.mNumbers = new Array("0", "1", "2", "3", "4", "5", "6", "7", "8", "9");
+		
+		this.mAlphaNumeric = new Array();
+		this.mAlphaNumeric = this.mAlphaNumeric.concat(this.mAlphaUpper);
+		this.mAlphaNumeric = this.mAlphaNumeric.concat(this.mAlphaLower);
+		this.mAlphaNumeric = this.mAlphaNumeric.concat(this.mNumbers);
+		
+		{
+			var arr = new Array("¬", "!", '"', "£", "$", "%", "^", "&", "*", "(", ")", "_", "+",
+					"`", "¦", "-", "=", "[", "{", "]", "}", ";", ":", "'", "@", "#", "~", "\\", "|",
+					",", "<", ".", ">", "/", "?");
+			
+			this.mAlphaNumericPunctuation = new Array();
+			this.mAlphaNumericPunctuation = this.mAlphaNumeric.concat(this.mAlphaNumeric);
+			this.mAlphaNumericPunctuation = this.mAlphaNumeric.concat(arr);
+		}
+	}
+};
+
+GUIDOMInputBox.prototype.Type = function() {
+	return "GUIDOMInputBox";
+}
+
+GUIDOMInputBox.prototype.Copy = function(other) {
+	this.mPos.Copy(other.mPos);
+	
+	this.mElement = other.mElement;
+	
+	this.mOldValue = other.mOldValue;
+	
+	this.mValidInput.splice(0, this.mValidInput.length);
+	this.mValidInput = this.mValidInput.concat(other.mValidInput);
+}
+
+GUIDOMInputBox.prototype.SetUp = function(pos, defaultText, inputArr) {
+	this.mPos.Copy(pos);
+	
+	this.mElement.style.position = "absolute";
+	this.mElement.style.left = nmain.game.mCanvasPos.mX + this.mPos.mX + "px";
+	this.mElement.style.top = nmain.game.mCanvasPos.mY + this.mPos.mY + "px";
+	
+	this.mElement.defaultValue = defaultText;
+	
+	if (inputArr == null) {
+		this.mValidInput = this.mValidInput.concat(this.mAlphaNumericPunctuation);
+	}
+	else {
+		this.mValidInput = this.mValidInput.concat(inputArr);
+	}
+}
+
+GUIDOMInputBox.prototype.Process = function() {
+	if (this.mElement.value != this.mOldValue) {
+		var valueStr = this.mElement.value;
+		var finalStr = "";
+		
+		for (var i = 0; i < valueStr.length; ++i) {	
+			for (var j = 0; j < this.mValidInput.length; ++j) {
+				if (valueStr.charAt(i) == this.mValidInput[j]) {
+					finalStr += valueStr.charAt(i);
+					break;
+				}
+			}
+		}
+		
+		this.mElement.value = finalStr;
+		this.mOldValue = this.mElement.value;
+	}
+}
+
+GUIDOMInputBox.prototype.SetPos = function(pos) {
+	this.mPos.Copy(pos);
+	
+	this.mElement.style.left = nmain.game.mCanvasPos.mX + this.mPos.mX + "px";
+	this.mElement.style.top = nmain.game.mCanvasPos.mY + this.mPos.mY + "px";
+}
+
+GUIDOMButton.prototype.RegisterCallbacks = function(e) {
+	
+}
+
+GUIDOMButton.prototype.UnregisterCallbacks = function(e) {
+	
+}
+
+GUIDOMButton.prototype.GetText = function() {
+	return this.mElement.value;
+}
+
+GUIDOMButton.prototype.SetText = function(text) {
+	this.mElement.value = text;
+}
+
+GUIDOMButton.prototype.GetSize = function() {
+	return this.mElement.size;
+}
+
+GUIDOMButton.prototype.SetSize = function(size) {
+	this.mElement.size = size;
+}
+
+GUIDOMButton.prototype.GetMaxChars = function() {
+	return this.mElement.maxLength;
+}
+
+GUIDOMButton.prototype.SetMaxChars = function(length) {
+	this.mElement.maxLength = length;
+} 
+
+GUIDOMButton.prototype.SelectAll = function() {
+	this.mElement.select()
 }
 // ...End
 
@@ -4353,8 +4584,6 @@ function GFMenuScene() {
 	this.mButtonsText = new Array();
 	this.mButtonsText[0] = new Text();
 	this.mButtonsText[1] = new Text();
-	
-	this.mTest = new GUIDOMContainer();
 }
 
 // returns the type of this object for validity checking
@@ -4427,17 +4656,6 @@ GFMenuScene.prototype.SetUp = function() {
 		this.mButtonsText[1].mShadow = true;
 		this.mButtonsText[1].mDepth = -5000;
 	}
-	
-	{
-		var but = new GUIDOMButton();
-		but.SetUp(new IVec2(0, 0), "Test Button");
-		
-		this.mTest.Add(but, "test");
-		this.mTest.Remove("test");
-		this.mTest.Add(but, "test");
-		this.mTest.Clear();
-		this.mTest.Add(but, "test");
-	}
 }
 
 // cleans up the scene object
@@ -4466,15 +4684,11 @@ GFMenuScene.prototype.Process = function() {
 	{
 		if (this.mButtons[0].OnClick() == true) {
 			nmgrs.sceneMan.ChangeScene(new GFTestScene());
-			this.mTest.Clear();
 		}
 		else if (this.mButtons[1].OnClick() == true) {
 			nmgrs.sceneMan.ChangeScene(new GFCreationScene());
-			this.mTest.Clear();
 		}
 	}
-	
-	this.mTest.Process();
 }
 
 // handles all drawing tasks
