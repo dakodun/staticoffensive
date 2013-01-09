@@ -33,6 +33,9 @@ function GUIDOMInputBox() {
 			this.mAlphaNumericPunctuation = this.mAlphaNumeric.concat(arr);
 		}
 	}
+	
+	this.mSelected = false;
+	this.mHover = false;
 };
 
 GUIDOMInputBox.prototype.Type = function() {
@@ -48,6 +51,9 @@ GUIDOMInputBox.prototype.Copy = function(other) {
 	
 	this.mValidInput.splice(0, this.mValidInput.length);
 	this.mValidInput = this.mValidInput.concat(other.mValidInput);
+	
+	this.mSelected = other.mSelected;
+	this.mHover = other.mHover;
 }
 
 GUIDOMInputBox.prototype.SetUp = function(pos, defaultText, inputArr) {
@@ -93,40 +99,78 @@ GUIDOMInputBox.prototype.SetPos = function(pos) {
 	this.mElement.style.top = nmain.game.mCanvasPos.mY + this.mPos.mY + "px";
 }
 
-GUIDOMButton.prototype.RegisterCallbacks = function(e) {
+GUIDOMInputBox.prototype.RegisterCallbacks = function(e) {
+	this.mElement.onfocus = function(e) {
+		nmgrs.inputMan.mDisableBackspace = false;
+		this.mSelected = true;
+	}
 	
+	this.mElement.onblur = function(e) {
+		nmgrs.inputMan.mDisableBackspace = true;
+		this.mSelected = false;
+	}
+	
+	this.mElement.onmouseover = function(e) {
+		this.mHover = true;
+	}
+	
+	this.mElement.onmouseout = function(e) {
+		this.mHover = false;
+	}
 }
 
-GUIDOMButton.prototype.UnregisterCallbacks = function(e) {
+GUIDOMInputBox.prototype.UnregisterCallbacks = function(e) {
+	this.mElement.onfocus = function(e) {
+		
+	}
 	
+	this.mElement.onblur = function(e) {
+		
+	}
+	
+	this.mElement.onmouseover = function(e) {
+		
+	}
+	
+	this.mElement.onmouseout = function(e) {
+		
+	}
 }
 
-GUIDOMButton.prototype.GetText = function() {
+GUIDOMInputBox.prototype.GetText = function() {
 	return this.mElement.value;
 }
 
-GUIDOMButton.prototype.SetText = function(text) {
+GUIDOMInputBox.prototype.SetText = function(text) {
 	this.mElement.value = text;
 }
 
-GUIDOMButton.prototype.GetSize = function() {
+GUIDOMInputBox.prototype.GetSize = function() {
 	return this.mElement.size;
 }
 
-GUIDOMButton.prototype.SetSize = function(size) {
+GUIDOMInputBox.prototype.SetSize = function(size) {
 	this.mElement.size = size;
 }
 
-GUIDOMButton.prototype.GetMaxChars = function() {
+GUIDOMInputBox.prototype.GetMaxChars = function() {
 	return this.mElement.maxLength;
 }
 
-GUIDOMButton.prototype.SetMaxChars = function(length) {
+GUIDOMInputBox.prototype.SetMaxChars = function(length) {
 	this.mElement.maxLength = length;
-} 
+}
 
-GUIDOMButton.prototype.SelectAll = function() {
-	this.mElement.select()
+GUIDOMInputBox.prototype.GetReadOnly = function() {
+	return this.mElement.readOnly;
+}
+
+GUIDOMInputBox.prototype.SetReadOnly = function(readOnly) {
+	this.mElement.readOnly = readOnly;
+}
+
+GUIDOMInputBox.prototype.SelectAll = function() {
+	this.mElement.select();
 }
 // ...End
 
