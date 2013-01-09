@@ -48,6 +48,8 @@ function InputManager() {
 	this.mGlobalMouseCoords = new IVec2(0, 0); // coordinates of the mouse in the page
 	
 	this.mTextInput = "";
+	
+	this.mDisableBackspace = true;
 }
 
 // process the input manager (update key and button states)
@@ -83,7 +85,9 @@ InputManager.prototype.HandleKeyDown = function(e) {
 	}
 	
 	if (e.keyCode == 8) {
-		e.preventDefault();
+		if (this.mDisableBackspace == true) {
+			e.preventDefault();
+		}
 	}
 }
 
