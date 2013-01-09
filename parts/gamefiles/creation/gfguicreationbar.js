@@ -115,7 +115,8 @@ GFGUICreationBar.prototype.Process = function(point) {
 			currScene.mCreationControl.mDialogueOpen = "load";
 		}
 		else if (this.mMenus[0].OnClick(3) == true) {
-			
+			currScene.mCreationControl.mDialogueControl.mDialogues["import"].CreateDOM();
+			currScene.mCreationControl.mDialogueOpen = "import";
 		}
 		else if (this.mMenus[0].OnClick(4) == true) {
 			currScene.mCreationControl.mDialogueControl.mDialogues["export"].CreateDOM();
