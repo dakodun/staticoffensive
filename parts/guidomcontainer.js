@@ -82,7 +82,7 @@ GUIDOMContainer.prototype.RemoveElement = function(elementName) {
 GUIDOMContainer.prototype.GetElement = function(elementName) {
 	for (var i = 0; i < this.mElements.length; ++i) {
 		if (this.mElements[i].mName == elementName) {
-			return this.mElements.mGUIElement;
+			return this.mElements[i].mGUIElement;
 		}
 	}
 	
