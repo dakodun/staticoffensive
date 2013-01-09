@@ -652,6 +652,8 @@ function InputManager() {
 	this.mGlobalMouseCoords = new IVec2(0, 0); // coordinates of the mouse in the page
 	
 	this.mTextInput = "";
+	
+	this.mDisableBackspace = true;
 }
 
 // process the input manager (update key and button states)
@@ -687,7 +689,9 @@ InputManager.prototype.HandleKeyDown = function(e) {
 	}
 	
 	if (e.keyCode == 8) {
-		e.preventDefault();
+		if (this.mDisableBackspace == true) {
+			e.preventDefault();
+		}
 	}
 }
 
@@ -3591,7 +3595,7 @@ GUIDOMContainer.prototype.RemoveElement = function(elementName) {
 GUIDOMContainer.prototype.GetElement = function(elementName) {
 	for (var i = 0; i < this.mElements.length; ++i) {
 		if (this.mElements[i].mName == elementName) {
-			return this.mElements.mGUIElement;
+			return this.mElements[i].mGUIElement;
 		}
 	}
 	
@@ -3645,6 +3649,9 @@ function GUIDOMInputBox() {
 			this.mAlphaNumericPunctuation = this.mAlphaNumeric.concat(arr);
 		}
 	}
+	
+	this.mSelected = false;
+	this.mHover = false;
 };
 
 GUIDOMInputBox.prototype.Type = function() {
@@ -3660,6 +3667,9 @@ GUIDOMInputBox.prototype.Copy = function(other) {
 	
 	this.mValidInput.splice(0, this.mValidInput.length);
 	this.mValidInput = this.mValidInput.concat(other.mValidInput);
+	
+	this.mSelected = other.mSelected;
+	this.mHover = other.mHover;
 }
 
 GUIDOMInputBox.prototype.SetUp = function(pos, defaultText, inputArr) {
@@ -3705,40 +3715,78 @@ GUIDOMInputBox.prototype.SetPos = function(pos) {
 	this.mElement.style.top = nmain.game.mCanvasPos.mY + this.mPos.mY + "px";
 }
 
-GUIDOMButton.prototype.RegisterCallbacks = function(e) {
+GUIDOMInputBox.prototype.RegisterCallbacks = function(e) {
+	this.mElement.onfocus = function(e) {
+		nmgrs.inputMan.mDisableBackspace = false;
+		this.mSelected = true;
+	}
 	
+	this.mElement.onblur = function(e) {
+		nmgrs.inputMan.mDisableBackspace = true;
+		this.mSelected = false;
+	}
+	
+	this.mElement.onmouseover = function(e) {
+		this.mHover = true;
+	}
+	
+	this.mElement.onmouseout = function(e) {
+		this.mHover = false;
+	}
 }
 
-GUIDOMButton.prototype.UnregisterCallbacks = function(e) {
+GUIDOMInputBox.prototype.UnregisterCallbacks = function(e) {
+	this.mElement.onfocus = function(e) {
+		
+	}
 	
+	this.mElement.onblur = function(e) {
+		
+	}
+	
+	this.mElement.onmouseover = function(e) {
+		
+	}
+	
+	this.mElement.onmouseout = function(e) {
+		
+	}
 }
 
-GUIDOMButton.prototype.GetText = function() {
+GUIDOMInputBox.prototype.GetText = function() {
 	return this.mElement.value;
 }
 
-GUIDOMButton.prototype.SetText = function(text) {
+GUIDOMInputBox.prototype.SetText = function(text) {
 	this.mElement.value = text;
 }
 
-GUIDOMButton.prototype.GetSize = function() {
+GUIDOMInputBox.prototype.GetSize = function() {
 	return this.mElement.size;
 }
 
-GUIDOMButton.prototype.SetSize = function(size) {
+GUIDOMInputBox.prototype.SetSize = function(size) {
 	this.mElement.size = size;
 }
 
-GUIDOMButton.prototype.GetMaxChars = function() {
+GUIDOMInputBox.prototype.GetMaxChars = function() {
 	return this.mElement.maxLength;
 }
 
-GUIDOMButton.prototype.SetMaxChars = function(length) {
+GUIDOMInputBox.prototype.SetMaxChars = function(length) {
 	this.mElement.maxLength = length;
-} 
+}
 
-GUIDOMButton.prototype.SelectAll = function() {
-	this.mElement.select()
+GUIDOMInputBox.prototype.GetReadOnly = function() {
+	return this.mElement.readOnly;
+}
+
+GUIDOMInputBox.prototype.SetReadOnly = function(readOnly) {
+	this.mElement.readOnly = readOnly;
+}
+
+GUIDOMInputBox.prototype.SelectAll = function() {
+	this.mElement.select();
 }
 // ...End
 
@@ -3951,6 +3999,14 @@ InitScene.prototype.SetUp = function() {
 			nmgrs.resLoad.QueueTexture("gui_creation_loaddialogue_back", "./res/vis/gui/gui_creation_loaddialogue_back.png");
 			nmgrs.resLoad.QueueTexture("gui_creation_loaddialogue_listbox", "./res/vis/gui/gui_creation_loaddialogue_listbox.png");
 			nmgrs.resLoad.QueueTexture("gui_creation_loaddialogue_listbox_arrows", "./res/vis/gui/gui_creation_loaddialogue_listbox_arrows.png");
+		}
+		
+		{ // textures for creation "import" dialogue boxes
+			nmgrs.resLoad.QueueTexture("gui_creation_importdialogue_back", "./res/vis/gui/gui_creation_importdialogue_back.png");
+		}
+		
+		{ // textures for creation "export" dialogue boxes
+			nmgrs.resLoad.QueueTexture("gui_creation_exportdialogue_back", "./res/vis/gui/gui_creation_exportdialogue_back.png");
 		}
 		
 		nmgrs.resLoad.QueueTexture("menu_button", "./res/vis/gui/menu_button.png");
@@ -5411,7 +5467,8 @@ GFGUICreationBar.prototype.Process = function(point) {
 			
 		}
 		else if (this.mMenus[0].OnClick(4) == true) {
-			
+			currScene.mCreationControl.mDialogueControl.mDialogues["export"].CreateDOM();
+			currScene.mCreationControl.mDialogueOpen = "export";
 		}
 	}
 }
@@ -5590,12 +5647,14 @@ function GFGUICreationDialogueControl() {
 	this.mDialogues["new"] = new GFGUICreationNewDialogue();
 	this.mDialogues["save"] = new GFGUICreationSaveDialogue();
 	this.mDialogues["load"] = new GFGUICreationLoadDialogue();
+	this.mDialogues["export"] = new GFGUICreationExportDialogue();
 }
 
 GFGUICreationDialogueControl.prototype.SetUp = function() {
 	this.mDialogues["new"].SetUp();
 	this.mDialogues["save"].SetUp();
 	this.mDialogues["load"].SetUp();
+	this.mDialogues["export"].SetUp();
 };
 
 GFGUICreationDialogueControl.prototype.Input = function(dialogue) {
@@ -5618,6 +5677,109 @@ GFGUICreationDialogueControl.prototype.GetRenderData = function(dialogue) {
 	}
 	
 	return arr;
+}
+// ...End
+
+
+// GFGUICreationExportDialogue Class...
+// game file:
+function GFGUICreationExportDialogue() {
+	this.mSprite = new Sprite();
+	
+	this.mDOMExport = new GUIDOMContainer();
+	this.mDOMInputBox = new GUIDOMInputBox();
+	
+	this.mButton = new GUIButton();
+	
+	this.mExtraText = new Text();
+}
+
+GFGUICreationExportDialogue.prototype.SetUp = function() {
+	var pos = new IVec2(nmain.game.mCanvasSize.mX / 2, nmain.game.mCanvasSize.mY / 2);
+	pos.mX -= 212; pos.mY -= 54;
+	
+	{
+		var tex = nmgrs.resMan.mTexStore.GetResource("gui_creation_exportdialogue_back");
+		
+		this.mSprite.mPos.Set(pos.mX, pos.mY);
+		this.mSprite.mDepth = -5100;
+		this.mSprite.SetTexture(tex);
+		this.mSprite.mAbsolute = true;
+	}
+	
+	{
+		this.mDOMInputBox.SetUp(new IVec2(pos.mX + 12, pos.mY + 53), "");
+		this.mDOMInputBox.SetReadOnly(true);
+		this.mDOMInputBox.SetSize(64);
+	}
+	
+	{
+		var tex = nmgrs.resMan.mTexStore.GetResource("gui_creation_newdialogue_cancelbutton");
+		
+		this.mButton.SetUp(new IVec2(pos.mX + 400, pos.mY + 84), new IVec2(18, 18), -5101);
+		
+		this.mButton.mSpriteIdle.SetAnimatedTexture(tex, 3, 1, -1, -1);
+		this.mButton.mSpriteIdle.SetCurrentFrame(0);
+		
+		this.mButton.mSpriteHover.SetAnimatedTexture(tex, 3, 1, -1, -1);
+		this.mButton.mSpriteHover.SetCurrentFrame(1);
+		
+		this.mButton.mSpriteDown.SetAnimatedTexture(tex, 3, 1, -1, -1);
+		this.mButton.mSpriteDown.SetCurrentFrame(2);
+		
+		this.mButton.mSpriteInactive.SetAnimatedTexture(tex, 3, 1, -1, -1);
+		this.mButton.mSpriteInactive.SetCurrentFrame(0);
+	}
+	
+	{
+		var font = nmgrs.resMan.mFontStore.GetResource("mainfont");
+		
+		{
+			this.mExtraText.SetFont(font);
+			this.mExtraText.SetFontSize(12);
+			this.mExtraText.mAlign = "centre";
+			this.mExtraText.mAbsolute = true;
+			this.mExtraText.mString = "CTRL + C (or RMB -> Copy) to copy map segment string above.";
+			this.mExtraText.mDepth = -5100;
+			this.mExtraText.mPos.Set(nmain.game.mCanvasSize.mX / 2, pos.mY + 108 + 6);
+			this.mExtraText.mShadow = true;
+		}
+	}
+}
+
+GFGUICreationExportDialogue.prototype.Input = function() {
+	this.mButton.Input();
+}
+
+GFGUICreationExportDialogue.prototype.Process = function(point) {
+	var currScene = nmgrs.sceneMan.mCurrScene;
+	
+	this.mDOMExport.Process();
+	
+	this.mButton.Process(point);
+	if (this.mButton.OnClick() == true) {
+		this.mDOMExport.Clear();
+		currScene.mCreationControl.mDialogueOpen = "";
+	}
+}
+
+GFGUICreationExportDialogue.prototype.GetRenderData = function() {
+	var arr = new Array();
+	
+	arr.push(this.mSprite);
+	arr = arr.concat(this.mButton.GetRenderData());
+	
+	arr.push(this.mExtraText);
+	
+	return arr;
+}
+
+GFGUICreationExportDialogue.prototype.CreateDOM = function() {
+	var currScene = nmgrs.sceneMan.mCurrScene;
+	this.mDOMInputBox.SetText(currScene.mMap.ToString());
+	
+	this.mDOMExport.AddElement(this.mDOMInputBox, "inputBox");
+	this.mDOMExport.GetElement("inputBox").SelectAll();
 }
 // ...End
 
@@ -5651,7 +5813,7 @@ function GFGUICreationLoadDialogue() {
 
 GFGUICreationLoadDialogue.prototype.SetUp = function() {
 	var pos = new IVec2(nmain.game.mCanvasSize.mX / 2, nmain.game.mCanvasSize.mY / 2);
-	pos.mX -= 161; pos.mY -= 146;
+	pos.mX -= 161; pos.mY -= 161;
 	this.mPos.Copy(pos);
 	
 	{
@@ -5664,7 +5826,7 @@ GFGUICreationLoadDialogue.prototype.SetUp = function() {
 	}
 	
 	{
-		this.mListBox.SetUp(new IVec2(pos.mX + 58, pos.mY + 10), -5101, "gui_creation_loaddialogue_listbox_arrows");
+		this.mListBox.SetUp(new IVec2(pos.mX + 58, pos.mY + 40), -5101, "gui_creation_loaddialogue_listbox_arrows");
 		this.mListBox.mItemsMax = 5;
 	}
 	
@@ -5682,7 +5844,7 @@ GFGUICreationLoadDialogue.prototype.SetUp = function() {
 		{
 			var tex = nmgrs.resMan.mTexStore.GetResource("gui_creation_newdialogue_confirmbutton");
 			
-			this.mButtons[0].SetUp(new IVec2(pos.mX + 132, pos.mY + 101), new IVec2(60, 26), -5101);
+			this.mButtons[0].SetUp(new IVec2(pos.mX + 132, pos.mY + 130), new IVec2(60, 26), -5101);
 			
 			this.mButtons[0].mSpriteIdle.SetAnimatedTexture(tex, 4, 1, -1, -1);
 			this.mButtons[0].mSpriteIdle.SetCurrentFrame(0);
@@ -5700,7 +5862,7 @@ GFGUICreationLoadDialogue.prototype.SetUp = function() {
 		{
 			var tex = nmgrs.resMan.mTexStore.GetResource("gui_creation_newdialogue_confirmbutton");
 			
-			this.mButtons[1].SetUp(new IVec2(pos.mX + 57, pos.mY + 101), new IVec2(60, 26), -5101);
+			this.mButtons[1].SetUp(new IVec2(pos.mX + 57, pos.mY + 130), new IVec2(60, 26), -5101);
 			
 			this.mButtons[1].mSpriteIdle.SetAnimatedTexture(tex, 4, 1, -1, -1);
 			this.mButtons[1].mSpriteIdle.SetCurrentFrame(0);
@@ -5718,7 +5880,7 @@ GFGUICreationLoadDialogue.prototype.SetUp = function() {
 		{
 			var tex = nmgrs.resMan.mTexStore.GetResource("gui_creation_newdialogue_cancelbutton");
 			
-			this.mButtons[2].SetUp(new IVec2(pos.mX + 247, pos.mY + 107), new IVec2(18, 18), -5101);
+			this.mButtons[2].SetUp(new IVec2(pos.mX + 247, pos.mY + 137), new IVec2(18, 18), -5101);
 			
 			this.mButtons[2].mSpriteIdle.SetAnimatedTexture(tex, 3, 1, -1, -1);
 			this.mButtons[2].mSpriteIdle.SetCurrentFrame(0);
@@ -5743,7 +5905,7 @@ GFGUICreationLoadDialogue.prototype.SetUp = function() {
 			this.mConfirmText.mAbsolute = true;
 			this.mConfirmText.mString = "Load";
 			this.mConfirmText.mAlign = "centre";
-			this.mConfirmText.mPos.Set(pos.mX + 162, pos.mY + 107);
+			this.mConfirmText.mPos.Set(pos.mX + 162, pos.mY + 136);
 			this.mConfirmText.mColour = "#270100";
 			this.mConfirmText.mDepth = -5102;
 		}
@@ -5754,7 +5916,7 @@ GFGUICreationLoadDialogue.prototype.SetUp = function() {
 			this.mDeleteText.mAbsolute = true;
 			this.mDeleteText.mString = "Delete";
 			this.mDeleteText.mAlign = "centre";
-			this.mDeleteText.mPos.Set(pos.mX + 87, pos.mY + 107);
+			this.mDeleteText.mPos.Set(pos.mX + 87, pos.mY + 136);
 			this.mDeleteText.mColour = "#270100";
 			this.mDeleteText.mDepth = -5102;
 		}
@@ -5765,7 +5927,7 @@ GFGUICreationLoadDialogue.prototype.SetUp = function() {
 			this.mWarningText.mAlign = "centre";
 			this.mWarningText.mAbsolute = true;
 			this.mWarningText.mDepth = -5100;
-			this.mWarningText.mPos.Set(nmain.game.mCanvasSize.mX / 2, (nmain.game.mCanvasSize.mY / 2) + 148);
+			this.mWarningText.mPos.Set(nmain.game.mCanvasSize.mX / 2, pos.mY + 322 + 6);
 			this.mWarningText.mShadow = true;
 		}
 	}
@@ -6049,7 +6211,7 @@ GFGUICreationLoadDialogue.prototype.RedrawPreview = function() {
 				this.mRenderCanvas.mContext.restore();
 				
 				this.mRenderCanvas.mPos.Set(this.mPos.mX + 161 - ((seg.mBounds.GetWidth() / 4) / 2),
-						this.mPos.mY + 210 - ((seg.mBounds.GetHeight() / 4) / 2));
+						this.mPos.mY + 240 - ((seg.mBounds.GetHeight() / 4) / 2));
 			}
 		}
 		
@@ -6206,7 +6368,7 @@ GFGUICreationNewDialogue.prototype.SetUp = function() {
 			this.mExtraText.mAlign = "centre";
 			this.mExtraText.mAbsolute = true;
 			this.mExtraText.mDepth = -5100;
-			this.mExtraText.mPos.Set(nmain.game.mCanvasSize.mX / 2, (nmain.game.mCanvasSize.mY / 2) + 52);
+			this.mExtraText.mPos.Set(nmain.game.mCanvasSize.mX / 2, pos.mY + 96 + 6);
 			this.mExtraText.mString = "Minimum Size: (1, 1)\nMaximum Size: (20, 20)";
 			this.mExtraText.mShadow = true;
 		}
@@ -6385,7 +6547,7 @@ function GFGUICreationSaveDialogue() {
 
 GFGUICreationSaveDialogue.prototype.SetUp = function() {
 	var pos = new IVec2(nmain.game.mCanvasSize.mX / 2, nmain.game.mCanvasSize.mY / 2);
-	pos.mX -= 72; pos.mY -= 57;
+	pos.mX -= 72; pos.mY -= 77;
 	
 	{
 		var tex = nmgrs.resMan.mTexStore.GetResource("gui_creation_savedialogue_back");
@@ -6505,7 +6667,7 @@ GFGUICreationSaveDialogue.prototype.SetUp = function() {
 			this.mWarningOutOfMemoryText.mAlign = "centre";
 			this.mWarningOutOfMemoryText.mAbsolute = true;
 			this.mWarningOutOfMemoryText.mDepth = -5100;
-			this.mWarningOutOfMemoryText.mPos.Set(nmain.game.mCanvasSize.mX / 2, (nmain.game.mCanvasSize.mY / 2) + 60);
+			this.mWarningOutOfMemoryText.mPos.Set(nmain.game.mCanvasSize.mX / 2, pos.mY + 113 + 6);
 			this.mWarningOutOfMemoryText.mString = "Not enough space left in localStorage to save current segment!\n";
 			this.mWarningOutOfMemoryText.mString += "Delete previous segments via the load option in the file menu";
 			this.mWarningOutOfMemoryText.mShadow = true;
