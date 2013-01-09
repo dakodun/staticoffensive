@@ -25,7 +25,7 @@ GFGUICreationExportDialogue.prototype.SetUp = function() {
 	}
 	
 	{
-		this.mDOMInputBox.SetUp(new IVec2(pos.mX + 12, pos.mY + 53), "");
+		this.mDOMInputBox.SetUp(new IVec2(pos.mX + 12, pos.mY + 48), "");
 		this.mDOMInputBox.SetReadOnly(true);
 		this.mDOMInputBox.SetSize(64);
 	}
