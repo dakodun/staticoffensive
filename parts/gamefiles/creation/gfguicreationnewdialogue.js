@@ -145,7 +145,7 @@ GFGUICreationNewDialogue.prototype.SetUp = function() {
 			this.mExtraText.mAlign = "centre";
 			this.mExtraText.mAbsolute = true;
 			this.mExtraText.mDepth = -5100;
-			this.mExtraText.mPos.Set(nmain.game.mCanvasSize.mX / 2, (nmain.game.mCanvasSize.mY / 2) + 52);
+			this.mExtraText.mPos.Set(nmain.game.mCanvasSize.mX / 2, pos.mY + 96 + 6);
 			this.mExtraText.mString = "Minimum Size: (1, 1)\nMaximum Size: (20, 20)";
 			this.mExtraText.mShadow = true;
 		}

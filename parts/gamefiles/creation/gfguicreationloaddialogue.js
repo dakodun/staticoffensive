@@ -27,7 +27,7 @@ function GFGUICreationLoadDialogue() {
 
 GFGUICreationLoadDialogue.prototype.SetUp = function() {
 	var pos = new IVec2(nmain.game.mCanvasSize.mX / 2, nmain.game.mCanvasSize.mY / 2);
-	pos.mX -= 161; pos.mY -= 146;
+	pos.mX -= 161; pos.mY -= 161;
 	this.mPos.Copy(pos);
 	
 	{
@@ -40,7 +40,7 @@ GFGUICreationLoadDialogue.prototype.SetUp = function() {
 	}
 	
 	{
-		this.mListBox.SetUp(new IVec2(pos.mX + 58, pos.mY + 10), -5101, "gui_creation_loaddialogue_listbox_arrows");
+		this.mListBox.SetUp(new IVec2(pos.mX + 58, pos.mY + 40), -5101, "gui_creation_loaddialogue_listbox_arrows");
 		this.mListBox.mItemsMax = 5;
 	}
 	
@@ -58,7 +58,7 @@ GFGUICreationLoadDialogue.prototype.SetUp = function() {
 		{
 			var tex = nmgrs.resMan.mTexStore.GetResource("gui_creation_newdialogue_confirmbutton");
 			
-			this.mButtons[0].SetUp(new IVec2(pos.mX + 132, pos.mY + 101), new IVec2(60, 26), -5101);
+			this.mButtons[0].SetUp(new IVec2(pos.mX + 132, pos.mY + 130), new IVec2(60, 26), -5101);
 			
 			this.mButtons[0].mSpriteIdle.SetAnimatedTexture(tex, 4, 1, -1, -1);
 			this.mButtons[0].mSpriteIdle.SetCurrentFrame(0);
@@ -76,7 +76,7 @@ GFGUICreationLoadDialogue.prototype.SetUp = function() {
 		{
 			var tex = nmgrs.resMan.mTexStore.GetResource("gui_creation_newdialogue_confirmbutton");
 			
-			this.mButtons[1].SetUp(new IVec2(pos.mX + 57, pos.mY + 101), new IVec2(60, 26), -5101);
+			this.mButtons[1].SetUp(new IVec2(pos.mX + 57, pos.mY + 130), new IVec2(60, 26), -5101);
 			
 			this.mButtons[1].mSpriteIdle.SetAnimatedTexture(tex, 4, 1, -1, -1);
 			this.mButtons[1].mSpriteIdle.SetCurrentFrame(0);
@@ -94,7 +94,7 @@ GFGUICreationLoadDialogue.prototype.SetUp = function() {
 		{
 			var tex = nmgrs.resMan.mTexStore.GetResource("gui_creation_newdialogue_cancelbutton");
 			
-			this.mButtons[2].SetUp(new IVec2(pos.mX + 247, pos.mY + 107), new IVec2(18, 18), -5101);
+			this.mButtons[2].SetUp(new IVec2(pos.mX + 247, pos.mY + 137), new IVec2(18, 18), -5101);
 			
 			this.mButtons[2].mSpriteIdle.SetAnimatedTexture(tex, 3, 1, -1, -1);
 			this.mButtons[2].mSpriteIdle.SetCurrentFrame(0);
@@ -119,7 +119,7 @@ GFGUICreationLoadDialogue.prototype.SetUp = function() {
 			this.mConfirmText.mAbsolute = true;
 			this.mConfirmText.mString = "Load";
 			this.mConfirmText.mAlign = "centre";
-			this.mConfirmText.mPos.Set(pos.mX + 162, pos.mY + 107);
+			this.mConfirmText.mPos.Set(pos.mX + 162, pos.mY + 136);
 			this.mConfirmText.mColour = "#270100";
 			this.mConfirmText.mDepth = -5102;
 		}
@@ -130,7 +130,7 @@ GFGUICreationLoadDialogue.prototype.SetUp = function() {
 			this.mDeleteText.mAbsolute = true;
 			this.mDeleteText.mString = "Delete";
 			this.mDeleteText.mAlign = "centre";
-			this.mDeleteText.mPos.Set(pos.mX + 87, pos.mY + 107);
+			this.mDeleteText.mPos.Set(pos.mX + 87, pos.mY + 136);
 			this.mDeleteText.mColour = "#270100";
 			this.mDeleteText.mDepth = -5102;
 		}
@@ -141,7 +141,7 @@ GFGUICreationLoadDialogue.prototype.SetUp = function() {
 			this.mWarningText.mAlign = "centre";
 			this.mWarningText.mAbsolute = true;
 			this.mWarningText.mDepth = -5100;
-			this.mWarningText.mPos.Set(nmain.game.mCanvasSize.mX / 2, (nmain.game.mCanvasSize.mY / 2) + 148);
+			this.mWarningText.mPos.Set(nmain.game.mCanvasSize.mX / 2, pos.mY + 322 + 6);
 			this.mWarningText.mShadow = true;
 		}
 	}
@@ -425,7 +425,7 @@ GFGUICreationLoadDialogue.prototype.RedrawPreview = function() {
 				this.mRenderCanvas.mContext.restore();
 				
 				this.mRenderCanvas.mPos.Set(this.mPos.mX + 161 - ((seg.mBounds.GetWidth() / 4) / 2),
-						this.mPos.mY + 210 - ((seg.mBounds.GetHeight() / 4) / 2));
+						this.mPos.mY + 240 - ((seg.mBounds.GetHeight() / 4) / 2));
 			}
 		}
 		

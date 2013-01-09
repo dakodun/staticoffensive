@@ -21,7 +21,7 @@ function GFGUICreationSaveDialogue() {
 
 GFGUICreationSaveDialogue.prototype.SetUp = function() {
 	var pos = new IVec2(nmain.game.mCanvasSize.mX / 2, nmain.game.mCanvasSize.mY / 2);
-	pos.mX -= 72; pos.mY -= 57;
+	pos.mX -= 72; pos.mY -= 77;
 	
 	{
 		var tex = nmgrs.resMan.mTexStore.GetResource("gui_creation_savedialogue_back");
@@ -141,7 +141,7 @@ GFGUICreationSaveDialogue.prototype.SetUp = function() {
 			this.mWarningOutOfMemoryText.mAlign = "centre";
 			this.mWarningOutOfMemoryText.mAbsolute = true;
 			this.mWarningOutOfMemoryText.mDepth = -5100;
-			this.mWarningOutOfMemoryText.mPos.Set(nmain.game.mCanvasSize.mX / 2, (nmain.game.mCanvasSize.mY / 2) + 60);
+			this.mWarningOutOfMemoryText.mPos.Set(nmain.game.mCanvasSize.mX / 2, pos.mY + 113 + 6);
 			this.mWarningOutOfMemoryText.mString = "Not enough space left in localStorage to save current segment!\n";
 			this.mWarningOutOfMemoryText.mString += "Delete previous segments via the load option in the file menu";
 			this.mWarningOutOfMemoryText.mShadow = true;
