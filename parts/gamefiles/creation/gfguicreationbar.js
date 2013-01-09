@@ -5,11 +5,15 @@ function GFGUICreationBar() {
 	
 	this.mMenus = new Array();
 	this.mMenus[0] = new GUIDropDown();
+	this.mMenus[1] = new GUIDropDown();
 	
 	this.mMenusText = new Array();
 	this.mMenusText[0] = new Text();
+	this.mMenusText[1] = new Text();
 	
-	this.mDropBottom = new Sprite();
+	this.mDropBottoms = new Array();
+	this.mDropBottoms[0] = new Sprite();
+	this.mDropBottoms[1] = new Sprite();
 }
 
 GFGUICreationBar.prototype.SetUp = function() {
@@ -24,57 +28,111 @@ GFGUICreationBar.prototype.SetUp = function() {
 	
 	{
 		var tex = nmgrs.resMan.mTexStore.GetResource("gui_creation_topmenunew");
-		var baseBut = new GUIButton();
 		
-		baseBut.SetUp(new IVec2(16, 3), new IVec2(54, 26), -5000);
-		baseBut.mPos.Set(16, 3);
+		{
+			var baseBut = new GUIButton();
+			
+			baseBut.SetUp(new IVec2(16, 3), new IVec2(54, 26), -5000);
+			baseBut.mPos.Set(16, 3);
+			
+			baseBut.mSpriteIdle.SetAnimatedTexture(tex, 3, 1, -1, -1);
+			baseBut.mSpriteIdle.SetCurrentFrame(0);
+			
+			baseBut.mSpriteHover.SetAnimatedTexture(tex, 3, 1, -1, -1);
+			baseBut.mSpriteHover.SetCurrentFrame(1);
+			
+			baseBut.mSpriteDown.SetAnimatedTexture(tex, 3, 1, -1, -1);
+			baseBut.mSpriteDown.SetCurrentFrame(2);
+			
+			baseBut.mSpriteInactive.SetAnimatedTexture(tex, 3, 1, -1, -1);
+			baseBut.mSpriteInactive.SetCurrentFrame(0);
+			
+			this.mMenus[0].SetUp(baseBut);
+			this.AddItem(this.mMenus[0], "new", false);
+			var newPos = new IVec2(0, 0); newPos.Copy(this.mMenus[0].mItems[0].mPos); newPos.mY += 3;
+			this.mMenus[0].mItems[0].mPos.Copy(newPos);
+			this.mMenus[0].mItems[0].SetSpritePositions(newPos);
+			this.mMenus[0].mItemsText[0].mPos.mY += 3;
+			
+			this.AddItem(this.mMenus[0], "save", true);
+			this.AddItem(this.mMenus[0], "load", false);
+			this.AddItem(this.mMenus[0], "import", true);
+			this.AddItem(this.mMenus[0], "export", false);
+		}
 		
-		baseBut.mSpriteIdle.SetAnimatedTexture(tex, 3, 1, -1, -1);
-		baseBut.mSpriteIdle.SetCurrentFrame(0);
-		
-		baseBut.mSpriteHover.SetAnimatedTexture(tex, 3, 1, -1, -1);
-		baseBut.mSpriteHover.SetCurrentFrame(1);
-		
-		baseBut.mSpriteDown.SetAnimatedTexture(tex, 3, 1, -1, -1);
-		baseBut.mSpriteDown.SetCurrentFrame(2);
-		
-		baseBut.mSpriteInactive.SetAnimatedTexture(tex, 3, 1, -1, -1);
-		baseBut.mSpriteInactive.SetCurrentFrame(0);
-		
-		this.mMenus[0].SetUp(baseBut);
-		this.AddItem(this.mMenus[0], "new", false);
-		var newPos = new IVec2(0, 0); newPos.Copy(this.mMenus[0].mItems[0].mPos); newPos.mY += 3;
-		this.mMenus[0].mItems[0].mPos.Copy(newPos);
-		this.mMenus[0].mItems[0].SetSpritePositions(newPos);
-		this.mMenus[0].mItemsText[0].mPos.mY += 3;
-		
-		this.AddItem(this.mMenus[0], "save", true);
-		this.AddItem(this.mMenus[0], "load", false);
-		this.AddItem(this.mMenus[0], "import", true);
-		this.AddItem(this.mMenus[0], "export", false);
+		{
+			var baseBut = new GUIButton();
+			
+			baseBut.SetUp(new IVec2(76, 3), new IVec2(54, 26), -5000);
+			baseBut.mPos.Set(76, 3);
+			
+			baseBut.mSpriteIdle.SetAnimatedTexture(tex, 3, 1, -1, -1);
+			baseBut.mSpriteIdle.SetCurrentFrame(0);
+			
+			baseBut.mSpriteHover.SetAnimatedTexture(tex, 3, 1, -1, -1);
+			baseBut.mSpriteHover.SetCurrentFrame(1);
+			
+			baseBut.mSpriteDown.SetAnimatedTexture(tex, 3, 1, -1, -1);
+			baseBut.mSpriteDown.SetCurrentFrame(2);
+			
+			baseBut.mSpriteInactive.SetAnimatedTexture(tex, 3, 1, -1, -1);
+			baseBut.mSpriteInactive.SetCurrentFrame(0);
+			
+			this.mMenus[1].SetUp(baseBut);
+			this.AddItem(this.mMenus[1], "generate map", false);
+			var newPos = new IVec2(0, 0); newPos.Copy(this.mMenus[1].mItems[0].mPos); newPos.mY += 3;
+			this.mMenus[1].mItems[0].mPos.Copy(newPos);
+			this.mMenus[1].mItems[0].SetSpritePositions(newPos);
+			this.mMenus[1].mItemsText[0].mPos.mY += 3;
+		}
 	}
 	
 	{
 		var font = nmgrs.resMan.mFontStore.GetResource("mainfont");
-		this.mMenusText[0].SetFont(font);
-		this.mMenusText[0].SetFontSize(12);
-		this.mMenusText[0].mAbsolute = true;
-		this.mMenusText[0].mString = "File";
-		this.mMenusText[0].mAlign = "centre";
-		this.mMenusText[0].mPos.Set(42, 9);
-		this.mMenusText[0].mColour = "#270100";
-		this.mMenusText[0].mDepth = -5001;
+		
+		{
+			this.mMenusText[0].SetFont(font);
+			this.mMenusText[0].SetFontSize(12);
+			this.mMenusText[0].mAbsolute = true;
+			this.mMenusText[0].mString = "File";
+			this.mMenusText[0].mAlign = "centre";
+			this.mMenusText[0].mPos.Set(42, 9);
+			this.mMenusText[0].mColour = "#270100";
+			this.mMenusText[0].mDepth = -5001;
+		}
+		
+		{
+			this.mMenusText[1].SetFont(font);
+			this.mMenusText[1].SetFontSize(12);
+			this.mMenusText[1].mAbsolute = true;
+			this.mMenusText[1].mString = "Play";
+			this.mMenusText[1].mAlign = "centre";
+			this.mMenusText[1].mPos.Set(102, 9);
+			this.mMenusText[1].mColour = "#270100";
+			this.mMenusText[1].mDepth = -5001;
+		}
 	}
 	
 	{
 		var tex = nmgrs.resMan.mTexStore.GetResource("gui_creation_dropbottom");
 		
-		var id = this.mMenus[0].mItems.length - 1;
-		this.mDropBottom.mPos.Copy(this.mMenus[0].mItems[id].mPos);
-		this.mDropBottom.mPos.mY += this.mMenus[0].mItems[id].mSpriteIdle.GetHeight();
-		this.mDropBottom.mDepth = -5001;
-		this.mDropBottom.SetTexture(tex);
-		this.mDropBottom.mAbsolute = true;
+		{
+			var id = this.mMenus[0].mItems.length - 1;
+			this.mDropBottoms[0].mPos.Copy(this.mMenus[0].mItems[id].mPos);
+			this.mDropBottoms[0].mPos.mY += this.mMenus[0].mItems[id].mSpriteIdle.GetHeight();
+			this.mDropBottoms[0].mDepth = -5001;
+			this.mDropBottoms[0].SetTexture(tex);
+			this.mDropBottoms[0].mAbsolute = true;
+		}
+		
+		{
+			var id = this.mMenus[1].mItems.length - 1;
+			this.mDropBottoms[1].mPos.Copy(this.mMenus[1].mItems[id].mPos);
+			this.mDropBottoms[1].mPos.mY += this.mMenus[1].mItems[id].mSpriteIdle.GetHeight();
+			this.mDropBottoms[1].mDepth = -5001;
+			this.mDropBottoms[1].SetTexture(tex);
+			this.mDropBottoms[1].mAbsolute = true;
+		}
 	}
 }
 
@@ -135,7 +193,7 @@ GFGUICreationBar.prototype.GetRenderData = function() {
 		arr.push(this.mMenusText[i]);
 		
 		if (this.mMenus[i].mExpanded == true) {
-			arr.push(this.mDropBottom);
+			arr.push(this.mDropBottoms[i]);
 		}
 	}
 	
