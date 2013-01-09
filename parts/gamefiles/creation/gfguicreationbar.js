@@ -118,7 +118,8 @@ GFGUICreationBar.prototype.Process = function(point) {
 			
 		}
 		else if (this.mMenus[0].OnClick(4) == true) {
-			
+			currScene.mCreationControl.mDialogueControl.mDialogues["export"].CreateDOM();
+			currScene.mCreationControl.mDialogueOpen = "export";
 		}
 	}
 }

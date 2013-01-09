@@ -5,12 +5,14 @@ function GFGUICreationDialogueControl() {
 	this.mDialogues["new"] = new GFGUICreationNewDialogue();
 	this.mDialogues["save"] = new GFGUICreationSaveDialogue();
 	this.mDialogues["load"] = new GFGUICreationLoadDialogue();
+	this.mDialogues["export"] = new GFGUICreationExportDialogue();
 }
 
 GFGUICreationDialogueControl.prototype.SetUp = function() {
 	this.mDialogues["new"].SetUp();
 	this.mDialogues["save"].SetUp();
 	this.mDialogues["load"].SetUp();
+	this.mDialogues["export"].SetUp();
 };
 
 GFGUICreationDialogueControl.prototype.Input = function(dialogue) {
