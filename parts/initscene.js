@@ -91,7 +91,7 @@ InitScene.prototype.Input = function() {
 // handles game logic
 InitScene.prototype.Process = function() {
 	if (nmgrs.resLoad.mWorking == false) {
-		nmgrs.sceneMan.ChangeScene(new GFMenuScene());
+		nmgrs.sceneMan.RequestSceneChange(new GFMenuScene());
 	}
 }
 

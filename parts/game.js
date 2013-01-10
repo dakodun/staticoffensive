@@ -49,7 +49,9 @@ Game.prototype.SetUp = function() {
 	this.mCurrContext = this.mContext[this.mBufferIter]; // set reference to current buffer
 	this.mCanvas[this.mBufferIter].style.visibility = 'visible'; // set current buffer to visible (display)
 	
-	nmgrs.sceneMan.ChangeScene(new InitScene()); // change to our initial scene
+	// change to our initial scene
+	nmgrs.sceneMan.RequestSceneChange(new InitScene());
+	nmgrs.sceneMan.ChangeScene(new InitScene());
 };
 
 // cleans up the game object
@@ -91,6 +93,8 @@ Game.prototype.Run = function() {
 		this.mFPSAccum = 0;
 		this.mFPSIter = 0;
 	}
+	
+	nmgrs.sceneMan.ChangeScene(); // perform any scene change at the end of a frame
 }
 
 // quits tha game (not strictly required, could be used to completely restart the game)

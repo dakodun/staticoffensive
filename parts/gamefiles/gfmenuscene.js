@@ -111,10 +111,10 @@ GFMenuScene.prototype.Process = function() {
 	
 	{
 		if (this.mButtons[0].OnClick() == true) {
-			nmgrs.sceneMan.ChangeScene(new GFTestScene());
+			nmgrs.sceneMan.RequestSceneChange(new GFTestScene());
 		}
 		else if (this.mButtons[1].OnClick() == true) {
-			nmgrs.sceneMan.ChangeScene(new GFCreationScene());
+			nmgrs.sceneMan.RequestSceneChange(new GFCreationScene());
 		}
 	}
 }

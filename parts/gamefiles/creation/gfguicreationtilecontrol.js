@@ -238,8 +238,7 @@ GFGUICreationTileControl.prototype.Process = function(point) {
 		}
 		else if (this.mSetTexture.OnClick() == true) {
 			currScene.mPersist = true;
-			nmgrs.sceneMan.ReadyScene(new GFTexSelScene());
-			nmgrs.sceneMan.SwitchScene();
+			nmgrs.sceneMan.RequestSceneChange(new GFTexSelScene());
 		}
 	}
 }

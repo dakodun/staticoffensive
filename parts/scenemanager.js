@@ -24,46 +24,13 @@ SceneManager.prototype.TearDown = function() {
 	this.mCurrScene = null; // set current scene to null
 }
 
-// switches between scenes, handling any persistence
-SceneManager.prototype.ChangeScene = function(newScene) {
-	var found = false; // indicates if we have found a previously stored scene
-	
-	// if we have a current scene (i.e., this is not our initial scene change on game start up)
-	if (this.mCurrScene != null) {
-		// if this scene is to be persistent
-		if (this.mCurrScene.Persistent() == true) {
-			this.mSceneStore.push(this.mCurrScene); // store this scene
-		}
-		else {
-			this.mCurrScene.TearDown(); // otherwise clean up and destroy this scene
-		}
-	}
-	
-	// for all currently stored (persistent) scenes
-	for (var i = 0; i < this.mSceneStore.length; ++i) {
-		// if we find a match
-		if (this.mSceneStore[i].Type() == newScene.Type()) {
-			this.mCurrScene = this.mSceneStore[i]; // restore the stored scene as our current scene
-			this.mSceneStore.splice(i, i + 1); // remove it from the store
-			found = true; // indicate we have found a persistent scene to restore
-			break;
-		}
-	}
-	
-	// if we didn't find a scene to restore
-	if (found == false) {
-		this.mCurrScene = newScene; // create a new scene
-		this.mCurrScene.SetUp(); // initialise our new scene
-	}
-}
-
 // returns the current scene
 SceneManager.prototype.GetCurrentScene = function() {
 	return this.mCurrScene;
 }
 
 // adds a new scene to the scene manager but doesn't yet switch which allows interaction betweens scenes
-SceneManager.prototype.ReadyScene = function(newScene) {
+SceneManager.prototype.RequestSceneChange = function(newScene) {
 	// this.mReadyScene = newScene;
 	var found = false; // indicates if we have found a previously stored scene
 	
@@ -87,7 +54,7 @@ SceneManager.prototype.ReadyScene = function(newScene) {
 }
 
 // 
-SceneManager.prototype.SwitchScene = function() {
+SceneManager.prototype.ChangeScene = function() {
 	if (this.mReadyScene != null) {
 		// if we have a current scene (i.e., this is not our initial scene change on game start up)
 		if (this.mCurrScene != null) {

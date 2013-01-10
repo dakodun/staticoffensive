@@ -183,16 +183,16 @@ GFTexSelScene.prototype.Process = function() {
 			}
 		}
 		else if (this.mCancel.OnClick() == true) {
-			nmgrs.sceneMan.ChangeScene(new GFCreationScene());
+			nmgrs.sceneMan.RequestSceneChange(new GFCreationScene());
 		}
 		else {
 			for (var i = 0; i < this.mTexSelections.length; ++i) {
 				if (this.mTexSelections[i].OnClick() == true) {
 					this.mPersist = true;
-					nmgrs.sceneMan.ReadyScene(new GFCreationScene());
+					nmgrs.sceneMan.RequestSceneChange(new GFCreationScene());
 					nmgrs.sceneMan.mReadyScene.mCreationControl.mTileControl.mCurrentTexture = this.mTexSelections[i].mTextureStr;
 					nmgrs.sceneMan.mReadyScene.mCreationControl.mTileControl.UpdateTileSprite();
-					nmgrs.sceneMan.SwitchScene();
+					
 					break;
 				}
 			}
