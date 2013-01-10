@@ -12,7 +12,9 @@ function GUIButton() {
 	this.mActive = true;
 	this.mHover = false;
 	this.mDown = false;
+	
 	this.mWasClicked = false;
+	this.mOnClick = false;
 };
 
 GUIButton.prototype.Copy = function(other) {
@@ -72,6 +74,14 @@ GUIButton.prototype.Input = function() {
 }
 
 GUIButton.prototype.Process = function(point) {
+	if (this.mWasClicked == true) {
+		this.mWasClicked = false;
+		this.mOnClick = true;
+	}
+	else {
+		this.mOnClick = false;
+	}
+	
 	if (this.mActive == true) {
 		var tl = new IVec2(0, 0); tl.Copy(this.mPos);
 		tl.mX += 2; tl.mY +=  2;
@@ -131,12 +141,7 @@ GUIButton.prototype.GetRenderData = function() {
 }
 
 GUIButton.prototype.OnClick = function() {
-	if (this.mWasClicked == true) {
-		this.mWasClicked = false;
-		return true;
-	}
-	
-	return false;
+	return this.mOnClick;
 }
 
 GUIButton.prototype.GetSpritePositions = function() {
