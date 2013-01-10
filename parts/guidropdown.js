@@ -65,12 +65,15 @@ GUIDropDown.prototype.Process = function(point) {
 			this.mHover = true;
 		}
 		else {
-			if (this.mExpanded == true) {
-				for (var i = 0; i < this.mItems.length; ++i) {
+			for (var i = 0; i < this.mItems.length; ++i) {
+				if (this.mExpanded == true) {
 					if (this.mItems[i].mHover == true) {
 						this.mHover = true;
 						break;
 					}
+				}
+				else {
+					this.mItems[i].mOnClick = false;
 				}
 			}
 		}
