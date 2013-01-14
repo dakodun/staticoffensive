@@ -63,7 +63,8 @@ GUIDOMInputBox.prototype.SetUp = function(pos, defaultText, inputArr) {
 	this.mElement.style.left = nmain.game.mCanvasPos.mX + this.mPos.mX + "px";
 	this.mElement.style.top = nmain.game.mCanvasPos.mY + this.mPos.mY + "px";
 	
-	this.mElement.defaultValue = defaultText;
+	this.mElement.defaultValue = defaultText.mString;
+	this.mElement.style.font = defaultText.mFontString;
 	
 	if (inputArr == null) {
 		this.mValidInput = this.mValidInput.concat(this.mAlphaNumericPunctuation);
@@ -145,12 +146,15 @@ GUIDOMInputBox.prototype.SetText = function(text) {
 	this.mElement.value = text;
 }
 
-GUIDOMInputBox.prototype.GetSize = function() {
-	return this.mElement.size;
+GUIDOMInputBox.prototype.GetWidth = function() {
+	var str = this.mElement.style.width
+	var len = str.length - 2;
+	
+	return Number(str.substr(0, len));
 }
 
-GUIDOMInputBox.prototype.SetSize = function(size) {
-	this.mElement.size = size;
+GUIDOMInputBox.prototype.SetWidth = function(width) {
+	this.mElement.style.width = width + "px";
 }
 
 GUIDOMInputBox.prototype.GetMaxChars = function() {
