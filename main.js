@@ -3993,6 +3993,10 @@ InitScene.prototype.SetUp = function() {
 			nmgrs.resLoad.QueueTexture("gui_creation_generatedialogue_arrows", "./res/vis/gui/gui_creation_generatedialogue_arrows.png");
 		}
 		
+		{ // textures for creation "help" dialogue boxes
+			nmgrs.resLoad.QueueTexture("gui_creation_helpdialogue_back", "./res/vis/gui/gui_creation_helpdialogue_back.png");
+		}
+		
 		nmgrs.resLoad.QueueTexture("menu_button", "./res/vis/gui/menu_button.png");
 		
 		{ // main game font
@@ -5349,14 +5353,17 @@ function GFGUICreationBar() {
 	this.mMenus = new Array();
 	this.mMenus[0] = new GUIDropDown();
 	this.mMenus[1] = new GUIDropDown();
+	this.mMenus[2] = new GUIDropDown();
 	
 	this.mMenusText = new Array();
 	this.mMenusText[0] = new Text();
 	this.mMenusText[1] = new Text();
+	this.mMenusText[2] = new Text();
 	
 	this.mDropBottoms = new Array();
 	this.mDropBottoms[0] = new Sprite();
 	this.mDropBottoms[1] = new Sprite();
+	this.mDropBottoms[2] = new Sprite();
 }
 
 GFGUICreationBar.prototype.SetUp = function() {
@@ -5428,6 +5435,33 @@ GFGUICreationBar.prototype.SetUp = function() {
 			this.mMenus[1].mItems[0].SetSpritePositions(newPos);
 			this.mMenus[1].mItemsText[0].mPos.mY += 3;
 		}
+		
+		{
+			var baseBut = new GUIButton();
+			
+			baseBut.SetUp(new IVec2(570, 3), new IVec2(54, 26), -5000);
+			baseBut.mPos.Set(570, 3);
+			
+			baseBut.mSpriteIdle.SetAnimatedTexture(tex, 3, 1, -1, -1);
+			baseBut.mSpriteIdle.SetCurrentFrame(0);
+			
+			baseBut.mSpriteHover.SetAnimatedTexture(tex, 3, 1, -1, -1);
+			baseBut.mSpriteHover.SetCurrentFrame(1);
+			
+			baseBut.mSpriteDown.SetAnimatedTexture(tex, 3, 1, -1, -1);
+			baseBut.mSpriteDown.SetCurrentFrame(2);
+			
+			baseBut.mSpriteInactive.SetAnimatedTexture(tex, 3, 1, -1, -1);
+			baseBut.mSpriteInactive.SetCurrentFrame(0);
+			
+			this.mMenus[2].SetUp(baseBut);
+			this.AddItem(this.mMenus[2], "editor help", false);
+			var newPos = new IVec2(0, 0); newPos.Copy(this.mMenus[2].mItems[0].mPos);
+			newPos.mX -= 106; newPos.mY += 3;
+			this.mMenus[2].mItems[0].mPos.Copy(newPos);
+			this.mMenus[2].mItems[0].SetSpritePositions(newPos);
+			this.mMenus[2].mItemsText[0].mPos.mX -= 106; this.mMenus[2].mItemsText[0].mPos.mY += 3;
+		}
 	}
 	
 	{
@@ -5454,6 +5488,17 @@ GFGUICreationBar.prototype.SetUp = function() {
 			this.mMenusText[1].mColour = "#270100";
 			this.mMenusText[1].mDepth = -5001;
 		}
+		
+		{
+			this.mMenusText[2].SetFont(font);
+			this.mMenusText[2].SetFontSize(12);
+			this.mMenusText[2].mAbsolute = true;
+			this.mMenusText[2].mString = "Help";
+			this.mMenusText[2].mAlign = "centre";
+			this.mMenusText[2].mPos.Set(596, 9);
+			this.mMenusText[2].mColour = "#270100";
+			this.mMenusText[2].mDepth = -5001;
+		}
 	}
 	
 	{
@@ -5475,6 +5520,15 @@ GFGUICreationBar.prototype.SetUp = function() {
 			this.mDropBottoms[1].mDepth = -5001;
 			this.mDropBottoms[1].SetTexture(tex);
 			this.mDropBottoms[1].mAbsolute = true;
+		}
+		
+		{
+			var id = this.mMenus[2].mItems.length - 1;
+			this.mDropBottoms[2].mPos.Copy(this.mMenus[2].mItems[id].mPos);
+			this.mDropBottoms[2].mPos.mY += this.mMenus[2].mItems[id].mSpriteIdle.GetHeight();
+			this.mDropBottoms[2].mDepth = -5001;
+			this.mDropBottoms[2].SetTexture(tex);
+			this.mDropBottoms[2].mAbsolute = true;
 		}
 	}
 }
@@ -5527,6 +5581,10 @@ GFGUICreationBar.prototype.Process = function(point) {
 		if (this.mMenus[1].OnClick(0) == true) {
 			currScene.mCreationControl.mDialogueControl.mDialogues["generate"].PopulateSegmentList();
 			currScene.mCreationControl.mDialogueOpen = "generate";
+		}
+		
+		if (this.mMenus[2].OnClick(0) == true) {
+			currScene.mCreationControl.mDialogueOpen = "help";
 		}
 	}
 }
@@ -6225,6 +6283,8 @@ function GFGUICreationDialogueControl() {
 	this.mDialogues["export"] = new GFGUICreationExportDialogue();
 	
 	this.mDialogues["generate"] = new GFGUICreationGenerateDialogue();
+	
+	this.mDialogues["help"] = new GFGUICreationHelpDialogue();
 }
 
 GFGUICreationDialogueControl.prototype.SetUp = function() {
@@ -6235,6 +6295,8 @@ GFGUICreationDialogueControl.prototype.SetUp = function() {
 	this.mDialogues["export"].SetUp();
 	
 	this.mDialogues["generate"].SetUp();
+	
+	this.mDialogues["help"].SetUp();
 };
 
 GFGUICreationDialogueControl.prototype.Input = function(dialogue) {
@@ -7050,6 +7112,139 @@ GFGUICreationGenerateDialogue.prototype.ProcessButtonClick = function() {
 			this.mListBoxes[this.mSegmentType + 1].AddItem(itemBut, itemTxt);
 			this.mListBoxes[this.mSegmentType].RemoveItem(selected);
 		}
+	}
+}
+// ...End
+
+
+// GFGUICreationHelpDialogue Class...
+// game file:
+function GFGUICreationHelpDialogue() {
+	this.mSprite = new Sprite();
+	
+	this.mBackButton = new GUIButton();
+	this.mBackText = new Text();
+	
+	this.mOption = 0;
+	this.mRenderCanvas = new RenderCanvas();
+	this.mTitleText = new Text();
+}
+
+GFGUICreationHelpDialogue.prototype.SetUp = function() {
+	var pos = new IVec2(nmain.game.mCanvasSize.mX / 2, nmain.game.mCanvasSize.mY / 2);
+	pos.mX -= 250; pos.mY -= 235;
+	
+	{
+		var tex = nmgrs.resMan.mTexStore.GetResource("gui_creation_helpdialogue_back");
+		
+		this.mSprite.mPos.Set(pos.mX, pos.mY);
+		this.mSprite.mDepth = -5100;
+		this.mSprite.SetTexture(tex);
+		this.mSprite.mAbsolute = true;
+	}
+	
+	{
+		var tex = nmgrs.resMan.mTexStore.GetResource("gui_creation_newdialogue_confirmbutton");
+		
+		this.mBackButton.SetUp(new IVec2(pos.mX + 220, pos.mY + 439), new IVec2(60, 26), -5101);
+		
+		this.mBackButton.mSpriteIdle.SetAnimatedTexture(tex, 4, 1, -1, -1);
+		this.mBackButton.mSpriteIdle.SetCurrentFrame(0);
+		
+		this.mBackButton.mSpriteHover.SetAnimatedTexture(tex, 4, 1, -1, -1);
+		this.mBackButton.mSpriteHover.SetCurrentFrame(1);
+		
+		this.mBackButton.mSpriteDown.SetAnimatedTexture(tex, 4, 1, -1, -1);
+		this.mBackButton.mSpriteDown.SetCurrentFrame(2);
+		
+		this.mBackButton.mSpriteInactive.SetAnimatedTexture(tex, 4, 1, -1, -1);
+		this.mBackButton.mSpriteInactive.SetCurrentFrame(3);
+	}
+	
+	{
+		{
+			var font = nmgrs.resMan.mFontStore.GetResource("mainfont");
+			
+			this.mBackText.SetFont(font);
+			this.mBackText.SetFontSize(12);
+			this.mBackText.mAbsolute = true;
+			this.mBackText.mString = "Back";
+			this.mBackText.mAlign = "centre";
+			this.mBackText.mPos.Set(pos.mX + 250, pos.mY + 445);
+			this.mBackText.mColour = "#270100";
+			this.mBackText.mDepth = -5102;
+			
+			this.mTitleText.SetFont(font);
+			this.mTitleText.SetFontSize(24);
+			this.mTitleText.mAbsolute = true;
+			this.mTitleText.mString = "Welcome to the Help Screen!";
+			this.mTitleText.mAlign = "centre";
+			this.mTitleText.mPos.Set(pos.mX + 250, pos.mY + 38);
+			this.mTitleText.mColour = "#000000";
+			this.mTitleText.mDepth = -5102;
+		}
+	}
+}
+
+GFGUICreationHelpDialogue.prototype.Input = function() {
+	this.mBackButton.Input();
+}
+
+GFGUICreationHelpDialogue.prototype.Process = function(point) {
+	this.mBackButton.Process(point);
+	
+	this.ProcessTextState();
+	this.ProcessButtonClick();
+}
+
+GFGUICreationHelpDialogue.prototype.GetRenderData = function() {
+	var arr = new Array();
+	
+	arr.push(this.mSprite);
+	
+	arr = arr.concat(this.mBackButton.GetRenderData());
+	arr.push(this.mBackText);
+	
+	arr.push(this.mTitleText);
+	
+	return arr;
+}
+
+GFGUICreationHelpDialogue.prototype.ProcessTextState = function() {
+	if (this.mBackButton.mActive == false) {
+		this.mBackText.mColour = "#1E1915";
+	}
+	else {
+		if (this.mBackButton.mStatus == "down") {
+			this.mBackText.mColour = "#0B0505";
+		}
+		else if (this.mBackButton.mStatus == "hover") {
+			this.mBackText.mColour = "#501E11";
+		}
+		else {
+			this.mBackText.mColour = "#270100";
+		}
+	}
+}
+
+GFGUICreationHelpDialogue.prototype.ProcessButtonClick = function() {
+	var currScene = nmgrs.sceneMan.mCurrScene;
+	
+	if (this.mBackButton.OnClick() == true) {
+		if (this.mOption == 0) {
+			currScene.mCreationControl.mDialogueOpen = "";
+		}
+	}
+}
+
+GFGUICreationHelpDialogue.prototype.RedrawHelp = function(option) {
+	this.mOption = option;
+	this.mRenderCanvas.Clear();
+	
+	if (option == 0) {
+		// set title text
+		
+		// add content
 	}
 }
 // ...End
