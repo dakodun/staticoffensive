@@ -31,8 +31,14 @@ GFGUICreationImportDialogue.prototype.SetUp = function() {
 	}
 	
 	{
-		this.mDOMInputBox.SetUp(new IVec2(pos.mX + 12, pos.mY + 48), "");
-		this.mDOMInputBox.SetSize(64);
+		var font = nmgrs.resMan.mFontStore.GetResource("mainfont");
+		
+		var txt = new Text();
+		txt.SetFont(font);
+		txt.SetFontSize(12);
+		
+		this.mDOMInputBox.SetUp(new IVec2(pos.mX + 12, pos.mY + 48), txt);
+		this.mDOMInputBox.SetWidth(400);
 	}
 	
 	{
