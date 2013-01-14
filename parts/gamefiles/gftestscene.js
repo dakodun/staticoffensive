@@ -10,6 +10,8 @@ function GFTestScene() {
 	this.mMap = new GFMap();
 	
 	this.mMapControl = new GFGUIMapControl();
+	
+	this.mBPCollection = new GFBluePrintCollection();
 }
 
 // returns the type of this object for validity checking
@@ -34,44 +36,8 @@ GFTestScene.prototype.SetUp = function() {
 	nmain.game.mClearColour = "#75632F";
 	
 	{
-		var bpc = new GFBluePrintCollection();
-		
-		{
-			var arr = new Array();
-			arr.push("a:tileset_blue;");
-			arr.push("{");
-			arr.push("20xa?"); arr.push("20oa!");
-			arr.push("20oa?"); arr.push("20xa");
-			arr.push("}");
-			bpc.mInitStore.push(bpc.Convert(arr));
-		}
-		
-		{
-			var arr = new Array();
-			arr.push("a:tileset_dirtwhole;");
-			arr.push("b:tileset_grasstop;");
-			arr.push("c:tileset_grasswhole;");
-			arr.push("{");
-			arr.push("20ob?"); arr.push("20xb?"); arr.push("20eb?"); arr.push("20ob!");
-			arr.push("20ec?"); arr.push("20oa?"); arr.push("20ob?"); arr.push("20xb!");
-			arr.push("20xc?"); arr.push("20ob?"); arr.push("20ob?"); arr.push("20ea!");
-			arr.push("20oa?"); arr.push("20ec?"); arr.push("20xa?"); arr.push("20ob");
-			arr.push("}");
-			bpc.mRegStore.push(bpc.Convert(arr));
-		}
-		
-		{
-			var arr = new Array();
-			arr.push("a:tileset_red;");
-			arr.push("{");
-			arr.push("20ea?"); arr.push("20oa?"); arr.push("20ea?"); arr.push("20oa?"); arr.push("20ea!");
-			arr.push("20ea?"); arr.push("20oa?"); arr.push("20ea?"); arr.push("20oa?"); arr.push("20ea");
-			arr.push("}");
-			bpc.mFinStore.push(bpc.Convert(arr));
-		}
-		
 		var mapGen = new GFMapGen();
-		this.mMap.Copy(mapGen.GenerateMap(bpc, 16));
+		this.mMap.Copy(mapGen.GenerateMap(this.mBPCollection, 16));
 		
 		// centres map
 		// var trans = new IVec2(this.mMap.mBounds[0], this.mMap.mBounds[1]);
