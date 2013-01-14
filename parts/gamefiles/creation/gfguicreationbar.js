@@ -6,14 +6,17 @@ function GFGUICreationBar() {
 	this.mMenus = new Array();
 	this.mMenus[0] = new GUIDropDown();
 	this.mMenus[1] = new GUIDropDown();
+	this.mMenus[2] = new GUIDropDown();
 	
 	this.mMenusText = new Array();
 	this.mMenusText[0] = new Text();
 	this.mMenusText[1] = new Text();
+	this.mMenusText[2] = new Text();
 	
 	this.mDropBottoms = new Array();
 	this.mDropBottoms[0] = new Sprite();
 	this.mDropBottoms[1] = new Sprite();
+	this.mDropBottoms[2] = new Sprite();
 }
 
 GFGUICreationBar.prototype.SetUp = function() {
@@ -85,6 +88,33 @@ GFGUICreationBar.prototype.SetUp = function() {
 			this.mMenus[1].mItems[0].SetSpritePositions(newPos);
 			this.mMenus[1].mItemsText[0].mPos.mY += 3;
 		}
+		
+		{
+			var baseBut = new GUIButton();
+			
+			baseBut.SetUp(new IVec2(570, 3), new IVec2(54, 26), -5000);
+			baseBut.mPos.Set(570, 3);
+			
+			baseBut.mSpriteIdle.SetAnimatedTexture(tex, 3, 1, -1, -1);
+			baseBut.mSpriteIdle.SetCurrentFrame(0);
+			
+			baseBut.mSpriteHover.SetAnimatedTexture(tex, 3, 1, -1, -1);
+			baseBut.mSpriteHover.SetCurrentFrame(1);
+			
+			baseBut.mSpriteDown.SetAnimatedTexture(tex, 3, 1, -1, -1);
+			baseBut.mSpriteDown.SetCurrentFrame(2);
+			
+			baseBut.mSpriteInactive.SetAnimatedTexture(tex, 3, 1, -1, -1);
+			baseBut.mSpriteInactive.SetCurrentFrame(0);
+			
+			this.mMenus[2].SetUp(baseBut);
+			this.AddItem(this.mMenus[2], "editor help", false);
+			var newPos = new IVec2(0, 0); newPos.Copy(this.mMenus[2].mItems[0].mPos);
+			newPos.mX -= 106; newPos.mY += 3;
+			this.mMenus[2].mItems[0].mPos.Copy(newPos);
+			this.mMenus[2].mItems[0].SetSpritePositions(newPos);
+			this.mMenus[2].mItemsText[0].mPos.mX -= 106; this.mMenus[2].mItemsText[0].mPos.mY += 3;
+		}
 	}
 	
 	{
@@ -111,6 +141,17 @@ GFGUICreationBar.prototype.SetUp = function() {
 			this.mMenusText[1].mColour = "#270100";
 			this.mMenusText[1].mDepth = -5001;
 		}
+		
+		{
+			this.mMenusText[2].SetFont(font);
+			this.mMenusText[2].SetFontSize(12);
+			this.mMenusText[2].mAbsolute = true;
+			this.mMenusText[2].mString = "Help";
+			this.mMenusText[2].mAlign = "centre";
+			this.mMenusText[2].mPos.Set(596, 9);
+			this.mMenusText[2].mColour = "#270100";
+			this.mMenusText[2].mDepth = -5001;
+		}
 	}
 	
 	{
@@ -132,6 +173,15 @@ GFGUICreationBar.prototype.SetUp = function() {
 			this.mDropBottoms[1].mDepth = -5001;
 			this.mDropBottoms[1].SetTexture(tex);
 			this.mDropBottoms[1].mAbsolute = true;
+		}
+		
+		{
+			var id = this.mMenus[2].mItems.length - 1;
+			this.mDropBottoms[2].mPos.Copy(this.mMenus[2].mItems[id].mPos);
+			this.mDropBottoms[2].mPos.mY += this.mMenus[2].mItems[id].mSpriteIdle.GetHeight();
+			this.mDropBottoms[2].mDepth = -5001;
+			this.mDropBottoms[2].SetTexture(tex);
+			this.mDropBottoms[2].mAbsolute = true;
 		}
 	}
 }
@@ -184,6 +234,10 @@ GFGUICreationBar.prototype.Process = function(point) {
 		if (this.mMenus[1].OnClick(0) == true) {
 			currScene.mCreationControl.mDialogueControl.mDialogues["generate"].PopulateSegmentList();
 			currScene.mCreationControl.mDialogueOpen = "generate";
+		}
+		
+		if (this.mMenus[2].OnClick(0) == true) {
+			currScene.mCreationControl.mDialogueOpen = "help";
 		}
 	}
 }
