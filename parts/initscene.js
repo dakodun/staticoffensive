@@ -65,6 +65,11 @@ InitScene.prototype.SetUp = function() {
 			nmgrs.resLoad.QueueTexture("gui_creation_exportdialogue_back", "./res/vis/gui/gui_creation_exportdialogue_back.png");
 		}
 		
+		{ // textures for creation "generate" dialogue boxes
+			nmgrs.resLoad.QueueTexture("gui_creation_generatedialogue_back", "./res/vis/gui/gui_creation_generatedialogue_back.png");
+			nmgrs.resLoad.QueueTexture("gui_creation_generatedialogue_arrows", "./res/vis/gui/gui_creation_generatedialogue_arrows.png");
+		}
+		
 		nmgrs.resLoad.QueueTexture("menu_button", "./res/vis/gui/menu_button.png");
 		
 		{ // main game font
