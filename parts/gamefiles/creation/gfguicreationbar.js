@@ -180,6 +180,11 @@ GFGUICreationBar.prototype.Process = function(point) {
 			currScene.mCreationControl.mDialogueControl.mDialogues["export"].CreateDOM();
 			currScene.mCreationControl.mDialogueOpen = "export";
 		}
+		
+		if (this.mMenus[1].OnClick(0) == true) {
+			currScene.mCreationControl.mDialogueControl.mDialogues["generate"].PopulateSegmentList();
+			currScene.mCreationControl.mDialogueOpen = "generate";
+		}
 	}
 }
 

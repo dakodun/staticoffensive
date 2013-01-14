@@ -7,6 +7,8 @@ function GFGUICreationDialogueControl() {
 	this.mDialogues["load"] = new GFGUICreationLoadDialogue();
 	this.mDialogues["import"] = new GFGUICreationImportDialogue();
 	this.mDialogues["export"] = new GFGUICreationExportDialogue();
+	
+	this.mDialogues["generate"] = new GFGUICreationGenerateDialogue();
 }
 
 GFGUICreationDialogueControl.prototype.SetUp = function() {
@@ -15,6 +17,8 @@ GFGUICreationDialogueControl.prototype.SetUp = function() {
 	this.mDialogues["load"].SetUp();
 	this.mDialogues["import"].SetUp();
 	this.mDialogues["export"].SetUp();
+	
+	this.mDialogues["generate"].SetUp();
 };
 
 GFGUICreationDialogueControl.prototype.Input = function(dialogue) {
