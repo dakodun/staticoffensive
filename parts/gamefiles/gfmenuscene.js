@@ -111,7 +111,47 @@ GFMenuScene.prototype.Process = function() {
 	
 	{
 		if (this.mButtons[0].OnClick() == true) {
+			var bpc = new GFBluePrintCollection();
+			
+			{
+				{
+					var arr = new Array();
+					arr.push("a:tileset_blue;");
+					arr.push("{");
+					arr.push("20xa?"); arr.push("20oa!");
+					arr.push("20oa?"); arr.push("20xa");
+					arr.push("}");
+					bpc.mInitStore.push(bpc.Convert(arr));
+				}
+				
+				{
+					var arr = new Array();
+					arr.push("a:tileset_dirtwhole;");
+					arr.push("b:tileset_grasstop;");
+					arr.push("c:tileset_grasswhole;");
+					arr.push("{");
+					arr.push("20ob?"); arr.push("20xb?"); arr.push("20eb?"); arr.push("20ob!");
+					arr.push("20ec?"); arr.push("20oa?"); arr.push("20ob?"); arr.push("20xb!");
+					arr.push("20xc?"); arr.push("20ob?"); arr.push("20ob?"); arr.push("20ea!");
+					arr.push("20oa?"); arr.push("20ec?"); arr.push("20xa?"); arr.push("20ob");
+					arr.push("}");
+					bpc.mRegStore.push(bpc.Convert(arr));
+				}
+				
+				{
+					var arr = new Array();
+					arr.push("a:tileset_red;");
+					arr.push("{");
+					arr.push("20ea?"); arr.push("20oa?"); arr.push("20ea?"); arr.push("20oa?"); arr.push("20ea!");
+					arr.push("20ea?"); arr.push("20oa?"); arr.push("20ea?"); arr.push("20oa?"); arr.push("20ea");
+					arr.push("}");
+					bpc.mFinStore.push(bpc.Convert(arr));
+				}
+			}
+			
 			nmgrs.sceneMan.RequestSceneChange(new GFTestScene());
+			nmgrs.sceneMan.mReadyScene.mBPCollection.Copy(bpc);
+			
 		}
 		else if (this.mButtons[1].OnClick() == true) {
 			nmgrs.sceneMan.RequestSceneChange(new GFCreationScene());
