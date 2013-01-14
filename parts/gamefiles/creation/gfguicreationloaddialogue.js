@@ -297,6 +297,8 @@ GFGUICreationLoadDialogue.prototype.GetRenderData = function() {
 }
 
 GFGUICreationLoadDialogue.prototype.PopulateSegmentList = function() {
+	this.mRenderCanvas.Clear();
+	
 	this.mSegmentList.splice(0, this.mSegmentList.length);
 	this.mListBox.Clear();
 	this.mOldSelected = -1;
