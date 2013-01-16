@@ -75,6 +75,7 @@ InitScene.prototype.SetUp = function() {
 		}
 		
 		nmgrs.resLoad.QueueTexture("menu_button", "./res/vis/gui/menu_button.png");
+		nmgrs.resLoad.QueueTexture("blank", "./res/vis/gui/blank.png");
 		
 		{ // main game font
 			nmgrs.resLoad.QueueFont("mainfont", "./res/sys/Kingthings Serifique");
