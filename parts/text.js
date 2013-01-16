@@ -16,6 +16,7 @@ function Text() {
 	this.mRotation = 0;
 	
 	this.mAlign = "left";
+	this.mJustifyWidth = -1;
 	
 	this.mAbsolute = false;
 };
@@ -42,6 +43,7 @@ Text.prototype.Copy = function(other) {
 	this.mRotation = other.mRotation;
 	
 	this.mAlign = other.mAlign;
+	this.mJustifyWidth = other.mJustifyWidth;
 	
 	this.mAbsolute = other.mAbsolute;
 }
