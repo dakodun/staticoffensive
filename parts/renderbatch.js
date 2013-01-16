@@ -255,34 +255,118 @@ RenderBatch.prototype.Render = function(camera, target) {
 				
 				if (txt.mOutline == true) {
 					for (var j = 0; j < txtArr.length; ++j) {
-						var hAlign = 0;
-						if (txt.mAlign == "centre") {
-							hAlign = Math.round(0 - (targ.measureText(txtArr[j]).width / 2));
+						if (txt.mAlign == "justify") {
+							var spacingArr = new Array();
+							spacingArr = txtArr[j].split(" ");
+							
+							var justifyWidth = txt.mJustifyWidth;
+							for (var k = 0; k < spacingArr.length; ++k) {
+								justifyWidth -= targ.measureText(spacingArr[k]).width;
+							}
+							
+							if (justifyWidth > 0) {
+								var gap = 0;
+								if (spacingArr.length > 0) {
+									gap = justifyWidth / (spacingArr.length - 1);
+								}
+								
+								var hAlign = 0;
+								for (var k = 0; k < spacingArr.length; ++k) {
+									if (txt.mShadow == true) {
+										targ.fillStyle = txt.mShadowColour;
+										targ.fillText(spacingArr[k], hAlign + 2, (txt.mFontSize * j) + 2);
+									}
+									
+									targ.fillStyle = txt.mColour;
+									targ.fillText(spacingArr[k], hAlign, txt.mFontSize * j);
+									
+									hAlign += targ.measureText(spacingArr[k]).width;
+									hAlign += gap;
+								}
+							}
+							else {
+								var hAlign = 0;
+								if (txt.mShadow == true) {
+									targ.fillStyle = txt.mShadowColour;
+									targ.fillText(txtArr[j], hAlign + 2, (txt.mFontSize * j) + 2);
+								}
+								
+								targ.fillStyle = txt.mColour;
+								targ.fillText(txtArr[j], hAlign, txt.mFontSize * j);
+							}
 						}
-						else if (txt.mAlign == "right") {
-							hAlign = Math.round(0 - targ.measureText(txtArr[j]).width);
+						else {
+							var hAlign = 0;
+							if (txt.mAlign == "centre") {
+								hAlign = Math.round(0 - (targ.measureText(txtArr[j]).width / 2));
+							}
+							else if (txt.mAlign == "right") {
+								hAlign = Math.round(0 - targ.measureText(txtArr[j]).width);
+							}
+							
+							targ.strokeText(txtArr[j], hAlign, txt.mFontSize * j);
 						}
-						
-						targ.strokeText(txtArr[j], hAlign, txt.mFontSize * j);
 					}
 				}
 				else {
 					for (var j = 0; j < txtArr.length; ++j) {
-						var hAlign = 0;
-						if (txt.mAlign == "centre") {
-							hAlign = Math.round(0 - (targ.measureText(txtArr[j]).width / 2));
+						if (txt.mAlign == "justify") {
+							var spacingArr = new Array();
+							spacingArr = txtArr[j].split(" ");
+							
+							var justifyWidth = txt.mJustifyWidth;
+							for (var k = 0; k < spacingArr.length; ++k) {
+								justifyWidth -= targ.measureText(spacingArr[k]).width;
+							}
+							
+							if (justifyWidth > 0) {
+								var gap = 0;
+								if (spacingArr.length > 0) {
+									gap = justifyWidth / (spacingArr.length - 1);
+								}
+								
+								var hAlign = 0;
+								for (var k = 0; k < spacingArr.length; ++k) {
+									if (txt.mShadow == true) {
+										targ.fillStyle = txt.mShadowColour;
+										targ.fillText(spacingArr[k], hAlign + 2, (txt.mFontSize * j) + 2);
+									}
+									
+									targ.fillStyle = txt.mColour;
+									targ.fillText(spacingArr[k], hAlign, txt.mFontSize * j);
+									
+									hAlign += targ.measureText(spacingArr[k]).width;
+									hAlign += gap;
+								}
+							}
+							else {
+								var hAlign = 0;
+								if (txt.mShadow == true) {
+									targ.fillStyle = txt.mShadowColour;
+									targ.fillText(txtArr[j], hAlign + 2, (txt.mFontSize * j) + 2);
+								}
+								
+								targ.fillStyle = txt.mColour;
+								targ.fillText(txtArr[j], hAlign, txt.mFontSize * j);
+							}
 						}
-						else if (txt.mAlign == "right") {
-							hAlign = Math.round(0 - targ.measureText(txtArr[j]).width);
+						else {
+							var hAlign = 0;
+							if (txt.mAlign == "centre") {
+								hAlign = Math.round(0 - (targ.measureText(txtArr[j]).width / 2));
+							}
+							else if (txt.mAlign == "right") {
+								hAlign = Math.round(0 - targ.measureText(txtArr[j]).width);
+							}
+							
+							if (txt.mShadow == true) {
+								targ.fillStyle = txt.mShadowColour;
+								targ.fillText(txtArr[j], hAlign + 2, (txt.mFontSize * j) + 2);
+							}
+							
+							targ.fillStyle = txt.mColour;
+							targ.fillText(txtArr[j], hAlign, txt.mFontSize * j);
 						}
-						
-						if (txt.mShadow == true) {
-							targ.fillStyle = txt.mShadowColour;
-							targ.fillText(txtArr[j], hAlign + 2, (txt.mFontSize * j) + 2);
-						}
-						
-						targ.fillStyle = txt.mColour;
-						targ.fillText(txtArr[j], hAlign, txt.mFontSize * j);
 					}
 				}
 			}
