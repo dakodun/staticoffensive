@@ -10,6 +10,8 @@ function Camera() {
 // make a copy of another (other) camera (copy constructor)
 Camera.prototype.Copy = function(other) {
 	this.mTranslate.Copy(other.mTranslate); // call ivec2 copy (copy constructor)
+	
+	this.mViewUpdated = other.mViewUpdated;
 }
 
 // processes camera every frame
@@ -20,8 +22,13 @@ Camera.prototype.Process = function() {
 }
 
 // apply the camera's transform to the canvas
-Camera.prototype.Apply = function() {
-	nmain.game.mCurrContext.translate(-this.mTranslate.mX, -this.mTranslate.mY); // apply translation
+Camera.prototype.Apply = function(context) {
+	var renderContext = nmain.game.mCurrContext;
+	if (context != null) {
+		renderContext = context;
+	}
+	
+	renderContext.translate(-this.mTranslate.mX, -this.mTranslate.mY); // apply translation
 }
 
 // apply a transformation to the camera
