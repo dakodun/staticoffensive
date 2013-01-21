@@ -1257,8 +1257,11 @@ function Text() {
 	this.mRotation = 0;
 	
 	this.mAlign = "left";
+	this.mJustifyWidth = -1;
 	
 	this.mAbsolute = false;
+	this.mWrap = false;
+	this.mWrapWidth = -1;
 };
 
 // returns the type of this object for validity checking
@@ -1283,8 +1286,28 @@ Text.prototype.Copy = function(other) {
 	this.mRotation = other.mRotation;
 	
 	this.mAlign = other.mAlign;
+	this.mJustifyWidth = other.mJustifyWidth;
 	
 	this.mAbsolute = other.mAbsolute;
+	this.mWrap = other.mWrap;
+	this.mWrapWidth = other.mWrapWidth;
+}
+
+// 
+Text.prototype.SetFont = function(font) {
+	this.mFont = font;
+	this.mFontString = String(this.mFontSize) + "px " + this.mFont.mFontName;
+}
+
+// 
+Text.prototype.SetFontSize = function(size) {
+	this.mFontSize = size;
+	this.mFontString = String(this.mFontSize) + "px " + this.mFont.mFontName;
+}
+
+// return the position of the text
+Text.prototype.GetPosition = function() {
+	return this.mPos;
 }
 
 // return the width of the text
@@ -1312,18 +1335,6 @@ Text.prototype.GetWidth = function() {
 Text.prototype.GetHeight = function() {
 	var txtArr = this.mString.split("\n");
 	return this.mFontSize * txtArr.length;
-}
-
-// 
-Text.prototype.SetFont = function(font) {
-	this.mFont = font;
-	this.mFontString = String(this.mFontSize) + "px " + this.mFont.mFontName;
-}
-
-// 
-Text.prototype.SetFontSize = function(size) {
-	this.mFontSize = size;
-	this.mFontString = String(this.mFontSize) + "px " + this.mFont.mFontName;
 }
 // ...End
 
@@ -1800,14 +1811,20 @@ RenderCanvas.prototype.Copy = function(other) {
 	this.mFrustrumCull = other.mFrustrumCull;
 }
 
-RenderCanvas.prototype.RenderTo = function(renderable) {
+RenderCanvas.prototype.RenderTo = function(renderable, cam) {
+	var renderCam = null;
+	if (cam != null) {
+		renderCam = new Camera();
+		renderCam.Copy(cam);
+	}
+	
 	var batch = new RenderBatch();
 	batch.mFrustrumCull = this.mFrustrumCull;
 	batch.Clear();
 	
 	batch.Add(renderable);
 	
-	batch.Render(null, this.mContext);
+	batch.Render(renderCam, this.mContext);
 }
 
 RenderCanvas.prototype.Clear = function() {
@@ -1834,15 +1851,17 @@ RenderCanvas.prototype.GetHeight = function() {
 // DepthSort function
 // sorts renderable resources based on depth
 function DepthSort(first, second) {
+	// find the difference between the depths
 	var firstDepth = first.mDepth;
 	var secondDepth = second.mDepth;
 	var result = secondDepth - firstDepth;
 	
+	// if the depths match, then find the difference between the ids
 	if (result == 0) {
-		result =  first.mID - second.mID;
+		result = first.mID - second.mID;
 	}
 	
-	return result;
+	return result; // <0 || >0
 };
 // ...End
 
@@ -1871,9 +1890,12 @@ RenderBatch.prototype.SetUp = function() {
 
 // clean up the render batch
 RenderBatch.prototype.TearDown = function() {
-	
+	this.mRenderData.splice(0, this.mRenderData.length);
+	this.mNeedSort = false;
+	this.mFrustrumCull = true;
 }
 
+// add a renderable object using the appropiate method
 RenderBatch.prototype.Add = function(renderable) {
 	if (renderable.Type() == "Sprite") {
 		this.AddSprite(renderable);
@@ -1894,14 +1916,15 @@ RenderBatch.prototype.Add = function(renderable) {
 
 // add a sprite to the render batch
 RenderBatch.prototype.AddSprite = function(sprite) {
-	this.mNeedSort = true;
+	this.mNeedSort = true; // new data entered implies a sort may be needed
+	
+	// make a copy of the sprite
 	var spr = new Sprite();
 	spr.Copy(sprite);
 	
 	if (spr.mTex != null) {
-		this.mRenderData.push(spr);
+		this.mRenderData.push(spr); // add the sprite to the renderables array
 	}
-	// this.mRenderData.sort(DepthSort); // sort the queue
 }
 
 // add renderable text to the render batch
@@ -1911,7 +1934,6 @@ RenderBatch.prototype.AddText = function(text) {
 	txt.Copy(text);
 	
 	this.mRenderData.push(txt);
-	// this.mRenderData.sort(DepthSort); // sort the queue
 }
 
 // add renderable shape to the render batch
@@ -1921,7 +1943,6 @@ RenderBatch.prototype.AddShape = function(shape) {
 	shp.Copy(shape);
 	
 	this.mRenderData.push(shp);
-	// this.mRenderData.sort(DepthSort); // sort the queue
 }
 
 // add render data to the render batch
@@ -1931,7 +1952,6 @@ RenderBatch.prototype.AddRenderData = function(renderData) {
 	renData.Copy(renderData);
 	
 	this.mRenderData.push(renData);
-	// this.mRenderData.sort(DepthSort); // sort the queue
 }
 
 // add render canvas to the render batch
@@ -1941,7 +1961,6 @@ RenderBatch.prototype.AddRenderCanvas = function(renderCanvas) {
 	renCanv.Copy(renderCanvas);
 	
 	this.mRenderData.push(renCanv);
-	// this.mRenderData.sort(DepthSort); // sort the queue
 }
 
 // clear the render batch
@@ -1951,17 +1970,22 @@ RenderBatch.prototype.Clear = function() {
 
 // render the render batch to the context
 RenderBatch.prototype.Render = function(camera, target) {
+	// use the supplied camera if valid, otherwise use a default camera
 	var cam = new Camera();
 	if (camera) {
 		cam.Copy(camera);
 	}
 	
+	// use the supplied target (context) if valid, otherwise use the main context
 	var targ = nmain.game.mCurrContext;
 	if (target) {
 		targ = target;
 	}
 	
+	// if we need to sort the renderables array
 	if (this.mNeedSort == true) {
+		// add all depths and ids to an array for sorting
+		// this ensures a stable sort since if depths are equal, id will be used
 		var arr = new Array();
 		for (var i = 0; i < this.mRenderData.length; ++i) {
 			var element = new RenderBatchSortElement();
@@ -1971,309 +1995,380 @@ RenderBatch.prototype.Render = function(camera, target) {
 			arr.push(element);
 		}
 		
-		arr.sort(DepthSort);
+		arr.sort(DepthSort); // sort our element array by depth
 		
+		// add our renderable data to a temporary array using the order supplied by the sorted elements array
 		var temp = new Array();
 		for (var i = 0; i < this.mRenderData.length; ++i) {
 			temp.push(this.mRenderData[arr[i].mID]);
 		}
 		
+		// set the contents of our renderables array to the contents of the temporary array
 		this.mRenderData.splice(0, this.mRenderData.length);
 		this.mRenderData = this.mRenderData.concat(temp);
 		
-		this.mNeedSort = false;
+		this.mNeedSort = false; // notify that sort is complete
 	}
 	
-	var scrTL = new IVec2(0, 0);
-	var scrBR = new IVec2(0, 0);
+	// variables for the position and size of the screen
+	var scrPos = new IVec2(0, 0);
+	var scrSize = new IVec2(0, 0);
 	
 	for (var i = 0; i < this.mRenderData.length; ++i) {
-		targ.save();
+		targ.save(); // save the current transform matrix
 		
+		// if the renderable is not absolute (position is not relative to the camera)
 		if (this.mRenderData[i].mAbsolute == false) {
-			cam.Apply();
-			scrTL.Set(0 + cam.mTranslate.mX, 0 + cam.mTranslate.mY);
-			scrBR.Set(nmain.game.mCanvasSize.mX + cam.mTranslate.mX, nmain.game.mCanvasSize.mY + cam.mTranslate.mY);
+			cam.Apply(targ); // apply the camera's tranformation matrix
+			
+			// set the position to the camera's position and the size to the canvas' size
+			scrPos.Copy(cam.mTranslate);
+			scrSize.Copy(nmain.game.mCanvasSize);
 		}
 		else {
-			scrTL.Set(0, 0);
-			scrBR.Set(nmain.game.mCanvasSize.mX, nmain.game.mCanvasSize.mY);
+			// set the position to the origin and the size to the canvas' size
+			scrPos.Set(0, 0);
+			scrSize.Copy(nmain.game.mCanvasSize);
 		}
 		
+		// call the appropiate render function
 		if (this.mRenderData[i].Type() == "Sprite") {
-			var spr = this.mRenderData[i];
-			
-			var sprTL = new IVec2(spr.GetPosition().mX, spr.GetPosition().mY);
-			var sprBR = new IVec2(spr.GetPosition().mX + spr.GetWidth(), spr.GetPosition().mY + spr.GetHeight());
-			
-			var intersect = false;
-			if (this.mFrustrumCull == true) {
-				var left = sprTL.mX;
-				var right = scrBR.mX;
-				if (scrTL.mX < sprTL.mX) {
-					left = scrTL.mX;
-					right = sprBR.mX;
-				}
-				
-				if (right - left < spr.GetWidth() + nmain.game.mCanvasSize.mX) {
-					var top = sprTL.mY;
-					var bottom = scrBR.mY;
-					if (scrTL.mY < sprTL.mY) {
-						top = scrTL.mY;
-						bottom = sprBR.mY;
-					}
-					
-					if (bottom - top < spr.GetHeight() + nmain.game.mCanvasSize.mY) {
-						intersect = true;
-					}
-				}
-			}
-			else {
-				intersect = true;
-			}
-			
-			if (intersect == true) {
-				var oldAlpha = targ.globalAlpha;
-				targ.globalAlpha = spr.mAlpha;
-				
-				targ.translate(spr.GetPosition().mX, spr.GetPosition().mY);
-				targ.rotate(spr.mRotation * (Math.PI / 180));
-				
-				targ.drawImage(spr.mTex.mImg, spr.mClipPos.mX, spr.mClipPos.mY,
-						spr.mClipSize.mX, spr.mClipSize.mY, 0, 0,
-						spr.GetWidth() * spr.mScale.mX, spr.GetHeight() * spr.mScale.mY);
-				
-				targ.globalAlpha = oldAlpha;
-			}
+			this.RenderSprite(targ, i, scrPos, scrSize);
 		}
 		else if (this.mRenderData[i].Type() == "Text") {
-			var txt = this.mRenderData[i];
-			var txtArr = txt.mString.split("\n");
-			
-			var txtTL = new IVec2(txt.mPos.mX, txt.mPos.mY);
-			var txtBR = new IVec2(txt.mPos.mX + txt.GetWidth(), txt.mPos.mY + txt.GetHeight());
-			
-			var intersect = false;
-			if (this.mFrustrumCull == true) {
-				var left = txtTL.mX;
-				var right = scrBR.mX;
-				if (scrTL.mX < txtTL.mX) {
-					left = scrTL.mX;
-					right = txtBR.mX;
-				}
-				
-				if (right - left < txt.GetWidth() + nmain.game.mCanvasSize.mX) {
-					var top = txtTL.mY;
-					var bottom = scrBR.mY;
-					if (scrTL.mY < txtTL.mY) {
-						top = scrTL.mY;
-						bottom = txtBR.mY;
-					}
-					
-					if (bottom - top < txt.GetHeight() + nmain.game.mCanvasSize.mY) {
-						intersect = true;
-					}
-				}
-			}
-			else {
-				intersect = true;
-			}
-			
-			if (intersect == true) {
-				targ.font = txt.mFontString;
-				targ.strokeStyle = txt.mColour;
-				
-				targ.translate(txt.mPos.mX, txt.mPos.mY + txt.mFontSize);
-				targ.rotate(txt.mRotation * (Math.PI / 180));
-				
-				if (txt.mOutline == true) {
-					for (var j = 0; j < txtArr.length; ++j) {
-						var hAlign = 0;
-						if (txt.mAlign == "centre") {
-							hAlign = Math.round(0 - (targ.measureText(txtArr[j]).width / 2));
-						}
-						else if (txt.mAlign == "right") {
-							hAlign = Math.round(0 - targ.measureText(txtArr[j]).width);
-						}
-						
-						targ.strokeText(txtArr[j], hAlign, txt.mFontSize * j);
-					}
-				}
-				else {
-					for (var j = 0; j < txtArr.length; ++j) {
-						var hAlign = 0;
-						if (txt.mAlign == "centre") {
-							hAlign = Math.round(0 - (targ.measureText(txtArr[j]).width / 2));
-						}
-						else if (txt.mAlign == "right") {
-							hAlign = Math.round(0 - targ.measureText(txtArr[j]).width);
-						}
-						
-						if (txt.mShadow == true) {
-							targ.fillStyle = txt.mShadowColour;
-							targ.fillText(txtArr[j], hAlign + 2, (txt.mFontSize * j) + 2);
-						}
-						
-						targ.fillStyle = txt.mColour;
-						targ.fillText(txtArr[j], hAlign, txt.mFontSize * j);
-					}
-				}
-			}
+			this.RenderText(targ, i, scrPos, scrSize);
 		}
 		else if (this.mRenderData[i].Type() == "Shape") {
-			var shp = this.mRenderData[i];
-			var pos = shp.GetPosition();
-			
-			var shpTL = new IVec2(shp.mPos.mX + shp.mBounds[0], shp.mPos.mY + shp.mBounds[1]);
-			var shpBR = new IVec2(shp.mPos.mX + shp.mBounds[2], shp.mPos.mY + shp.mBounds[3]);
-			
-			var intersect = false;
-			if (this.mFrustrumCull == true) {
-				var left = shpTL.mX;
-				var right = scrBR.mX;
-				if (scrTL.mX < shpTL.mX) {
-					left = scrTL.mX;
-					right = shpBR.mX;
-				}
-				
-				if (right - left < shp.GetWidth() + nmain.game.mCanvasSize.mX) {
-					var top = shpTL.mY;
-					var bottom = scrBR.mY;
-					if (scrTL.mY < shpTL.mY) {
-						top = scrTL.mY;
-						bottom = shpBR.mY;
-					}
-					
-					if (bottom - top < shp.GetHeight() + nmain.game.mCanvasSize.mY) {
-						intersect = true;
-					}
-				}
-			}
-			else {
-				intersect = true;
-			}
-			
-			if (intersect == true) {
-				targ.fillStyle = shp.mColour;
-				targ.strokeStyle = shp.mColour;
-				
-				var oldAlpha = targ.globalAlpha;
-				targ.globalAlpha = shp.mAlpha;
-				
-				var oldLineWidth = targ.lineWidth;
-				targ.lineWidth = shp.mLineWidth;
-				
-				targ.beginPath();
-				targ.moveTo(pos.mX, pos.mY);
-				
-				for (var j = 0; j < shp.mPoints.length; ++j) {
-					var pt = new IVec2();
-					pt.Copy(shp.mPoints[j]);
-					targ.lineTo(pos.mX + pt.mX, pos.mY + pt.mY);
-				}
-				
-				targ.closePath();
-				
-				if (shp.mOutline == false) {
-					targ.fill();
-				}
-				else {
-					
-					targ.stroke();
-				}
-				
-				targ.globalAlpha = oldAlpha;
-				targ.lineWidth = oldLineWidth;
-			}
+			this.RenderShape(targ, i, scrPos, scrSize);
 		}
 		else if (this.mRenderData[i].Type() == "RenderData") {
-			var renData = this.mRenderData[i];
-			
-			var idTL = new IVec2(renData.mPos.mX, renData.mPos.mY);
-			var idBR = new IVec2(renData.mPos.mX + renData.GetWidth(), renData.mPos.mY + renData.GetHeight());
-			
-			var intersect = false;
-			if (this.mFrustrumCull == true) {
-				var left = idTL.mX;
-				var right = scrBR.mX;
-				if (scrTL.mX < idTL.mX) {
-					left = scrTL.mX;
-					right = idBR.mX;
-				}
-				
-				if (right - left < renData.GetWidth() + nmain.game.mCanvasSize.mX) {
-					var top = idTL.mY;
-					var bottom = scrBR.mY;
-					if (scrTL.mY < idTL.mY) {
-						top = scrTL.mY;
-						bottom = idBR.mY;
-					}
-					
-					if (bottom - top < renData.GetHeight() + nmain.game.mCanvasSize.mY) {
-						intersect = true;
-					}
-				}
-			}
-			else {
-				intersect = true;
-			}
-			
-			if (intersect == true) {
-				targ.translate(renData.mPos.mX, renData.mPos.mY);
-				targ.rotate(renData.mRotation * (Math.PI / 180));
-				
-				targ.putImageData(renData.mImageData, renData.mPos.mX, renData.mPos.mY);
-			}
+			this.RenderRenderData(targ, i, scrPos, scrSize);
 		}
 		else if (this.mRenderData[i].Type() == "RenderCanvas") {
-			var canv = this.mRenderData[i];
-			
-			var canvTL = new IVec2(canv.mPos.mX, canv.mPos.mY);
-			var canvBR = new IVec2(canv.mPos.mX + canv.GetWidth(), canv.mPos.mY + canv.GetHeight());
-			
-			var intersect = false;
-			if (this.mFrustrumCull == true) {
-				var left = canvTL.mX;
-				var right = scrBR.mX;
-				if (scrTL.mX < canvTL.mX) {
-					left = scrTL.mX;
-					right = canvBR.mX;
-				}
-				
-				if (right - left < canv.GetWidth() + nmain.game.mCanvasSize.mX) {
-					var top = canvTL.mY;
-					var bottom = scrBR.mY;
-					if (scrTL.mY < canvTL.mY) {
-						top = scrTL.mY;
-						bottom = canvBR.mY;
-					}
-					
-					if (bottom - top < canv.GetHeight() + nmain.game.mCanvasSize.mY) {
-						intersect = true;
-					}
-				}
-			}
-			else {
-				intersect = true;
-			}
-			
-			if (intersect == true) {
-				var oldAlpha = targ.globalAlpha;
-				targ.globalAlpha = canv.mAlpha;
-				
-				targ.translate(canv.mPos.mX, canv.mPos.mY);
-				targ.rotate(canv.mRotation * (Math.PI / 180));
-				
-				targ.drawImage(canv.mCanvas, 0, 0);
-				
-				targ.globalAlpha = oldAlpha;
-			}
+			this.RenderRenderCanvas(targ, i, scrPos, scrSize);
 		}
 		
-		targ.restore();
+		targ.restore(); // load the saved transform matrix
 	}
 }
 
+// logic for rendering a sprite
+RenderBatch.prototype.RenderSprite = function(targ, id, scrPos, scrSize) {
+	var spr = this.mRenderData[id]; // get a copy of the sprite to be rendered
+	
+	// store the sprite's position and size
+	var sprPos = new IVec2(0, 0); sprPos.Copy(spr.GetPosition());
+	var sprSize = new IVec2(spr.GetWidth(), spr.GetHeight());
+	
+	var intersect = true; // assume instersection occurs initially
+	if (this.mFrustrumCull == true) { // if frustrum culling is to be performed
+		// check for a rectangle collision between the sprite's boundingbox and the screen
+		intersect = util.RectangleCollision(sprPos, sprSize, scrPos, scrSize, false);
+	}
+	
+	// if we have a collision then render
+	if (intersect == true) {
+		// store the current alpha value and then set it to the sprite's alpha value
+		var oldAlpha = targ.globalAlpha;
+		targ.globalAlpha = spr.mAlpha;
+		
+		// translate and rotate the target context to position the sprite
+		targ.translate(spr.GetPosition().mX, spr.GetPosition().mY);
+		targ.rotate(spr.mRotation * (Math.PI / 180));
+		
+		// draw the sprite texture using clip and scale values
+		targ.drawImage(spr.mTex.mImg, spr.mClipPos.mX, spr.mClipPos.mY,
+				spr.mClipSize.mX, spr.mClipSize.mY, 0, 0,
+				spr.GetWidth() * spr.mScale.mX, spr.GetHeight() * spr.mScale.mY);
+		
+		targ.globalAlpha = oldAlpha; // restore the old alpha value
+	}
+}
+
+// logic for rendering text
+RenderBatch.prototype.RenderText = function(targ, id, scrPos, scrSize) {
+	var txt = this.mRenderData[id]; // get a copy of the text to be rendered
+	var txtArr = txt.mString.split("\n"); // split the text at any new line characters
+	
+	// if text wrap is enabled
+	if (txt.mWrap == true) {
+		targ.font = txt.mFontString; // set the font so that text measurements are correct
+		
+		var txtArrNew = new Array(); // an array to hold our new text strings
+		for (var j = 0; j < txtArr.length; ++j) { // for all current text strings ("\n" delimited)
+			var split = txtArr[j].split(" "); // split at " " (space)
+			var str = ""; // our new string
+			var width = 0; // our new string's width
+			
+			// for all current 'words' (" " delimited)
+			for (var k = 0; k < split.length; ++k) {
+				// if the current width + the width of the current 'word' (" " delimited) is less than the specified wrap width
+				if (width + targ.measureText(split[k]).width <= txt.mWrapWidth) {
+					str += split[k]; // add the current 'word' to the new string
+					str += " "; // add a space to the new string
+					width = targ.measureText(str).width; // caluclate the new width of the new string
+				}
+				else { // otherwise it is larger
+					txtArrNew.push(str); // add the new string to the array
+					str = ""; // reset the new string
+					width = 0; // reset the width
+					k--; // decrement iterator so we repeat the current 'word'
+				}
+			}
+			
+			// when we reach here, if width is greater than 0, then we still have a string to push
+			if (width > 0) {
+				txtArrNew.push(str); // add the final string
+			}
+		}
+		
+		// replace the old text array with the new (wrapped) one
+		txtArr.splice(0, txtArr.length);
+		txtArr = txtArr.concat(txtArrNew);
+	}
+	
+	// store the text's position and size
+	var txtPos = new IVec2(0, 0); txtPos.Copy(txt.GetPosition());
+	var txtSize = new IVec2(txt.GetWidth(), txt.GetHeight());
+	
+	var intersect = true; // assume instersection occurs initially
+	if (this.mFrustrumCull == true) { // if frustrum culling is to be performed
+		// check for a rectangle collision between the text's boundingbox and the screen
+		intersect = util.RectangleCollision(txtPos, txtSize, scrPos, scrSize, false);
+	}
+	
+	// if we have a collision then render
+	if (intersect == true) {
+		// set the font of the text (size and family)
+		targ.font = txt.mFontString;
+		
+		// translate and rotate the target context to position the text
+		targ.translate(txt.mPos.mX, txt.mPos.mY + txt.mFontSize);
+		targ.rotate(txt.mRotation * (Math.PI / 180));
+		
+		// for all delimited text strings
+		for (var j = 0; j < txtArr.length; ++j) {
+			// if alignment is justify
+			if (txt.mAlign == "justify") {
+				// split the text string at " " (space)
+				var spacingArr = new Array();
+				spacingArr = txtArr[j].split(" ");
+				
+				// calculate the extra width we need to fill when justifying the text
+				var justifyWidth = txt.mJustifyWidth;
+				for (var k = 0; k < spacingArr.length; ++k) {
+					justifyWidth -= targ.measureText(spacingArr[k]).width;
+				}
+				
+				// if the text fits into the justify space (0 = nothing needs done, <0 = too large)
+				if (justifyWidth > 0) {
+					var gap = 0; // assume gap between words is 0
+					if (spacingArr.length - 1 > 0) { // if there is more than one 'word' (" " delimited strings)
+						gap = justifyWidth / (spacingArr.length - 1); // calculate the gap between each word
+					}
+					
+					var hAlign = 0; // set alignment to the left point
+					
+					// for all 'words' (" " delimited strings)
+					for (var k = 0; k < spacingArr.length; ++k) {
+						// if a shadow is to be drawn
+						if (txt.mShadow == true) {
+							if (txt.mOutline == true) {
+								targ.strokeStyle = txt.mShadowColour; // set the colour of the stroked text shadow
+								targ.strokeText(spacingArr[k], hAlign + 2, (txt.mFontSize * j) + 2); // draw offset stroked text
+							}
+							else {
+								targ.fillStyle = txt.mShadowColour; // set the colour of the filled text shadow
+								targ.fillText(spacingArr[k], hAlign + 2, (txt.mFontSize * j) + 2); // draw offset filled text
+							}
+						}
+						
+						if (txt.mOutline == true) {
+							targ.strokeStyle = txt.mColour; // set the colour of the stroked text
+							targ.strokeText(spacingArr[k], hAlign, txt.mFontSize * j); // draw stroked text
+						}
+						else {
+							targ.fillStyle = txt.mColour; // set the colour of the filled text
+							targ.fillText(spacingArr[k], hAlign, txt.mFontSize * j); // draw filled text
+						}
+						
+						// increment the alignment point by the width of the previous 'word' and the common gap
+						hAlign += targ.measureText(spacingArr[k]).width;
+						hAlign += gap;
+					}
+				}
+				else { // otherwise text is to long to be justified
+					var hAlign = 0; // set alignment to the left point
+					
+					// if a shadow is to be drawn
+					if (txt.mShadow == true) {
+						if (txt.mOutline == true) {
+							targ.strokeStyle = txt.mShadowColour; // set the colour of the stroked text shadow
+							targ.strokeText(txtArr[j], hAlign + 2, (txt.mFontSize * j) + 2); // draw offset stroked text
+						}
+						else {
+							targ.fillStyle = txt.mShadowColour; // set the colour of the filled text shadow
+							targ.fillText(txtArr[j], hAlign + 2, (txt.mFontSize * j) + 2); // draw offset filled text
+						}
+					}
+					
+					if (txt.mOutline == true) {
+						targ.strokeStyle = txt.mColour; // set the colour of the stroked text
+						targ.strokeText(txtArr[j], hAlign, txt.mFontSize * j); // draw stroked text
+					}
+					else {
+						targ.fillStyle = txt.mColour; // set the colour of the filled text
+						targ.fillText(txtArr[j], hAlign, txt.mFontSize * j); // draw filled text
+					}
+				}
+			}
+			else { // otherwise not justify
+				var hAlign = 0; // assume alignment is at the left point of the text string initially
+				
+				// if alignment is centred
+				if (txt.mAlign == "centre") {
+					// set alignment to the centre point of the text string
+					hAlign = Math.round(0 - (targ.measureText(txtArr[j]).width / 2));
+				}
+				else if (txt.mAlign == "right") { // else if align is right aligned
+					// set alignment to the right point of the text string
+					hAlign = Math.round(0 - targ.measureText(txtArr[j]).width);
+				}
+				
+				// if a shadow is to be drawn
+				if (txt.mShadow == true) {
+					if (txt.mOutline == true) {
+						targ.strokeStyle = txt.mShadowColour; // set the colour of the stroked text shadow
+						targ.strokeText(txtArr[j], hAlign + 2, (txt.mFontSize * j) + 2); // draw offset stroked text
+					}
+					else {
+						targ.fillStyle = txt.mShadowColour; // set the colour of the filled text shadow
+						targ.fillText(txtArr[j], hAlign + 2, (txt.mFontSize * j) + 2); // draw offset filled text
+					}
+				}
+				
+				if (txt.mOutline == true) {
+					targ.strokeStyle = txt.mColour; // set the colour of the stroked text
+					targ.strokeText(txtArr[j], hAlign, txt.mFontSize * j); // draw stroked text
+				}
+				else {
+					targ.fillStyle = txt.mColour; // set the colour of the filled text
+					targ.fillText(txtArr[j], hAlign, txt.mFontSize * j); // draw filled text
+				}
+			}
+		}
+	} 
+}
+
+// logic for rendering shapes
+RenderBatch.prototype.RenderShape = function(targ, id, scrPos, scrSize) {
+	var shp = this.mRenderData[id]; // get a copy of the shape to be rendered
+	
+	// store the shapes's position and size
+	var shpPos = new IVec2(shp.mPos.mX + shp.mBounds[0], shp.mPos.mY + shp.mBounds[1]);
+	var shpSize = new IVec2(shp.GetWidth(), shp.GetHeight());
+	
+	var intersect = true; // assume instersection occurs initially
+	if (this.mFrustrumCull == true) { // if frustrum culling is to be performed
+		// check for a rectangle collision between the shape's boundingbox and the screen
+		intersect = util.RectangleCollision(shpPos, shpSize, scrPos, scrSize, false);
+	}
+	
+	// if we have a collision then render
+	if (intersect == true) {
+		var pos = shp.GetPosition(); // get the shape's position
+		
+		// save current alpha and width values and set to shape's values
+		var oldAlpha = targ.globalAlpha; targ.globalAlpha = shp.mAlpha;
+		var oldLineWidth = targ.lineWidth; targ.lineWidth = shp.mLineWidth;
+		
+		// start the path and move the shape's position
+		targ.beginPath();
+		targ.moveTo(pos.mX, pos.mY);
+		
+		// for all points in the shape
+		for (var j = 0; j < shp.mPoints.length; ++j) {
+			// draw a line to the point
+			var pt = new IVec2(); pt.Copy(shp.mPoints[j]);
+			targ.lineTo(pos.mX + pt.mX, pos.mY + pt.mY);
+		}
+		
+		targ.closePath(); // finish the path
+		
+		// if shape is to be filled
+		if (shp.mOutline == false) {
+			// set the fill colour and draw the filled shape
+			targ.fillStyle = shp.mColour;
+			targ.fill();
+		}
+		else {
+			// set the stroke colour and draw the shape outline
+			targ.strokeStyle = shp.mColour;
+			targ.stroke();
+		}
+		
+		// restore old alpha and width values
+		targ.globalAlpha = oldAlpha;
+		targ.lineWidth = oldLineWidth;
+	}
+}
+
+// logic for rendering render data
+RenderBatch.prototype.RenderRenderData = function(targ, id, scrPos, scrSize) {
+	var renData = this.mRenderData[id]; // get a copy of the render data to be rendered
+	
+	// store the render data's position and size
+	var rdPos = new IVec2(0, 0); rdPos.Copy(renData.mPos);
+	var rdSize = new IVec2(renData.GetWidth(), renData.GetHeight());
+	
+	var intersect = true; // assume instersection occurs initially
+	if (this.mFrustrumCull == true) { // if frustrum culling is to be performed
+		// check for a rectangle collision between the render data's boundingbox and the screen
+		intersect = util.RectangleCollision(rdPos, rdSize, scrPos, scrSize, false);
+	}
+	
+	// if we have a collision then render
+	if (intersect == true) {
+		// translate and rotate the target context to position the render data
+		targ.translate(renData.mPos.mX, renData.mPos.mY);
+		targ.rotate(renData.mRotation * (Math.PI / 180));
+		
+		// draw the render data to the target context
+		targ.putImageData(renData.mImageData, renData.mPos.mX, renData.mPos.mY);
+	}
+}
+
+// logic for rendering render canvas
+RenderBatch.prototype.RenderRenderCanvas = function(targ, id, scrPos, scrSize) {
+	var canv = this.mRenderData[id]; // get a copy of the render canvas to be rendered
+	
+	// store the render canvas's position and size
+	var canvPos = new IVec2(0, 0); canvPos.Copy(canv.mPos);
+	var canvSize = new IVec2(canv.GetWidth(), canv.GetHeight());
+	
+	var intersect = true; // assume instersection occurs initially
+	if (this.mFrustrumCull == true) { // if frustrum culling is to be performed
+		// check for a rectangle collision between the render canvas's boundingbox and the screen
+		intersect = util.RectangleCollision(canvPos, canvSize, scrPos, scrSize, false);
+	}
+	
+	// if we have a collision then render
+	if (intersect == true) {
+		// store the current alpha value and then set it to the render canvas' alpha value
+		var oldAlpha = targ.globalAlpha;
+		targ.globalAlpha = canv.mAlpha;
+		
+		// translate and rotate the target context to position the render canvas
+		targ.translate(canv.mPos.mX, canv.mPos.mY);
+		targ.rotate(canv.mRotation * (Math.PI / 180));
+		
+		// draw the render canvas
+		targ.drawImage(canv.mCanvas, 0, 0);
+		
+		// restore the old alpha value
+		targ.globalAlpha = oldAlpha;
+	}
+}
 // ...End
 
 
@@ -3899,6 +3994,8 @@ function Camera() {
 // make a copy of another (other) camera (copy constructor)
 Camera.prototype.Copy = function(other) {
 	this.mTranslate.Copy(other.mTranslate); // call ivec2 copy (copy constructor)
+	
+	this.mViewUpdated = other.mViewUpdated;
 }
 
 // processes camera every frame
@@ -3909,8 +4006,13 @@ Camera.prototype.Process = function() {
 }
 
 // apply the camera's transform to the canvas
-Camera.prototype.Apply = function() {
-	nmain.game.mCurrContext.translate(-this.mTranslate.mX, -this.mTranslate.mY); // apply translation
+Camera.prototype.Apply = function(context) {
+	var renderContext = nmain.game.mCurrContext;
+	if (context != null) {
+		renderContext = context;
+	}
+	
+	renderContext.translate(-this.mTranslate.mX, -this.mTranslate.mY); // apply translation
 }
 
 // apply a transformation to the camera
@@ -3995,9 +4097,22 @@ InitScene.prototype.SetUp = function() {
 		
 		{ // textures for creation "help" dialogue boxes
 			nmgrs.resLoad.QueueTexture("gui_creation_helpdialogue_back", "./res/vis/gui/gui_creation_helpdialogue_back.png");
+			
+			nmgrs.resLoad.QueueTexture("help_mapcontrol1", "./res/vis/helpfiles/help_mapcontrol1.png");
+			nmgrs.resLoad.QueueTexture("help_mapcontrol2", "./res/vis/helpfiles/help_mapcontrol2.png");
+			nmgrs.resLoad.QueueTexture("help_tilecontrol1", "./res/vis/helpfiles/help_tilecontrol1.png");
+			
+			nmgrs.resLoad.QueueTexture("help_newdialogue1", "./res/vis/helpfiles/help_newdialogue1.png");
+			nmgrs.resLoad.QueueTexture("help_savedialogue1", "./res/vis/helpfiles/help_savedialogue1.png");
+			nmgrs.resLoad.QueueTexture("help_loaddialogue1", "./res/vis/helpfiles/help_loaddialogue1.png");
+			nmgrs.resLoad.QueueTexture("help_importdialogue1", "./res/vis/helpfiles/help_importdialogue1.png");
+			nmgrs.resLoad.QueueTexture("help_exportdialogue1", "./res/vis/helpfiles/help_exportdialogue1.png");
+			
+			nmgrs.resLoad.QueueTexture("help_generatedialogue1", "./res/vis/helpfiles/help_generatedialogue1.png");
 		}
 		
 		nmgrs.resLoad.QueueTexture("menu_button", "./res/vis/gui/menu_button.png");
+		nmgrs.resLoad.QueueTexture("blank", "./res/vis/gui/blank.png");
 		
 		{ // main game font
 			nmgrs.resLoad.QueueFont("mainfont", "./res/sys/Kingthings Serifique");
@@ -7117,6 +7232,82 @@ GFGUICreationGenerateDialogue.prototype.ProcessButtonClick = function() {
 // ...End
 
 
+function GFHelpContent() {
+	this.mCam = new Camera();
+	this.mRenderCanvas = new RenderCanvas();
+	
+	this.mSprites = new Array();
+	this.mText = new Array();
+	
+	this.mRedraw = true;
+	
+	this.mLowerBound = 0;
+};
+
+GFHelpContent.prototype.SetUp = function(pos) {
+	this.mRenderCanvas.mPos.Set(pos.mX + 26, pos.mY + 91);
+	this.mRenderCanvas.SetDimensions(new IVec2(448, 336));
+	
+	this.mRenderCanvas.mDepth = -5101;
+	this.mRenderCanvas.mAbsolute = true;
+	
+	this.mRenderCanvas.mFrustrumCull = false;
+}
+
+GFHelpContent.prototype.Process = function() {
+	if (this.mRedraw == true) {
+		this.mRenderCanvas.Clear();
+		var arr = new Array();
+		
+		for (var i = 0; i < this.mText.length; ++i) {
+			arr.push(this.mText[i]);
+		}
+		
+		for (var i = 0; i < this.mSprites.length; ++i) {
+			arr.push(this.mSprites[i]);
+		}
+		
+		{
+			var arrSort = new Array();
+			for (var i = 0; i < arr.length; ++i) {
+				var element = new RenderBatchSortElement();
+				element.mID = i;
+				element.mDepth = arr[i].mDepth;
+				
+				arrSort.push(element);
+			}
+			
+			arrSort.sort(DepthSort);
+			
+			var temp = new Array();
+			for (var i = 0; i < arr.length; ++i) {
+				temp.push(arr[arrSort[i].mID]);
+			}
+			
+			arr.splice(0, arr.length);
+			arr = arr.concat(temp);
+		}
+		
+		this.mRenderCanvas.mContext.save();
+		for (var i = 0; i < arr.length; ++i) {
+			this.mRenderCanvas.RenderTo(arr[i], this.mCam);
+		}
+		
+		this.mRenderCanvas.mContext.restore();
+		
+		this.mRedraw = false;
+	}
+}
+
+GFHelpContent.prototype.GetRenderData = function() {
+	var arr = new Array();
+	
+	arr.push(this.mRenderCanvas);
+	
+	return arr;
+}
+
+
 // GFGUICreationHelpDialogue Class...
 // game file:
 function GFGUICreationHelpDialogue() {
@@ -7125,10 +7316,51 @@ function GFGUICreationHelpDialogue() {
 	this.mBackButton = new GUIButton();
 	this.mBackText = new Text();
 	
+	this.mArrows = new Array();
+	this.mArrows[0] = new GUIButton();
+	this.mArrows[1] = new GUIButton();
+	
 	this.mOption = 0;
-	this.mRenderCanvas = new RenderCanvas();
 	this.mTitleText = new Text();
-}
+	this.mSubtitleText = new Text();
+	
+	{
+		this.mButtons = new Array();
+		this.mButtons[0] = new GUIButton();
+		this.mButtons[1] = new GUIButton();
+		this.mButtons[2] = new GUIButton();
+		this.mButtons[3] = new GUIButton();
+		this.mButtons[4] = new GUIButton();
+		this.mButtons[5] = new GUIButton();
+		this.mButtons[6] = new GUIButton();
+		this.mButtons[7] = new GUIButton();
+		
+		this.mText = new Array();
+		this.mText[0] = new Text();
+		this.mText[1] = new Text();
+		this.mText[2] = new Text();
+		this.mText[3] = new Text();
+		this.mText[4] = new Text();
+		this.mText[5] = new Text();
+		this.mText[6] = new Text();
+		this.mText[7] = new Text();
+		this.mText[8] = new Text();
+		this.mText[9] = new Text();
+		this.mText[10] = new Text();
+	}
+	
+	this.mContent = new Array();
+	this.mContent[0] = new GFHelpContent();
+	this.mContent[1] = new GFHelpContent();
+	
+	this.mContent[2] = new GFHelpContent();
+	this.mContent[3] = new GFHelpContent();
+	this.mContent[4] = new GFHelpContent();
+	this.mContent[5] = new GFHelpContent();
+	this.mContent[6] = new GFHelpContent();
+	
+	this.mContent[7] = new GFHelpContent();
+};
 
 GFGUICreationHelpDialogue.prototype.SetUp = function() {
 	var pos = new IVec2(nmain.game.mCanvasSize.mX / 2, nmain.game.mCanvasSize.mY / 2);
@@ -7162,6 +7394,42 @@ GFGUICreationHelpDialogue.prototype.SetUp = function() {
 	}
 	
 	{
+		var tex = nmgrs.resMan.mTexStore.GetResource("gui_creation_loaddialogue_listbox_arrows");
+		
+		{
+			this.mArrows[0].SetUp(new IVec2(pos.mX + 476, pos.mY + 38), new IVec2(16, 16), -5101);
+			
+			this.mArrows[0].mSpriteIdle.SetAnimatedTexture(tex, 6, 2, -1, -1);
+			this.mArrows[0].mSpriteIdle.SetCurrentFrame(0);
+			
+			this.mArrows[0].mSpriteHover.SetAnimatedTexture(tex, 6, 2, -1, -1);
+			this.mArrows[0].mSpriteHover.SetCurrentFrame(2);
+			
+			this.mArrows[0].mSpriteDown.SetAnimatedTexture(tex, 6, 2, -1, -1);
+			this.mArrows[0].mSpriteDown.SetCurrentFrame(4);
+			
+			this.mArrows[0].mSpriteInactive.SetAnimatedTexture(tex, 6, 2, -1, -1);
+			this.mArrows[0].mSpriteInactive.SetCurrentFrame(0);
+		}
+		
+		{
+			this.mArrows[1].SetUp(new IVec2(pos.mX + 476, pos.mY + 447), new IVec2(16, 16), -5101);
+			
+			this.mArrows[1].mSpriteIdle.SetAnimatedTexture(tex, 6, 2, -1, -1);
+			this.mArrows[1].mSpriteIdle.SetCurrentFrame(1);
+			
+			this.mArrows[1].mSpriteHover.SetAnimatedTexture(tex, 6, 2, -1, -1);
+			this.mArrows[1].mSpriteHover.SetCurrentFrame(3);
+			
+			this.mArrows[1].mSpriteDown.SetAnimatedTexture(tex, 6, 2, -1, -1);
+			this.mArrows[1].mSpriteDown.SetCurrentFrame(5);
+			
+			this.mArrows[1].mSpriteInactive.SetAnimatedTexture(tex, 6, 2, -1, -1);
+			this.mArrows[1].mSpriteInactive.SetCurrentFrame(1);
+		}
+	}
+	
+	{
 		{
 			var font = nmgrs.resMan.mFontStore.GetResource("mainfont");
 			
@@ -7180,21 +7448,72 @@ GFGUICreationHelpDialogue.prototype.SetUp = function() {
 			this.mTitleText.mString = "Welcome to the Help Screen!";
 			this.mTitleText.mAlign = "centre";
 			this.mTitleText.mPos.Set(pos.mX + 250, pos.mY + 38);
-			this.mTitleText.mColour = "#000000";
+			this.mTitleText.mColour = "#C59687";
 			this.mTitleText.mDepth = -5102;
+			this.mTitleText.mShadow = true;
+			this.mTitleText.mShadowColour = "#80433C";
+			
+			this.mSubtitleText.SetFont(font);
+			this.mSubtitleText.SetFontSize(18);
+			this.mSubtitleText.mAbsolute = true;
+			this.mSubtitleText.mString = "Do you need help? Then select and option below:";
+			this.mSubtitleText.mAlign = "centre";
+			this.mSubtitleText.mPos.Set(pos.mX + 250, pos.mY + 62);
+			this.mSubtitleText.mColour = "#9C5249";
+			this.mSubtitleText.mDepth = -5102;
 		}
+	}
+	
+	{
+		this.SetUpIndex(pos);
+		
+		this.SetUpContentMapControls(pos);
+		this.SetUpContentTileControls(pos);
+		
+		this.SetUpContentNewDialogue(pos);
+		this.SetUpContentSaveDialogue(pos);
+		this.SetUpContentLoadDialogue(pos);
+		this.SetUpContentImportDialogue(pos);
+		this.SetUpContentExportDialogue(pos);
+		
+		this.SetUpContentGenerateDialogue(pos);
 	}
 }
 
 GFGUICreationHelpDialogue.prototype.Input = function() {
 	this.mBackButton.Input();
+	
+	for (var i = 0; i < this.mButtons.length; ++i) {
+		this.mButtons[i].Input();
+	}
+	
+	for (var i = 0; i < this.mArrows.length; ++i) {
+		this.mArrows[i].Input();
+	}
 }
 
 GFGUICreationHelpDialogue.prototype.Process = function(point) {
 	this.mBackButton.Process(point);
 	
+	for (var i = 0; i < this.mButtons.length; ++i) {
+		this.mButtons[i].Process(point);
+	}
+	
+	for (var i = 0; i < this.mArrows.length; ++i) {
+		this.mArrows[i].Process(point);
+	}
+	
 	this.ProcessTextState();
 	this.ProcessButtonClick();
+	
+	if (this.mOption == 0) {
+		this.ProcessIndexTextState();
+		this.ProcessIndexButtonClick();
+	}
+	
+	if (this.mOption > 0) {
+		this.mContent[this.mOption - 1].Process();
+	}
 }
 
 GFGUICreationHelpDialogue.prototype.GetRenderData = function() {
@@ -7206,6 +7525,24 @@ GFGUICreationHelpDialogue.prototype.GetRenderData = function() {
 	arr.push(this.mBackText);
 	
 	arr.push(this.mTitleText);
+	arr.push(this.mSubtitleText);
+	
+	if (this.mOption == 0) {
+		for (var i = 0; i < this.mText.length; ++i) {
+			arr.push(this.mText[i]);
+		}
+	}
+	else {
+		if (this.mContent[this.mOption - 1].mCam.mTranslate.mY > 0) {
+			arr = arr.concat(this.mArrows[0].GetRenderData());
+		}
+		
+		if (this.mContent[this.mOption - 1].mCam.mTranslate.mY < this.mContent[this.mOption - 1].mLowerBound) {
+			arr = arr.concat(this.mArrows[1].GetRenderData());
+		}
+		
+		arr = arr.concat(this.mContent[this.mOption - 1].GetRenderData());
+	}
 	
 	return arr;
 }
@@ -7234,18 +7571,670 @@ GFGUICreationHelpDialogue.prototype.ProcessButtonClick = function() {
 		if (this.mOption == 0) {
 			currScene.mCreationControl.mDialogueOpen = "";
 		}
+		else {
+			this.RedrawHelp(0);
+		}
+	}
+	
+	if (this.mOption > 0) {
+		if (this.mArrows[0].mDown == true) {
+			if (this.mContent[this.mOption - 1].mCam.mTranslate.mY > 0) {
+				this.mContent[this.mOption - 1].mCam.Translate(new IVec2(0, -4));
+				this.mContent[this.mOption - 1].mRedraw = true;
+			}
+		}
+		else if (this.mArrows[1].mDown == true) {
+			if (this.mContent[this.mOption - 1].mCam.mTranslate.mY < this.mContent[this.mOption - 1].mLowerBound) {
+				this.mContent[this.mOption - 1].mCam.Translate(new IVec2(0, 4));
+				this.mContent[this.mOption - 1].mRedraw = true;
+			}
+		}
 	}
 }
 
 GFGUICreationHelpDialogue.prototype.RedrawHelp = function(option) {
 	this.mOption = option;
-	this.mRenderCanvas.Clear();
 	
 	if (option == 0) {
-		// set title text
-		
-		// add content
+		this.mTitleText.mString = "Welcome to the Help Screen!";
+		this.mSubtitleText.mString = "Do you need help? Then select and option below:";
 	}
+	else if (option == 1) {
+		this.mTitleText.mString = "Editor Controls";
+		this.mSubtitleText.mString = "Map Controls";
+	}
+	else if (option == 2) {
+		this.mTitleText.mString = "Editor Controls";
+		this.mSubtitleText.mString = "Tile Controls";
+	}
+	else if (option == 3) {
+		this.mTitleText.mString = "File Menu";
+		this.mSubtitleText.mString = "New Dialogue";
+	}
+	else if (option == 4) {
+		this.mTitleText.mString = "File Menu";
+		this.mSubtitleText.mString = "Save Dialogue";
+	}
+	else if (option == 5) {
+		this.mTitleText.mString = "File Menu";
+		this.mSubtitleText.mString = "Load Dialogue";
+	}
+	else if (option == 6) {
+		this.mTitleText.mString = "File Menu";
+		this.mSubtitleText.mString = "Import Dialogue";
+	}
+	else if (option == 7) {
+		this.mTitleText.mString = "File Menu";
+		this.mSubtitleText.mString = "Export Dialogue";
+	}
+	else if (option == 8) {
+		this.mTitleText.mString = "Play Menu";
+		this.mSubtitleText.mString = "Export Dialogue";
+	}
+}
+// ...End
+
+
+// GFGUICreationHelpDialogue "Content: Index" methods
+GFGUICreationHelpDialogue.prototype.SetUpIndex = function(pos) {
+	{
+		var font = nmgrs.resMan.mFontStore.GetResource("mainfont");
+		
+		for (var i = 0; i < this.mText.length; ++i) {
+			this.mText[i].SetFont(font);
+			this.mText[i].mAbsolute = true;
+			this.mText[i].mDepth = -5102;
+		}
+	}
+	
+	{
+		this.mText[0].SetFontSize(16);
+		this.mText[0].mString = "Editor Controls";
+		this.mText[0].mPos.Set(pos.mX + 100, pos.mY + 110);
+		this.mText[0].mColour = "#C59687";
+		this.mText[0].mJustifyWidth = -1;
+		this.mText[0].mAlign = "left";
+		
+		this.mText[1].SetFontSize(12);
+		this.mText[1].mString = "... Map Controls";
+		this.mText[1].mPos.Set(pos.mX + 130, pos.mY + 130);
+		this.mText[1].mColour = "#88ACDD";
+		this.mText[1].mJustifyWidth = 100;
+		this.mText[1].mAlign = "justify";
+		
+		this.mText[2].SetFontSize(12);
+		this.mText[2].mString = "... Tile Controls";
+		this.mText[2].mPos.Set(pos.mX + 130, pos.mY + 146);
+		this.mText[2].mColour = "#88ACDD";
+		this.mText[2].mJustifyWidth = 100;
+		this.mText[2].mAlign = "justify";
+		
+		
+		this.mText[3].SetFontSize(16);
+		this.mText[3].mString = "File Menu";
+		this.mText[3].mPos.Set(pos.mX + 100, pos.mY + 172);
+		this.mText[3].mColour = "#C59687";
+		this.mText[3].mJustifyWidth = -1;
+		this.mText[3].mAlign = "left";
+		
+		this.mText[4].SetFontSize(12);
+		this.mText[4].mString = "... New Dialogue";
+		this.mText[4].mPos.Set(pos.mX + 130, pos.mY + 192);
+		this.mText[4].mColour = "#88ACDD";
+		this.mText[4].mJustifyWidth = 120;
+		this.mText[4].mAlign = "justify";
+		
+		this.mText[5].SetFontSize(12);
+		this.mText[5].mString = "... Save Dialogue";
+		this.mText[5].mPos.Set(pos.mX + 130, pos.mY + 208);
+		this.mText[5].mColour = "#88ACDD";
+		this.mText[5].mJustifyWidth = 120;
+		this.mText[5].mAlign = "justify";
+		
+		this.mText[6].SetFontSize(12);
+		this.mText[6].mString = "... Load Dialogue";
+		this.mText[6].mPos.Set(pos.mX + 130, pos.mY + 224);
+		this.mText[6].mColour = "#88ACDD";
+		this.mText[6].mJustifyWidth = 120;
+		this.mText[6].mAlign = "justify";
+		
+		this.mText[7].SetFontSize(12);
+		this.mText[7].mString = "... Import Dialogue";
+		this.mText[7].mPos.Set(pos.mX + 130, pos.mY + 240);
+		this.mText[7].mColour = "#88ACDD";
+		this.mText[7].mJustifyWidth = 120;
+		this.mText[7].mAlign = "justify";
+		
+		this.mText[8].SetFontSize(12);
+		this.mText[8].mString = "... Export Dialogue";
+		this.mText[8].mPos.Set(pos.mX + 130, pos.mY + 256);
+		this.mText[8].mColour = "#88ACDD";
+		this.mText[8].mJustifyWidth = 120;
+		this.mText[8].mAlign = "justify";
+		
+		
+		this.mText[9].SetFontSize(16);
+		this.mText[9].mString = "Play Menu";
+		this.mText[9].mPos.Set(pos.mX + 100, pos.mY + 282);
+		this.mText[9].mColour = "#C59687";
+		this.mText[9].mJustifyWidth = -1;
+		this.mText[9].mAlign = "left";
+		
+		this.mText[10].SetFontSize(12);
+		this.mText[10].mString = "... Generate Map Dialogue";
+		this.mText[10].mPos.Set(pos.mX + 130, pos.mY + 302);
+		this.mText[10].mColour = "#88ACDD";
+		this.mText[10].mJustifyWidth = 160;
+		this.mText[10].mAlign = "justify";
+	}
+	
+	{
+		var tex = nmgrs.resMan.mTexStore.GetResource("blank");
+		
+		{
+			this.mButtons[0].SetUp(new IVec2(pos.mX + 130, pos.mY + 130), new IVec2(100, 12), -5101);
+			this.mButtons[1].SetUp(new IVec2(pos.mX + 130, pos.mY + 146), new IVec2(100, 12), -5101);
+			
+			this.mButtons[2].SetUp(new IVec2(pos.mX + 130, pos.mY + 192), new IVec2(120, 12), -5101);
+			this.mButtons[3].SetUp(new IVec2(pos.mX + 130, pos.mY + 208), new IVec2(120, 12), -5101);
+			this.mButtons[4].SetUp(new IVec2(pos.mX + 130, pos.mY + 224), new IVec2(120, 12), -5101);
+			this.mButtons[5].SetUp(new IVec2(pos.mX + 130, pos.mY + 240), new IVec2(120, 12), -5101);
+			this.mButtons[6].SetUp(new IVec2(pos.mX + 130, pos.mY + 256), new IVec2(120, 12), -5101);
+			
+			this.mButtons[7].SetUp(new IVec2(pos.mX + 130, pos.mY + 302), new IVec2(160, 12), -5101);
+			
+			for (var i = 0; i < this.mButtons.length; ++i) {
+				this.mButtons[i].mSpriteIdle.SetTexture(tex);
+				this.mButtons[i].mSpriteHover.SetTexture(tex);
+				this.mButtons[i].mSpriteDown.SetTexture(tex);
+				this.mButtons[i].mSpriteInactive.SetTexture(tex);
+			}
+		}
+	}
+}
+
+GFGUICreationHelpDialogue.prototype.ProcessIndexTextState = function() {
+	document.getElementsByTagName("body")[0].style.cursor = 'auto';
+	var hovering = false;
+	
+	var arr = new Array(1, 2, 4, 5, 6, 7, 8, 10);
+	for (var i = 0; i < this.mButtons.length; ++i) {
+		if (this.mButtons[i].mStatus == "down") {
+			this.mText[arr[i]].mColour = "#43547A";
+			hovering = true;
+		}
+		else if (this.mButtons[i].mStatus == "hover") {
+			this.mText[arr[i]].mColour = "#CEE3E9";
+			hovering = true;
+		}
+		else {
+			this.mText[arr[i]].mColour = "#88ACDD";
+		}
+	}
+	
+	if (hovering == true) {
+		document.getElementsByTagName("body")[0].style.cursor = 'pointer';
+	}
+}
+
+GFGUICreationHelpDialogue.prototype.ProcessIndexButtonClick = function() {
+	var currScene = nmgrs.sceneMan.mCurrScene;
+	
+	for (var i = 0; i < this.mButtons.length; ++i) {
+		if (this.mButtons[i].OnClick() == true) {
+			this.RedrawHelp(i + 1);
+			
+			document.getElementsByTagName("body")[0].style.cursor = 'auto';
+			break;
+		}
+	}
+}
+// ...End
+
+
+// GFGUICreationHelpDialogue "Content: Map Control" methods
+GFGUICreationHelpDialogue.prototype.SetUpContentMapControls = function(pos) {
+	var contentID = 0;
+	this.mContent[contentID].SetUp(pos);
+	this.mContent[contentID].mLowerBound = 126;
+	this.mContent[contentID].mText[0] = new Text();
+	this.mContent[contentID].mText[1] = new Text();
+	this.mContent[contentID].mText[2] = new Text();
+	this.mContent[contentID].mText[3] = new Text();
+	this.mContent[contentID].mSprites[0] = new Sprite();
+	this.mContent[contentID].mSprites[1] = new Sprite();
+	
+	{
+		var tex1 = nmgrs.resMan.mTexStore.GetResource("help_mapcontrol1");
+		var tex2 = nmgrs.resMan.mTexStore.GetResource("help_mapcontrol2");
+		var font = nmgrs.resMan.mFontStore.GetResource("mainfont");
+		
+		{
+			this.mContent[contentID].mText[0].SetFont(font);
+			this.mContent[contentID].mText[0].mDepth = -5102;
+			this.mContent[contentID].mText[0].SetFontSize(12);
+			this.mContent[contentID].mText[0].mString = "    Moves the camera north, east, south and west, and moves " +
+					"up and down z-levels. Allows navigation when working with larger segments and the lowering of " +
+					"taller blocks to reveal any smaller blocks that might be masked behind.";
+			this.mContent[contentID].mText[0].mPos.Set(0, 0);
+			this.mContent[contentID].mText[0].mColour = "#C59687";
+			this.mContent[contentID].mText[0].mAlign = "left";
+			this.mContent[contentID].mText[0].mWrap = true;
+			this.mContent[contentID].mText[0].mWrapWidth = 454;
+		}
+		
+		{
+			this.mContent[contentID].mSprites[0].mPos.Set(100, 60);
+			this.mContent[contentID].mSprites[0].mDepth = -5100;
+			this.mContent[contentID].mSprites[0].SetTexture(tex1);
+		}
+		
+		{
+			this.mContent[contentID].mText[1].SetFont(font);
+			this.mContent[contentID].mText[1].mDepth = -5102;
+			this.mContent[contentID].mText[1].SetFontSize(12);
+			this.mContent[contentID].mText[1].mString = "a. Move up or down z-levels (alternative keys: Q and E).\n" +
+					"b. Move north, east, south or west (alternative keys: W, D, S and A).";
+			this.mContent[contentID].mText[1].mPos.Set(0, 156);
+			this.mContent[contentID].mText[1].mColour = "#C59687";
+			this.mContent[contentID].mText[1].mAlign = "left";
+		}
+		
+		{
+			this.mContent[contentID].mText[2].SetFont(font);
+			this.mContent[contentID].mText[2].mDepth = -5102;
+			this.mContent[contentID].mText[2].SetFontSize(12);
+			this.mContent[contentID].mText[2].mString = "    The segment editing area: left clicking on an empty tile " +
+					"or an existing tile will replace it with a tile with the current attributes; hold left click to paint.";
+			this.mContent[contentID].mText[2].mPos.Set(0, 204);
+			this.mContent[contentID].mText[2].mColour = "#C59687";
+			this.mContent[contentID].mText[2].mAlign = "left";
+			this.mContent[contentID].mText[2].mWrap = true;
+			this.mContent[contentID].mText[2].mWrapWidth = 450;
+		}
+		
+		{
+			this.mContent[contentID].mSprites[1].mPos.Set(82, 252);
+			this.mContent[contentID].mSprites[1].mDepth = -5100;
+			this.mContent[contentID].mSprites[1].SetTexture(tex2);
+		}
+		
+		{
+			this.mContent[contentID].mText[3].SetFont(font);
+			this.mContent[contentID].mText[3].mDepth = -5102;
+			this.mContent[contentID].mText[3].SetFontSize(12);
+			this.mContent[contentID].mText[3].mString = "a. Blank tile; a representation for a blank tile (only visible in\n" +
+					"       segment editor).\n" +
+					"b. Tile highlight; white outline that indicates the currently\n" +
+					"       selected tile.";
+			this.mContent[contentID].mText[3].mPos.Set(0, 410);
+			this.mContent[contentID].mText[3].mColour = "#C59687";
+			this.mContent[contentID].mText[3].mAlign = "left";
+		}
+	}
+}
+// ...End
+
+
+// GFGUICreationHelpDialogue "Content: Tile Control" methods
+GFGUICreationHelpDialogue.prototype.SetUpContentTileControls = function(pos) {
+	var contentID = 1;
+	this.mContent[contentID].SetUp(pos);
+	this.mContent[contentID].mLowerBound = 74;
+	this.mContent[contentID].mText[0] = new Text();
+	this.mContent[contentID].mText[1] = new Text();
+	this.mContent[contentID].mSprites[0] = new Sprite();
+	
+	{
+		var tex = nmgrs.resMan.mTexStore.GetResource("help_tilecontrol1");
+		var font = nmgrs.resMan.mFontStore.GetResource("mainfont");
+		
+		{
+			this.mContent[contentID].mText[0].SetFont(font);
+			this.mContent[contentID].mText[0].mDepth = -5102;
+			this.mContent[contentID].mText[0].SetFontSize(12);
+			this.mContent[contentID].mText[0].mString = "    Controls various attributes for the current tile " + 
+					"(the tile that will be placed with left click) such as the " +
+					"height, direction, special attributes and texture.";
+			this.mContent[contentID].mText[0].mPos.Set(0, 0);
+			this.mContent[contentID].mText[0].mColour = "#C59687";
+			this.mContent[contentID].mText[0].mAlign = "left";
+			this.mContent[contentID].mText[0].mWrap = true;
+			this.mContent[contentID].mText[0].mWrapWidth = 454;
+		}
+		
+		{
+			this.mContent[contentID].mSprites[0].mPos.Set(139, 48);
+			this.mContent[contentID].mSprites[0].mDepth = -5100;
+			this.mContent[contentID].mSprites[0].SetTexture(tex);
+		}
+		
+		{
+			this.mContent[contentID].mText[1].SetFont(font);
+			this.mContent[contentID].mText[1].mDepth = -5102;
+			this.mContent[contentID].mText[1].SetFontSize(12);
+			this.mContent[contentID].mText[1].mString = "a. A visual example of the current tile.\n" +
+					"b. The height of the current tile from 0 (blank) to 6 including slopes.\n" +
+					"c. The direction of the tile's slope (if applicable); low to high.\n" +
+					"d. Sets the current tile's special status (entrance, exit, both or none).\n" +
+					"       The special status is used for connectivity during map generation.\n" +
+					"e. Goes to the texture selection scene to change the current texture.\n";
+			this.mContent[contentID].mText[1].mPos.Set(0, 333);
+			this.mContent[contentID].mText[1].mColour = "#C59687";
+			this.mContent[contentID].mText[1].mAlign = "left";
+		}
+	}
+	
+	
+}
+// ...End
+
+
+// GFGUICreationHelpDialogue "Content: New Dialogue" methods
+GFGUICreationHelpDialogue.prototype.SetUpContentNewDialogue = function(pos) {
+	var contentID = 2;
+	this.mContent[contentID].SetUp(pos);
+	this.mContent[contentID].mText[0] = new Text();
+	this.mContent[contentID].mText[1] = new Text();
+	this.mContent[contentID].mSprites[0] = new Sprite();
+	
+	{
+		var tex = nmgrs.resMan.mTexStore.GetResource("help_newdialogue1");
+		var font = nmgrs.resMan.mFontStore.GetResource("mainfont");
+		
+		{
+			this.mContent[contentID].mText[0].SetFont(font);
+			this.mContent[contentID].mText[0].mDepth = -5102;
+			this.mContent[contentID].mText[0].SetFontSize(12);
+			this.mContent[contentID].mText[0].mString = "    Creates a new (blank) segment of the specified " +
+					"dimensions (x, y); any unsaved changes will be lost. The minimum size is (1, 1) and the " +
+					"maximum size is (20, 20).";
+			this.mContent[contentID].mText[0].mPos.Set(0, 0);
+			this.mContent[contentID].mText[0].mColour = "#C59687";
+			this.mContent[contentID].mText[0].mAlign = "left";
+			this.mContent[contentID].mText[0].mWrap = true;
+			this.mContent[contentID].mText[0].mWrapWidth = 454;
+		}
+		
+		{
+			this.mContent[contentID].mSprites[0].mPos.Set(156, 48);
+			this.mContent[contentID].mSprites[0].mDepth = -5100;
+			this.mContent[contentID].mSprites[0].SetTexture(tex);
+		}
+		
+		{
+			this.mContent[contentID].mText[1].SetFont(font);
+			this.mContent[contentID].mText[1].mDepth = -5102;
+			this.mContent[contentID].mText[1].SetFontSize(12);
+			this.mContent[contentID].mText[1].mString = "a. X and Y input boxes; sets the dimensions of the new segment.\n" +
+					"       Only accepts valid input.\n" +
+					"b. Create button; create new segment of the specified dimensions and\n" +
+					"       return to editor.\n" +
+					"c. Cancel button; cancel creation and return to the editor.";
+			this.mContent[contentID].mText[1].mPos.Set(0, 156);
+			this.mContent[contentID].mText[1].mColour = "#C59687";
+			this.mContent[contentID].mText[1].mAlign = "left";
+		}
+	}
+}
+// ...End
+
+
+// GFGUICreationHelpDialogue "Content: Save Dialogue" methods
+GFGUICreationHelpDialogue.prototype.SetUpContentSaveDialogue = function(pos) {
+	var contentID = 3;
+	this.mContent[contentID].SetUp(pos);
+	this.mContent[contentID].mText[0] = new Text();
+	this.mContent[contentID].mText[1] = new Text();
+	this.mContent[contentID].mSprites[0] = new Sprite();
+	
+	{
+		var tex = nmgrs.resMan.mTexStore.GetResource("help_savedialogue1");
+		var font = nmgrs.resMan.mFontStore.GetResource("mainfont");
+		
+		{
+			this.mContent[contentID].mText[0].SetFont(font);
+			this.mContent[contentID].mText[0].mDepth = -5102;
+			this.mContent[contentID].mText[0].SetFontSize(12);
+			this.mContent[contentID].mText[0].mString = "    Saves the current segment to local storage " + 
+					"(browser storage) with the specified name. If a segment with the specified name already " +
+					"exists then it will be overwritten. If there is insufficient space left in local storage " + 
+					"then the save will be unsuccessful.";
+			this.mContent[contentID].mText[0].mPos.Set(0, 0);
+			this.mContent[contentID].mText[0].mColour = "#C59687";
+			this.mContent[contentID].mText[0].mAlign = "left";
+			this.mContent[contentID].mText[0].mWrap = true;
+			this.mContent[contentID].mText[0].mWrapWidth = 454;
+		}
+		
+		{
+			this.mContent[contentID].mSprites[0].mPos.Set(152, 60);
+			this.mContent[contentID].mSprites[0].mDepth = -5100;
+			this.mContent[contentID].mSprites[0].SetTexture(tex);
+		}
+		
+		{
+			this.mContent[contentID].mText[1].SetFont(font);
+			this.mContent[contentID].mText[1].mDepth = -5102;
+			this.mContent[contentID].mText[1].SetFontSize(12);
+			this.mContent[contentID].mText[1].mString = "a. Name input box; sets the save name of the segment.\n" +
+					"b. Save button; confirm save (and overwrite if applicable) and return\n" + 
+					"       to the editor.\n" +
+					"c. Cancel button; cancel save and return to the editor.";
+			this.mContent[contentID].mText[1].mPos.Set(0, 185);
+			this.mContent[contentID].mText[1].mColour = "#C59687";
+			this.mContent[contentID].mText[1].mAlign = "left";
+		}
+	}
+}
+// ...End
+
+
+// GFGUICreationHelpDialogue "Content: Load Dialogue" methods
+GFGUICreationHelpDialogue.prototype.SetUpContentLoadDialogue = function(pos) {
+	var contentID = 4;
+	this.mContent[contentID].SetUp(pos);
+	this.mContent[contentID].mLowerBound = 130;
+	this.mContent[contentID].mText[0] = new Text();
+	this.mContent[contentID].mText[1] = new Text();
+	this.mContent[contentID].mSprites[0] = new Sprite();
+	
+	{
+		var tex = nmgrs.resMan.mTexStore.GetResource("help_loaddialogue1");
+		var font = nmgrs.resMan.mFontStore.GetResource("mainfont");
+		
+		{
+			this.mContent[contentID].mText[0].SetFont(font);
+			this.mContent[contentID].mText[0].mDepth = -5102;
+			this.mContent[contentID].mText[0].SetFontSize(12);
+			this.mContent[contentID].mText[0].mString = "    Loads the saved segment into the editor; "
+					+ "any unsaved changes will be lost.";
+			this.mContent[contentID].mText[0].mPos.Set(0, 0);
+			this.mContent[contentID].mText[0].mColour = "#C59687";
+			this.mContent[contentID].mText[0].mAlign = "left";
+			this.mContent[contentID].mText[0].mWrap = true;
+			this.mContent[contentID].mText[0].mWrapWidth = 454;
+		}
+		
+		{
+			this.mContent[contentID].mSprites[0].mPos.Set(63, 36);
+			this.mContent[contentID].mSprites[0].mDepth = -5100;
+			this.mContent[contentID].mSprites[0].SetTexture(tex);
+		}
+		
+		{
+			this.mContent[contentID].mText[1].SetFont(font);
+			this.mContent[contentID].mText[1].mDepth = -5102;
+			this.mContent[contentID].mText[1].SetFontSize(12);
+			this.mContent[contentID].mText[1].mString = "a. Saved segments list box; a scrollable list of all saved segments\n" +
+					"       in the local storage.\n" +
+					"b. Load button; load the selected segment from local storage and\n" +
+					"      return to the editor.\n" +
+					"c. Cancel button; cancel load and return to the editor.\n" +
+					"d. Delete button; delete the selected segment from local storage.\n" +
+					"e. Segment preview; a scaled preview of the selected segment.";
+			this.mContent[contentID].mText[1].mPos.Set(0, 370);
+			this.mContent[contentID].mText[1].mColour = "#C59687";
+			this.mContent[contentID].mText[1].mAlign = "left";
+		}
+	}
+}
+// ...End
+
+
+// GFGUICreationHelpDialogue "Content: Import Dialogue" methods
+GFGUICreationHelpDialogue.prototype.SetUpContentImportDialogue = function(pos) {
+	var contentID = 5;
+	this.mContent[contentID].SetUp(pos);
+	this.mContent[contentID].mText[0] = new Text();
+	this.mContent[contentID].mText[1] = new Text();
+	this.mContent[contentID].mSprites[0] = new Sprite();
+	
+	{
+		var tex = nmgrs.resMan.mTexStore.GetResource("help_importdialogue1");
+		var font = nmgrs.resMan.mFontStore.GetResource("mainfont");
+		
+		{
+			this.mContent[contentID].mText[0].SetFont(font);
+			this.mContent[contentID].mText[0].mDepth = -5102;
+			this.mContent[contentID].mText[0].SetFontSize(12);
+			this.mContent[contentID].mText[0].mString = "    Imports a segment (in string format) from the " +
+					"clipboard; any unsaved changes will be lost.";
+			this.mContent[contentID].mText[0].mPos.Set(0, 0);
+			this.mContent[contentID].mText[0].mColour = "#C59687";
+			this.mContent[contentID].mText[0].mAlign = "left";
+			this.mContent[contentID].mText[0].mWrap = true;
+			this.mContent[contentID].mText[0].mWrapWidth = 448;
+		}
+		
+		{
+			this.mContent[contentID].mSprites[0].mPos.Set(12, 36);
+			this.mContent[contentID].mSprites[0].mDepth = -5100;
+			this.mContent[contentID].mSprites[0].SetTexture(tex);
+		}
+		
+		{
+			this.mContent[contentID].mText[1].SetFont(font);
+			this.mContent[contentID].mText[1].mDepth = -5102;
+			this.mContent[contentID].mText[1].SetFontSize(12);
+			this.mContent[contentID].mText[1].mString = "a. Segment string input box; an input box for the pasting of\n" +
+					"       segment string.\n" +
+					"b. Import button; convert the string into a segment, load it and\n" +
+					"       return to the editor.\n" +
+					"c. Cancel button; cancel import and return to the editor.";
+			this.mContent[contentID].mText[1].mPos.Set(0, 156);
+			this.mContent[contentID].mText[1].mColour = "#C59687";
+			this.mContent[contentID].mText[1].mAlign = "left";
+		}
+	}
+}
+// ...End
+
+
+// GFGUICreationHelpDialogue "Content: Export Dialogue" methods
+GFGUICreationHelpDialogue.prototype.SetUpContentExportDialogue = function(pos) {
+	var contentID = 6;
+	this.mContent[contentID].SetUp(pos);
+	this.mContent[contentID].mText[0] = new Text();
+	this.mContent[contentID].mText[1] = new Text();
+	this.mContent[contentID].mSprites[0] = new Sprite();
+	
+	{
+		var tex = nmgrs.resMan.mTexStore.GetResource("help_exportdialogue1");
+		var font = nmgrs.resMan.mFontStore.GetResource("mainfont");
+		
+		{
+			this.mContent[contentID].mText[0].SetFont(font);
+			this.mContent[contentID].mText[0].mDepth = -5102;
+			this.mContent[contentID].mText[0].SetFontSize(12);
+			this.mContent[contentID].mText[0].mString = "    Converts the current segment to string format to be exported (via copy).";
+			this.mContent[contentID].mText[0].mPos.Set(0, 0);
+			this.mContent[contentID].mText[0].mColour = "#C59687";
+			this.mContent[contentID].mText[0].mAlign = "left";
+			this.mContent[contentID].mText[0].mWrap = true;
+			this.mContent[contentID].mText[0].mWrapWidth = 454;
+		}
+		
+		{
+			this.mContent[contentID].mSprites[0].mPos.Set(12, 36);
+			this.mContent[contentID].mSprites[0].mDepth = -5100;
+			this.mContent[contentID].mSprites[0].SetTexture(tex);
+		}
+		
+		{
+			this.mContent[contentID].mText[1].SetFont(font);
+			this.mContent[contentID].mText[1].mDepth = -5102;
+			this.mContent[contentID].mText[1].SetFontSize(12);
+			this.mContent[contentID].mText[1].mString = "a. Cancel button; return to editor.\n" +
+					"b. Segment string input box; an input box containing the current\n" +
+					"       segment in string format.";
+			this.mContent[contentID].mText[1].mPos.Set(0, 156);
+			this.mContent[contentID].mText[1].mColour = "#C59687";
+			this.mContent[contentID].mText[1].mAlign = "left";
+		}
+	}
+}
+// ...End
+
+
+// GFGUICreationHelpDialogue "Content: Generate Dialogue" methods
+GFGUICreationHelpDialogue.prototype.SetUpContentGenerateDialogue = function(pos) {
+	var contentID = 7;
+	this.mContent[contentID].SetUp(pos);
+	this.mContent[contentID].mRenderCanvas.SetDimensions(new IVec2(454, 336));
+	this.mContent[contentID].mRenderCanvas.mPos.Set(pos.mX + 23, pos.mY + 91);
+	this.mContent[contentID].mLowerBound = 194;
+	this.mContent[contentID].mText[0] = new Text();
+	this.mContent[contentID].mText[1] = new Text();
+	this.mContent[contentID].mSprites[0] = new Sprite();
+	
+	{
+		var tex = nmgrs.resMan.mTexStore.GetResource("help_generatedialogue1");
+		var font = nmgrs.resMan.mFontStore.GetResource("mainfont");
+		
+		{
+			this.mContent[contentID].mText[0].SetFont(font);
+			this.mContent[contentID].mText[0].mDepth = -5102;
+			this.mContent[contentID].mText[0].SetFontSize(12);
+			this.mContent[contentID].mText[0].mString = "    Generates a playable map from user created segments. " +
+					"There are 3 types of segment: initial, regular and final. There can be only 1 initial and final " +
+					"segments which are place at the start and end of map generation respectively. Regular segments " +
+					"make up the bulk of the map.";
+			this.mContent[contentID].mText[0].mPos.Set(0, 0);
+			this.mContent[contentID].mText[0].mColour = "#C59687";
+			this.mContent[contentID].mText[0].mAlign = "left";
+			this.mContent[contentID].mText[0].mWrap = true;
+			this.mContent[contentID].mText[0].mWrapWidth = 456;
+		}
+		
+		{
+			this.mContent[contentID].mSprites[0].mPos.Set(0, 60);
+			this.mContent[contentID].mSprites[0].mDepth = -5100;
+			this.mContent[contentID].mSprites[0].SetTexture(tex);
+		}
+		
+		{
+			this.mContent[contentID].mText[1].SetFont(font);
+			this.mContent[contentID].mText[1].mDepth = -5102;
+			this.mContent[contentID].mText[1].SetFontSize(12);
+			this.mContent[contentID].mText[1].mString = "a. Unused segments list box; a scrollable list of all saved segments in\n" +
+					"       the local storage that are unused.\n" +
+					"b. Next/Finish button; go to the next segment type or generate map\n" + 
+					"       if done.\n" +
+					"c. Cancel button; cancel generation and return to the editor.\n" +
+					"d. Back button; return the the previous segment type selection.\n" +
+					"e. Used segments list box; a scrollable list of all currently\n" +
+					"       used segments.\n" +
+					"f. Select/deselect buttons; buttons to transfer between used and unused.\n" +
+					"g. Segment preview; a scaled preview of the selected segment.\n" +
+					"h. Segment type; the type of segment currently being selected.";
+			this.mContent[contentID].mText[1].mPos.Set(0, 394);
+			this.mContent[contentID].mText[1].mColour = "#C59687";
+			this.mContent[contentID].mText[1].mAlign = "left";
+		}
+	}
+	
+	
 }
 // ...End
 
@@ -7895,8 +8884,6 @@ GFGUICreationLoadDialogue.prototype.RedrawPreview = function() {
 					
 					arr.splice(0, arr.length);
 					arr = arr.concat(temp);
-					
-					this.mNeedSort = false;
 				}
 				
 				this.mRenderCanvas.mContext.save();
