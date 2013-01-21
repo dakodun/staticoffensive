@@ -40,14 +40,20 @@ RenderCanvas.prototype.Copy = function(other) {
 	this.mFrustrumCull = other.mFrustrumCull;
 }
 
-RenderCanvas.prototype.RenderTo = function(renderable) {
+RenderCanvas.prototype.RenderTo = function(renderable, cam) {
+	var renderCam = null;
+	if (cam != null) {
+		renderCam = new Camera();
+		renderCam.Copy(cam);
+	}
+	
 	var batch = new RenderBatch();
 	batch.mFrustrumCull = this.mFrustrumCull;
 	batch.Clear();
 	
 	batch.Add(renderable);
 	
-	batch.Render(null, this.mContext);
+	batch.Render(renderCam, this.mContext);
 }
 
 RenderCanvas.prototype.Clear = function() {
