@@ -19,6 +19,8 @@ function Text() {
 	this.mJustifyWidth = -1;
 	
 	this.mAbsolute = false;
+	this.mWrap = false;
+	this.mWrapWidth = -1;
 };
 
 // returns the type of this object for validity checking
@@ -46,6 +48,25 @@ Text.prototype.Copy = function(other) {
 	this.mJustifyWidth = other.mJustifyWidth;
 	
 	this.mAbsolute = other.mAbsolute;
+	this.mWrap = other.mWrap;
+	this.mWrapWidth = other.mWrapWidth;
+}
+
+// 
+Text.prototype.SetFont = function(font) {
+	this.mFont = font;
+	this.mFontString = String(this.mFontSize) + "px " + this.mFont.mFontName;
+}
+
+// 
+Text.prototype.SetFontSize = function(size) {
+	this.mFontSize = size;
+	this.mFontString = String(this.mFontSize) + "px " + this.mFont.mFontName;
+}
+
+// return the position of the text
+Text.prototype.GetPosition = function() {
+	return this.mPos;
 }
 
 // return the width of the text
@@ -73,18 +94,6 @@ Text.prototype.GetWidth = function() {
 Text.prototype.GetHeight = function() {
 	var txtArr = this.mString.split("\n");
 	return this.mFontSize * txtArr.length;
-}
-
-// 
-Text.prototype.SetFont = function(font) {
-	this.mFont = font;
-	this.mFontString = String(this.mFontSize) + "px " + this.mFont.mFontName;
-}
-
-// 
-Text.prototype.SetFontSize = function(size) {
-	this.mFontSize = size;
-	this.mFontString = String(this.mFontSize) + "px " + this.mFont.mFontName;
 }
 // ...End
 
