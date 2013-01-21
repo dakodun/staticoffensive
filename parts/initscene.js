@@ -72,6 +72,18 @@ InitScene.prototype.SetUp = function() {
 		
 		{ // textures for creation "help" dialogue boxes
 			nmgrs.resLoad.QueueTexture("gui_creation_helpdialogue_back", "./res/vis/gui/gui_creation_helpdialogue_back.png");
+			
+			nmgrs.resLoad.QueueTexture("help_mapcontrol1", "./res/vis/helpfiles/help_mapcontrol1.png");
+			nmgrs.resLoad.QueueTexture("help_mapcontrol2", "./res/vis/helpfiles/help_mapcontrol2.png");
+			nmgrs.resLoad.QueueTexture("help_tilecontrol1", "./res/vis/helpfiles/help_tilecontrol1.png");
+			
+			nmgrs.resLoad.QueueTexture("help_newdialogue1", "./res/vis/helpfiles/help_newdialogue1.png");
+			nmgrs.resLoad.QueueTexture("help_savedialogue1", "./res/vis/helpfiles/help_savedialogue1.png");
+			nmgrs.resLoad.QueueTexture("help_loaddialogue1", "./res/vis/helpfiles/help_loaddialogue1.png");
+			nmgrs.resLoad.QueueTexture("help_importdialogue1", "./res/vis/helpfiles/help_importdialogue1.png");
+			nmgrs.resLoad.QueueTexture("help_exportdialogue1", "./res/vis/helpfiles/help_exportdialogue1.png");
+			
+			nmgrs.resLoad.QueueTexture("help_generatedialogue1", "./res/vis/helpfiles/help_generatedialogue1.png");
 		}
 		
 		nmgrs.resLoad.QueueTexture("menu_button", "./res/vis/gui/menu_button.png");
