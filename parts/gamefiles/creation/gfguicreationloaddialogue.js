@@ -414,8 +414,6 @@ GFGUICreationLoadDialogue.prototype.RedrawPreview = function() {
 					
 					arr.splice(0, arr.length);
 					arr = arr.concat(temp);
-					
-					this.mNeedSort = false;
 				}
 				
 				this.mRenderCanvas.mContext.save();
